@@ -25,12 +25,17 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import io.micrometer.api.instrument.docs.DocumentedSample;
 import io.micrometer.api.instrument.docs.TagKey;
@@ -38,6 +43,7 @@ import io.micrometer.api.internal.logging.InternalLogger;
 import io.micrometer.api.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
+import io.micrometer.docs.commons.utils.StringUtils;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
 import org.jboss.forge.roaster.Roaster;
@@ -79,7 +85,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-            if (!myEnum.getInterfaces().contains(DocumentedSpan.class.getCanonicalName())) {
+            if (Stream.of(DocumentedSpan.class.getCanonicalName(), DocumentedSample.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
             logger.info("Checking [" + myEnum.getName() + "]");
@@ -104,12 +110,23 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        List<String> overridingNames = spanEntries.stream().filter(s -> s.overridesDefaultSpanFrom != null)
+                .map(spanEntry -> spanEntry.overridesDefaultSpanFrom.getKey())
+                .collect(Collectors.toList());
+        List<SpanEntry> spansToRemove = spanEntries.stream().filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)))).collect(Collectors.toList());
+        logger.info("Will remove the span entry [" + spansToRemove + "] because they are overridden");
+        spanEntries.removeAll(spansToRemove);
+        return FileVisitResult.CONTINUE;
+    }
+
     // if entry has overridesDefaultSpanFrom - read tags from that thing
     // if entry has overridesDefaultSpanFrom AND getTagKeys() - we pick only the latter
     // if entry has overridesDefaultSpanFrom AND getAdditionalTagKeys() - we pick both
     private void addTagsFromOverride(Path file, SpanEntry entry) throws IOException {
         Map.Entry<String, String> overridesDefaultSpanFrom = entry.overridesDefaultSpanFrom;
-        logger.warn("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
+        logger.info("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
         String className = overridesDefaultSpanFrom.getKey();
         try (InputStream streamForOverride = Files.newInputStream(new File(file.getParent().toFile(), className + ".java").toPath())) {
             JavaUnit parsedForOverride = Roaster.parseUnit(streamForOverride);
@@ -160,6 +177,12 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getTagKeys".equals(methodName)) {
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            }
+            else if ("getLowCardinalityTags".equals(methodName)) {
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            }
+            else if ("getHighCardinalityTags".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
             else if ("getAdditionalTagKeys".equals(methodName)) {

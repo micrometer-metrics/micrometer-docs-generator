@@ -91,7 +91,7 @@ class SpanEntry implements Comparable<SpanEntry> {
     public String toString() {
         StringBuilder text = new StringBuilder()
                 .append("=== ")
-                .append(Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" ")))
+                .append(name())
                 .append("\n\n> ").append(description).append("\n\n")
                 .append("**Span name** `").append(name).append("`");
         if (name.contains("%s")) {
@@ -104,7 +104,6 @@ class SpanEntry implements Comparable<SpanEntry> {
         if (StringUtils.hasText(prefix)) {
             text.append("\n\nIMPORTANT: All tags and event names must be prefixed with `").append(this.prefix).append("` prefix!");
         }
-        // TODO: Merge tagkeys, additionaltagkeys etc.
         if (!tagKeys.isEmpty()) {
             text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
                     .append("\n|===");
@@ -114,5 +113,13 @@ class SpanEntry implements Comparable<SpanEntry> {
                     .append("\n|===");
         }
         return text.toString();
+    }
+
+    private String name() {
+        String name = Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
+        if (!name.toLowerCase(Locale.ROOT).endsWith("span")) {
+            return name + " Span";
+        }
+        return name;
     }
 }

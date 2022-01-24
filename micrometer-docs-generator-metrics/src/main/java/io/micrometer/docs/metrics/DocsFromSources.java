@@ -55,7 +55,7 @@ public class DocsFromSources {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        logger.info("Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.info("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SampleEntry> spanEntries = new TreeSet<>();
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
