@@ -6,7 +6,7 @@
 [![Javadocs](https://www.javadoc.io/badge/io.micrometer/micrometer-docs-generator.svg)](https://www.javadoc.io/doc/io.micrometer/micrometer-core)
 [![Revved up by Gradle Enterprise](https://img.shields.io/badge/Revved%20up%20by-Gradle%20Enterprise-06A0CE?logo=Gradle&labelColor=02303A)](https://ge.micrometer.io/)
 
-A application tracing facade.
+Generating adoc tables for metrics and spans.
 
 ## Supported versions
 

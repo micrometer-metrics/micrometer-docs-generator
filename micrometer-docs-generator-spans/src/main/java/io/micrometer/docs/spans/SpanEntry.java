@@ -23,6 +23,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.utils.Assert;
+import io.micrometer.docs.commons.utils.StringUtils;
+
 class SpanEntry implements Comparable<SpanEntry> {
 
     final String name;
@@ -84,33 +88,31 @@ class SpanEntry implements Comparable<SpanEntry> {
     }
 
     @Override
-    //@formatter:off
-	public String toString() {
-		StringBuilder text = new StringBuilder()
-				.append("=== ").append(Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" ")))
-				.append("\n\n> ").append(description).append("\n\n")
-				.append("**Span name** `").append(name).append("`");
-		if (name.contains("%s")) {
-			text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
-		}
-		else {
-			text.append(".");
-		}
-		text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`");
-		if (StringUtils.hasText(prefix)) {
-			text.append("\n\nIMPORTANT: All tags and event names must be prefixed with `").append(this.prefix).append("` prefix!");
-		}
+    public String toString() {
+        StringBuilder text = new StringBuilder()
+                .append("=== ")
+                .append(Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" ")))
+                .append("\n\n> ").append(description).append("\n\n")
+                .append("**Span name** `").append(name).append("`");
+        if (name.contains("%s")) {
+            text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
+        }
+        else {
+            text.append(".");
+        }
+        text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`");
+        if (StringUtils.hasText(prefix)) {
+            text.append("\n\nIMPORTANT: All tags and event names must be prefixed with `").append(this.prefix).append("` prefix!");
+        }
         // TODO: Merge tagkeys, additionaltagkeys etc.
-		if (!tagKeys.isEmpty()) {
-			text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
-					.append("\n|===");
-		}
-		if (!events.isEmpty()) {
-			text.append("\n\n.Event Values\n|===\n|Name | Description\n").append(this.events.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
-					.append("\n|===");
-		}
-		return text.toString();
-	}
-	//@formatter:on
-
+        if (!tagKeys.isEmpty()) {
+            text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+                    .append("\n|===");
+        }
+        if (!events.isEmpty()) {
+            text.append("\n\n.Event Values\n|===\n|Name | Description\n").append(this.events.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+                    .append("\n|===");
+        }
+        return text.toString();
+    }
 }

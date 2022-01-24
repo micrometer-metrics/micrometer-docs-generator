@@ -22,6 +22,10 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.micrometer.docs.commons.utils.Assert;
+import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.utils.StringUtils;
+
 class SampleEntry implements Comparable<SampleEntry> {
 
     final String name;

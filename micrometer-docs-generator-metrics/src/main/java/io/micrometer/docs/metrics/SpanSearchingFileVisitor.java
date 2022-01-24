@@ -24,29 +24,27 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.micrometer.api.instrument.docs.DocumentedSample;
 import io.micrometer.api.instrument.docs.TagKey;
+import io.micrometer.api.internal.logging.InternalLogger;
+import io.micrometer.api.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.ParsingUtils;
 import org.jboss.forge.roaster.Roaster;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodInvocation;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ReturnStatement;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.StringLiteral;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
-import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 
-
 class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
+
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SpanSearchingFileVisitor.class);
 
     private final Pattern pattern;
 
@@ -75,7 +73,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if (!myEnum.getInterfaces().contains(DocumentedSample.class.getCanonicalName())) {
                 return FileVisitResult.CONTINUE;
             }
-            System.out.println("Checking [" + myEnum.getName() + "]");
+            logger.info("Checking [" + myEnum.getName() + "]");
             if (myEnum.getEnumConstants().size() == 0) {
                 return FileVisitResult.CONTINUE;
             }
@@ -83,7 +81,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 SampleEntry entry = parseSpan(enumConstant, myEnum);
                 if (entry != null) {
                     spanEntries.add(entry);
-                    System.out.println(
+                    logger.info(
                             "Found [" + entry.lowCardinalityTagKeys.size() + "] low cardinality tags and [" + entry.highCardinalityTagKeys.size() + "] high cardinality tags");
                 }
             }
@@ -109,124 +107,20 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if ("getName".equals(methodName)) {
-                name = readStringReturnValue(methodDeclaration);
+                name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getLowCardinalityTagKeys".equals(methodName)) {
-                tags.addAll(keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
             else if ("getHighCardinalityTagKeys".equals(methodName)) {
-                events.addAll(keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+                events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
             else if ("prefix".equals(methodName)) {
-                prefix = readStringReturnValue(methodDeclaration);
+                prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
         }
         return new SampleEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 events);
-    }
-
-    private Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass) {
-        Collection<String> enumNames = readClassValue(methodDeclaration);
-        Collection<KeyValueEntry> keyValues = new TreeSet<>();
-        enumNames.forEach(enumName -> {
-            List<JavaSource<?>> nestedTypes = myEnum.getNestedTypes();
-            JavaSource<?> nestedSource = nestedTypes.stream()
-                    .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
-                            () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues);
-        });
-        return keyValues;
-    }
-
-    private void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class requiredClass,
-            Collection<KeyValueEntry> keyValues) {
-        if (!(source instanceof JavaEnumImpl)) {
-            return;
-        }
-        JavaEnumImpl myEnum = (JavaEnumImpl) source;
-        if (!myEnum.getInterfaces().contains(requiredClass.getCanonicalName())) {
-            return;
-        }
-        System.out.println("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
-        if (myEnum.getEnumConstants().size() == 0) {
-            return;
-        }
-        for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            String keyValue = enumKeyValue(enumConstant);
-            keyValues.add(new KeyValueEntry(keyValue, enumConstant.getJavaDoc().getText()));
-        }
-    }
-
-    private String enumKeyValue(EnumConstantSource enumConstant) {
-        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
-        if (members.isEmpty()) {
-            System.err.println("No method declarations in the enum.");
-            return "";
-        }
-        Object internal = members.get(0).getInternal();
-        if (!(internal instanceof MethodDeclaration)) {
-            System.err.println("Can't read the member [" + internal.getClass() + "] as a method declaration.");
-            return "";
-        }
-        MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-        if (methodDeclaration.getBody().statements().isEmpty()) {
-            System.err.println("Body was empty. Continuing...");
-            return "";
-        }
-        return stringFromReturnMethodDeclaration(methodDeclaration);
-    }
-
-    private String stringFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
-        Object statement = methodDeclaration.getBody().statements().get(0);
-        if (!(statement instanceof ReturnStatement)) {
-            System.err.println("Statement [" + statement.getClass() + "] is not a return statement.");
-            return "";
-        }
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof StringLiteral)) {
-            System.err.println("Statement [" + statement.getClass() + "] is not a string literal statement.");
-            return "";
-        }
-        return ((StringLiteral) expression).getLiteralValue();
-    }
-
-    private String readStringReturnValue(MethodDeclaration methodDeclaration) {
-        return stringFromReturnMethodDeclaration(methodDeclaration);
-    }
-
-    private Collection<String> readClassValue(MethodDeclaration methodDeclaration) {
-        Object statement = methodDeclaration.getBody().statements().get(0);
-        if (!(statement instanceof ReturnStatement)) {
-            System.err.println("Statement [" + statement.getClass() + "] is not a return statement.");
-            return Collections.emptyList();
-        }
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof MethodInvocation)) {
-            System.err.println("Statement [" + statement.getClass() + "] is not a method invocation.");
-            return Collections.emptyList();
-        }
-        MethodInvocation methodInvocation = (MethodInvocation) expression;
-        if ("merge".equals(methodInvocation.getName().getIdentifier())) {
-            // TODO: There must be a better way to do this...
-            // TagKey.merge(TestSpanTags.values(),AsyncSpanTags.values())
-            String invocationString = methodInvocation.toString();
-            Matcher matcher = Pattern.compile("([a-zA-Z]+.values)").matcher(invocationString);
-            Collection<String> classNames = new TreeSet<>();
-            while (matcher.find()) {
-                String className = matcher.group(1).split("\\.")[0];
-                classNames.add(className);
-            }
-            return classNames;
-        }
-        else if (!methodInvocation.toString().endsWith(".values()")) {
-            throw new IllegalStateException("You have to use the static .values() method on the enum that implements "
-                    + TagKey.class + " interface or use [TagKey.merge(...)] method to merge multiple values from tags");
-        }
-        // will return Tags
-        return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
 }

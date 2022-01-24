@@ -25,7 +25,11 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import io.micrometer.api.internal.logging.InternalLogger;
+import io.micrometer.api.internal.logging.InternalLoggerFactory;
+
 public class DocsFromSources {
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DocsFromSources.class);
 
     private final File projectRoot;
 
@@ -49,19 +53,19 @@ public class DocsFromSources {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        System.out.println("Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.info("Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SpanEntry> spanEntries = new TreeSet<>();
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
             Files.walkFileTree(path, fv);
             Path output = new File(this.outputDir, "_spans.adoc").toPath();
             StringBuilder stringBuilder = new StringBuilder();
-            System.out.println("======================================");
-            System.out.println("Summary of sources analysis");
-            System.out.println("Found [" + spanEntries.size() + "] spans");
-            System.out.println(
+            logger.info("======================================");
+            logger.info("Summary of sources analysis");
+            logger.info("Found [" + spanEntries.size() + "] spans");
+            logger.info(
                     "Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
-            System.out.println(
+            logger.info(
                     "Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
             spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
             Files.write(output, stringBuilder.toString().getBytes());

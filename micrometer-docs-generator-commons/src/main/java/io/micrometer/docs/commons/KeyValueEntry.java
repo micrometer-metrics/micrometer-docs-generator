@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-package io.micrometer.docs.metrics;
+package io.micrometer.docs.commons;
 
 import java.util.Objects;
 
-class KeyValueEntry implements Comparable<KeyValueEntry> {
+public class KeyValueEntry implements Comparable<KeyValueEntry> {
 
-    final String name;
+    private final String name;
 
-    final String description;
+    private final String description;
 
-    KeyValueEntry(String name, String description) {
+    public KeyValueEntry(String name, String description) {
         this.name = name;
         this.description = description;
     }
@@ -64,4 +64,11 @@ class KeyValueEntry implements Comparable<KeyValueEntry> {
         return description + suffix;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 }

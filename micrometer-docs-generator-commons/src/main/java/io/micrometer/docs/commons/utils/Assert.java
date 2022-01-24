@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package io.micrometer.docs.metrics;
+package io.micrometer.docs.commons.utils;
 
-final class Assert {
-    static void hasText(String text, String description) {
+public final class Assert {
+    public static void hasText(String text, String description) {
         if (!StringUtils.hasText(text)) {
             throw new IllegalArgumentException(description);
         }

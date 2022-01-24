@@ -22,7 +22,7 @@ gradleEnterprise {
 	server = 'https://ge.micrometer.io'
 }
 
-include "micrometer-docs-generator-bom", "micrometer-docs-generator-commons"
+include "micrometer-docs-generator-commons", "micrometer-docs-generator-bom"
 
 ['metrics', 'spans'].each { type ->
 	include "micrometer-docs-generator-${type}"

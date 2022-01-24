@@ -25,8 +25,13 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
+import io.micrometer.api.internal.logging.InternalLogger;
+import io.micrometer.api.internal.logging.InternalLoggerFactory;
+
 // TODO: Assert on prefixes
 public class DocsFromSources {
+
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(DocsFromSources.class);
 
     private final File projectRoot;
 
@@ -50,7 +55,7 @@ public class DocsFromSources {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        System.out.println("Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.info("Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SampleEntry> spanEntries = new TreeSet<>();
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
@@ -60,15 +65,15 @@ public class DocsFromSources {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
             }
-            System.out.println("Will create files under [" + file + "]");
+            logger.info("Will create files under [" + file + "]");
             StringBuilder stringBuilder = new StringBuilder();
             Path output = file.toPath();
-            System.out.println("======================================");
-            System.out.println("Summary of sources analysis");
-            System.out.println("Found [" + spanEntries.size() + "] samples");
-            System.out.println(
+            logger.info("======================================");
+            logger.info("Summary of sources analysis");
+            logger.info("Found [" + spanEntries.size() + "] samples");
+            logger.info(
                     "Found [" + spanEntries.stream().flatMap(e -> e.lowCardinalityTagKeys.stream()).distinct().count() + "] low cardinality tags");
-            System.out.println(
+            logger.info(
                     "Found [" + spanEntries.stream().flatMap(e -> e.highCardinalityTagKeys.stream()).distinct().count() + "] high cardinality tags");
             spanEntries.forEach(sampleEntry -> stringBuilder.append(sampleEntry.toString()).append("\n\n"));
             Files.write(output, stringBuilder.toString().getBytes());

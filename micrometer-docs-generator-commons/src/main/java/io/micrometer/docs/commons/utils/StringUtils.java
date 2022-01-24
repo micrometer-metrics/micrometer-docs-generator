@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-package io.micrometer.docs.metrics;
+package io.micrometer.docs.commons.utils;
 
-final class StringUtils {
-    static boolean hasText(String text) {
+public final class StringUtils {
+    public static boolean hasText(String text) {
         return text != null && text.length() > 0;
     }
 
-    static String capitalize(String text) {
+    public static String capitalize(String text) {
         return changeFirstCharacterCase(text, true);
     }
 

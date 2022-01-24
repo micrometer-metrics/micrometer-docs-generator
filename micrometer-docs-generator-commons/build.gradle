@@ -3,13 +3,11 @@ plugins {
 }
 
 dependencies {
-	api project(':micrometer-docs-generator-commons')
-	api 'io.micrometer:micrometer-api'
 	api 'org.jboss.forge.roaster:roaster-api'
 	api 'org.jboss.forge.roaster:roaster-jdt'
+	api 'io.micrometer:micrometer-api'
 
 	testImplementation 'org.junit.jupiter:junit-jupiter'
 	testImplementation 'org.assertj:assertj-core'
-	testImplementation 'org.mockito:mockito-core'
 }
 
