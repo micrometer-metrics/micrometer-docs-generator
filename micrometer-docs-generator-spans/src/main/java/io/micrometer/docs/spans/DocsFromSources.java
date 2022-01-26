@@ -67,6 +67,7 @@ public class DocsFromSources {
                     "Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
             logger.info(
                     "Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
+            stringBuilder.append("[[observability-spans]]\n=== Observability - Spans\n\nBelow you can find a list of all spans declared by this project.\n\n");
             spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
             Files.write(output, stringBuilder.toString().getBytes());
         }

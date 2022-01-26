@@ -25,8 +25,6 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -43,7 +41,6 @@ import io.micrometer.api.internal.logging.InternalLogger;
 import io.micrometer.api.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
-import io.micrometer.docs.commons.utils.StringUtils;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
 import org.jboss.forge.roaster.Roaster;
@@ -115,7 +112,9 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         List<String> overridingNames = spanEntries.stream().filter(s -> s.overridesDefaultSpanFrom != null)
                 .map(spanEntry -> spanEntry.overridesDefaultSpanFrom.getKey())
                 .collect(Collectors.toList());
-        List<SpanEntry> spansToRemove = spanEntries.stream().filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)))).collect(Collectors.toList());
+        List<SpanEntry> spansToRemove = spanEntries.stream()
+                .filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT))))
+                .collect(Collectors.toList());
         if (!spansToRemove.isEmpty()) {
             logger.info("Will remove the span entries <" + spansToRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
         }

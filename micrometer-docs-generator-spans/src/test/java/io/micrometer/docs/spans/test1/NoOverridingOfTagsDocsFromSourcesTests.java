@@ -18,7 +18,6 @@ package io.micrometer.docs.spans.test1;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.regex.Pattern;
 
@@ -37,13 +36,13 @@ class NoOverridingOfTagsDocsFromSourcesTests {
         new DocsFromSources(root, Pattern.compile(".*"), output).generate();
 
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
-                .contains("=== Async Annotation Span").contains("> Span that wraps a")
+                .contains("==== Async Annotation Span").contains("> Span that wraps a")
                 .contains("**Span name** `%s` - since").contains("Fully qualified name of")
                 .contains("|`class`|Class name where a method got annotated with @Async.")
-                .contains("=== Annotation New Or Continue Span")
+                .contains("==== Annotation New Or Continue Span")
                 .contains("|`%s.before`|Annotated before executing a method annotated with @ContinueSpan or @NewSpan.")
-                .contains("=== Test Span").contains("**Span name** `fixed`.").contains("|`foooooo`|Test foo")
-                .contains("=== Parent Span");
+                .contains("==== Test Span").contains("**Span name** `fixed`.").contains("|`foooooo`|Test foo")
+                .contains("==== Parent Span");
     }
 
 }

@@ -60,7 +60,7 @@ public class DocsFromSources {
         FileVisitor<Path> fv = new SampleSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
             Files.walkFileTree(path, fv);
-            File file = new File(this.outputDir, "_samples.adoc");
+            File file = new File(this.outputDir, "_metrics.adoc");
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
@@ -75,6 +75,7 @@ public class DocsFromSources {
                     "Found [" + spanEntries.stream().flatMap(e -> e.lowCardinalityTagKeys.stream()).distinct().count() + "] low cardinality tags");
             logger.info(
                     "Found [" + spanEntries.stream().flatMap(e -> e.highCardinalityTagKeys.stream()).distinct().count() + "] high cardinality tags");
+            stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
             spanEntries.forEach(sampleEntry -> stringBuilder.append(sampleEntry.toString()).append("\n\n"));
             Files.write(output, stringBuilder.toString().getBytes());
         }

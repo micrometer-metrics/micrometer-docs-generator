@@ -90,7 +90,7 @@ class SpanEntry implements Comparable<SpanEntry> {
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder()
-                .append("=== ")
+                .append("==== ")
                 .append(name())
                 .append("\n\n> ").append(description).append("\n\n")
                 .append("**Span name** `").append(name).append("`");

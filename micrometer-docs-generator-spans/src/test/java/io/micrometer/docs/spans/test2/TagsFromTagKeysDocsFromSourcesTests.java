@@ -18,7 +18,6 @@ package io.micrometer.docs.spans.test2;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.regex.Pattern;
 
@@ -37,9 +36,9 @@ class TagsFromTagKeysDocsFromSourcesTests {
         new DocsFromSources(root, Pattern.compile(".*"), output).generate();
 
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
-                .doesNotContain("=== Parent Span")  // this should be overridden
+                .doesNotContain("==== Parent Span")  // this should be overridden
                 .contains("**Span name** `%s` - since").contains("Fully qualified name of")
-                .contains("=== Should Return Tag Keys Only Span").contains("|`foooooo`|Test foo");
+                .contains("==== Should Return Tag Keys Only Span").contains("|`foooooo`|Test foo");
     }
 
 }

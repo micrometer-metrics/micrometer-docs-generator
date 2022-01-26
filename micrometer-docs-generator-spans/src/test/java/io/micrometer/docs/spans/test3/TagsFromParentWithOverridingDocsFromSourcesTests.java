@@ -18,7 +18,6 @@ package io.micrometer.docs.spans.test3;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.util.regex.Pattern;
 
@@ -37,8 +36,8 @@ class TagsFromParentWithOverridingDocsFromSourcesTests {
         new DocsFromSources(root, Pattern.compile(".*"), output).generate();
 
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
-                .doesNotContain("=== Parent Span") // this should be overridden
-                .contains("=== Should Append Additional Tag Keys To Parent Sample Span").contains("> Span.")
+                .doesNotContain("==== Parent Span") // this should be overridden
+                .contains("==== Should Append Additional Tag Keys To Parent Sample Span").contains("> Span.")
                 .contains("|`class`|Class name where a method got annotated with a Sleuth annotation.")
                 .contains("|`class2`|Class name where a method got annotated with a Sleuth annotation.")
                 .contains("|`foooooo`|Test foo")

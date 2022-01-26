@@ -79,7 +79,7 @@ class SampleEntry implements Comparable<SampleEntry> {
     @Override
     public String toString() {
         StringBuilder text = new StringBuilder()
-                .append("=== ").append(Arrays.stream(enumName.replace("_", " ").split(" "))
+                .append("==== ").append(Arrays.stream(enumName.replace("_", " ").split(" "))
                         .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" ")))
                 .append("\n\n> ").append(description).append("\n\n")
                 .append("**Sample name** `").append(name).append("`");
