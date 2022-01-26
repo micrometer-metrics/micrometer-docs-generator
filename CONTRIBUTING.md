@@ -31,7 +31,7 @@ the [Contributor License Agreement](https://cla.pivotal.io/sign/pivotal) if you 
 
 ## Getting the source
 
-The Micrometer Docs Generator source code is hosted on GitHub at https://github.com/micrometer-metrics/tracing. You can use a
+The Micrometer Docs Generator source code is hosted on GitHub at https://github.com/micrometer-metrics/micrometer-docs-generator. You can use a
 Git client to clone the source code to your local machine.
 
 ## Building

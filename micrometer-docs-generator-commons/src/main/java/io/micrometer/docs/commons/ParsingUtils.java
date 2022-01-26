@@ -63,7 +63,6 @@ public class ParsingUtils {
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
 
-
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
             Class requiredClass) {
         Collection<String> enumNames = readClassValue(methodDeclaration);

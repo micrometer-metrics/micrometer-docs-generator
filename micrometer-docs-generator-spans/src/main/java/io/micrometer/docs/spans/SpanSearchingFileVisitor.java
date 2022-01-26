@@ -116,7 +116,9 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 .map(spanEntry -> spanEntry.overridesDefaultSpanFrom.getKey())
                 .collect(Collectors.toList());
         List<SpanEntry> spansToRemove = spanEntries.stream().filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT)))).collect(Collectors.toList());
-        logger.info("Will remove the span entry [" + spansToRemove + "] because they are overridden");
+        if (!spansToRemove.isEmpty()) {
+            logger.info("Will remove the span entries <" + spansToRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
+        }
         spanEntries.removeAll(spansToRemove);
         return FileVisitResult.CONTINUE;
     }
@@ -191,7 +193,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             else if ("getEvents".equals(methodName)) {
                 events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
             }
-            else if ("prefix".equals(methodName)) {
+            else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("overridesDefaultSpanFrom".equals(methodName)) {

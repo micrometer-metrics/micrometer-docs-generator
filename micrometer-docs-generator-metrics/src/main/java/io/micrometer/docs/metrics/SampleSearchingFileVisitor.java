@@ -42,17 +42,17 @@ import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 
-class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
+class SampleSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SpanSearchingFileVisitor.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SampleSearchingFileVisitor.class);
 
     private final Pattern pattern;
 
-    private final Collection<SampleEntry> spanEntries;
+    private final Collection<SampleEntry> sampleEntries;
 
-    SpanSearchingFileVisitor(Pattern pattern, Collection<SampleEntry> spanEntries) {
+    SampleSearchingFileVisitor(Pattern pattern, Collection<SampleEntry> sampleEntries) {
         this.pattern = pattern;
-        this.spanEntries = spanEntries;
+        this.sampleEntries = sampleEntries;
     }
 
     @Override
@@ -78,9 +78,9 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                SampleEntry entry = parseSpan(enumConstant, myEnum);
+                SampleEntry entry = parseSample(enumConstant, myEnum);
                 if (entry != null) {
-                    spanEntries.add(entry);
+                    sampleEntries.add(entry);
                     logger.info(
                             "Found [" + entry.lowCardinalityTagKeys.size() + "] low cardinality tags and [" + entry.highCardinalityTagKeys.size() + "] high cardinality tags");
                 }
@@ -89,7 +89,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
-    private SampleEntry parseSpan(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
+    private SampleEntry parseSample(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return null;
@@ -115,7 +115,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             else if ("getHighCardinalityTagKeys".equals(methodName)) {
                 events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
-            else if ("prefix".equals(methodName)) {
+            else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
         }

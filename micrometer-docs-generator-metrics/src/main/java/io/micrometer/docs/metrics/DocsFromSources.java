@@ -57,7 +57,7 @@ public class DocsFromSources {
         Path path = this.projectRoot.toPath();
         logger.info("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SampleEntry> spanEntries = new TreeSet<>();
-        FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
+        FileVisitor<Path> fv = new SampleSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
             Files.walkFileTree(path, fv);
             File file = new File(this.outputDir, "_samples.adoc");
