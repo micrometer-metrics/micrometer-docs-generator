@@ -89,7 +89,10 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     @Override
     public String toString() {
+        String displayName = Arrays.stream(enumName.replace("_", " ").split(" "))
+                .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
         StringBuilder text = new StringBuilder()
+                .append("[[").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
                 .append("==== ")
                 .append(name())
                 .append("\n\n> ").append(description).append("\n\n")

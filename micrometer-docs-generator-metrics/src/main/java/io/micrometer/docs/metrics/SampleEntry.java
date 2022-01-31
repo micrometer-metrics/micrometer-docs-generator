@@ -78,12 +78,15 @@ class SampleEntry implements Comparable<SampleEntry> {
 
     @Override
     public String toString() {
+        String displayName = Arrays.stream(enumName.replace("_", " ").split(" "))
+                .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
         StringBuilder text = new StringBuilder()
-                .append("==== ").append(Arrays.stream(enumName.replace("_", " ").split(" "))
-                        .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" ")))
+                .append("[[").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
+                .append("==== ")
+                .append(displayName)
                 .append("\n\n> ").append(description).append("\n\n")
-                .append("**Sample name** `").append(name).append("`");
-        if (name.contains("%s")) {
+                .append("**Sample name** `").append(this.name).append("`");
+        if (this.name.contains("%s")) {
             text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
         }
         else {
