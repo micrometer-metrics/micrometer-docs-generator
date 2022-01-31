@@ -39,12 +39,17 @@ enum AsyncSample implements DocumentedSample {
     },
 
     /**
-     * Test.
+     * FOO.
      */
     TEST {
         @Override
         public String getName() {
             return "fixed";
+        }
+
+        @Override
+        public String getDescription() {
+            return "Test.";
         }
 
         @Override

@@ -39,7 +39,8 @@ class DocsFromSourcesTests {
                 .contains("|`class`|Class name where a method got annotated with @Async.")
                 .contains("|`class2`|Class name where a method got annotated with a Sleuth annotation.")
                 .contains("==== Annotation New Or Continue")
-                .contains("==== Test").contains("**Sample name** `fixed`.").contains("|`foooooo`|Test foo");
+                .contains("==== Test").contains("**Sample name** `fixed`.").contains("|`foooooo`|Test foo")
+                .contains("Test.").doesNotContain("FOO.");
     }
 
 }

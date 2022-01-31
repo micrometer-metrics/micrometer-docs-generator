@@ -118,6 +118,9 @@ class SampleSearchingFileVisitor extends SimpleFileVisitor<Path> {
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            else if ("getDescription".equals(methodName)) {
+                description = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
         }
         return new SampleEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 events);
