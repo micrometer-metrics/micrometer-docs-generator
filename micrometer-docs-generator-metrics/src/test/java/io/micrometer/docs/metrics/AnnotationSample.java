@@ -16,10 +16,10 @@
 
 package io.micrometer.docs.metrics;
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 
-enum AnnotationSample implements DocumentedSample {
+enum AnnotationSample implements DocumentedObservation {
 
     /**
      * Sample that wraps annotations.

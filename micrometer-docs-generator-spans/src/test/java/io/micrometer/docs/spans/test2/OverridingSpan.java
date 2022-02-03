@@ -17,7 +17,7 @@
 package io.micrometer.docs.spans.test2;
 
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 import io.micrometer.tracing.docs.DocumentedSpan;
 
@@ -38,7 +38,7 @@ enum OverridingSpan implements DocumentedSpan {
         }
 
         @Override
-        public DocumentedSample overridesDefaultSpanFrom() {
+        public DocumentedObservation overridesDefaultSpanFrom() {
             return ParentSample.PARENT;
         }
     };

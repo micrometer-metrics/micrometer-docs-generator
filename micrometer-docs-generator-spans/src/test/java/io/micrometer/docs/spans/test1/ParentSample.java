@@ -16,10 +16,10 @@
 
 package io.micrometer.docs.spans.test1;
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 
-enum ParentSample implements DocumentedSample {
+enum ParentSample implements DocumentedObservation {
 
     /**
      * Sample that wraps annotations.

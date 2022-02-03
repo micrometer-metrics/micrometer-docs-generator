@@ -28,7 +28,7 @@ import java.util.List;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 import io.micrometer.api.internal.logging.InternalLogger;
 import io.micrometer.api.internal.logging.InternalLoggerFactory;
@@ -70,7 +70,7 @@ class SampleSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-            if (!myEnum.getInterfaces().contains(DocumentedSample.class.getCanonicalName())) {
+            if (!myEnum.getInterfaces().contains(DocumentedObservation.class.getCanonicalName())) {
                 return FileVisitResult.CONTINUE;
             }
             logger.info("Checking [" + myEnum.getName() + "]");

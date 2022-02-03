@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 import io.micrometer.api.internal.logging.InternalLogger;
 import io.micrometer.api.internal.logging.InternalLoggerFactory;
@@ -44,7 +44,9 @@ import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
 import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ReturnStatement;
@@ -82,7 +84,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-            if (Stream.of(DocumentedSpan.class.getCanonicalName(), DocumentedSample.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
+            if (Stream.of(DocumentedSpan.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
             logger.info("Checking [" + myEnum.getName() + "]");
@@ -129,14 +131,19 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Map.Entry<String, String> overridesDefaultSpanFrom = entry.overridesDefaultSpanFrom;
         logger.info("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
         String className = overridesDefaultSpanFrom.getKey();
-        try (InputStream streamForOverride = Files.newInputStream(new File(file.getParent().toFile(), className + ".java").toPath())) {
+        File parent = file.getParent().toFile();
+        while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
+            parent = parent.getParentFile();
+        }
+        String filePath = new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
+        try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
             JavaUnit parsedForOverride = Roaster.parseUnit(streamForOverride);
             JavaType overrideClass = parsedForOverride.getGoverningType();
             if (!(overrideClass instanceof JavaEnumImpl)) {
                 return;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) overrideClass;
-            if (!myEnum.getInterfaces().contains(DocumentedSample.class.getCanonicalName())) {
+            if (!myEnum.getInterfaces().contains(DocumentedObservation.class.getCanonicalName())) {
                 return;
             }
             logger.info("Checking [" + myEnum.getName() + "]");
@@ -236,7 +243,19 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return null;
         }
         QualifiedName qualifiedName = (QualifiedName) expression;
-        return new AbstractMap.SimpleEntry<>(qualifiedName.getQualifier().toString(), qualifiedName.getName().toString());
+        String className = qualifiedName.getQualifier().toString();
+        String enumName = qualifiedName.getName().toString();
+        CompilationUnit compilationUnit = (CompilationUnit) expression.getRoot();
+        List imports = compilationUnit.imports();
+        String matchingImportStatement = compilationUnit.getPackage().getName().toString() + "." + className;
+        for (Object anImport : imports) {
+            ImportDeclaration importDeclaration = (ImportDeclaration) anImport;
+            String importStatement = importDeclaration.getName().toString();
+            if (importStatement.endsWith(className)) {
+                matchingImportStatement = importStatement;
+            }
+        }
+        return new AbstractMap.SimpleEntry<>(matchingImportStatement, enumName);
     }
 
 }

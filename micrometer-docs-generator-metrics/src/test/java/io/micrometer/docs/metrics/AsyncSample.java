@@ -17,10 +17,10 @@
 package io.micrometer.docs.metrics;
 
 
-import io.micrometer.api.instrument.docs.DocumentedSample;
+import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 
-enum AsyncSample implements DocumentedSample {
+enum AsyncSample implements DocumentedObservation {
 
     /**
      * Sample that wraps a @Async annotation.
@@ -45,11 +45,6 @@ enum AsyncSample implements DocumentedSample {
         @Override
         public String getName() {
             return "fixed";
-        }
-
-        @Override
-        public String getDescription() {
-            return "Test.";
         }
 
         @Override
