@@ -16,16 +16,15 @@
 
 package io.micrometer.docs.metrics;
 
-
 import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 
-enum AsyncSample implements DocumentedObservation {
+enum AnnotationObservation implements DocumentedObservation {
 
     /**
-     * Sample that wraps a @Async annotation.
+     * Observation that wraps annotations.
      */
-    ASYNC_ANNOTATION {
+    ANNOTATION_NEW_OR_CONTINUE {
         @Override
         public String getName() {
             return "%s";
@@ -33,31 +32,23 @@ enum AsyncSample implements DocumentedObservation {
 
         @Override
         public TagKey[] getLowCardinalityTagKeys() {
-            return AsyncSpanTags.values();
-        }
-
-    },
-
-    /**
-     * FOO.
-     */
-    TEST {
-        @Override
-        public String getName() {
-            return "fixed";
+            return Tags.values();
         }
 
         @Override
-        public TagKey[] getLowCardinalityTagKeys() {
-            return TagKey.merge(TestSpanTags.values(), AsyncSpanTags.values());
+        public TagKey[] getHighCardinalityTagKeys() {
+            return Tags2.values();
         }
 
     };
 
-    enum AsyncSpanTags implements TagKey {
+    /**
+     * Low cardinality tags.
+     */
+    enum Tags implements TagKey {
 
         /**
-         * Class name where a method got annotated with @Async.
+         * Class name where a method got annotated.
          */
         CLASS {
             @Override
@@ -67,7 +58,7 @@ enum AsyncSample implements DocumentedObservation {
         },
 
         /**
-         * Method name that got annotated with @Async.
+         * Method name that got annotated with annotation.
          */
         METHOD {
             @Override
@@ -78,15 +69,28 @@ enum AsyncSample implements DocumentedObservation {
 
     }
 
-    enum TestSpanTags implements TagKey {
+    /**
+     * High cardinality tags.
+     */
+    enum Tags2 implements TagKey {
 
         /**
-         * Test foo
+         * Class name where a method got annotated.
          */
-        FOO {
+        CLASS2 {
             @Override
             public String getKey() {
-                return "foooooo";
+                return "class2";
+            }
+        },
+
+        /**
+         * Method name that got annotated.
+         */
+        METHOD2 {
+            @Override
+            public String getKey() {
+                return "method2";
             }
         }
 

@@ -38,11 +38,11 @@ class TagsFromParentWithOverridingDocsFromSourcesTests {
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
                 .doesNotContain("==== Parent Span") // this should be overridden
                 .contains("==== Should Append Additional Tag Keys To Parent Sample Span").contains("> Span.")
-                .contains("|`class`|Class name where a method got annotated with a Sleuth annotation.")
-                .contains("|`class2`|Class name where a method got annotated with a Sleuth annotation.")
+                .contains("|`class`|Class name where a method got annotated with a annotation.")
+                .contains("|`class2`|Class name where a method got annotated with a annotation.")
                 .contains("|`foooooo`|Test foo")
-                .contains("|`method`|Method name that got annotated with Sleuth annotation.")
-                .contains("|`method2`|Method name that got annotated with Sleuth annotation.");
+                .contains("|`method`|Method name that got annotated with annotation.")
+                .contains("|`method2`|Method name that got annotated with annotation.");
     }
 
 }

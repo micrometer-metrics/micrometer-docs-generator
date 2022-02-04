@@ -34,12 +34,12 @@ class DocsFromSourcesTests {
         new DocsFromSources(root, Pattern.compile(".*"), output).generate();
 
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_metrics.adoc").toPath())))
-                .contains("==== Async Annotation").contains("> Sample that wraps a")
-                .contains("**Sample name** `%s` - since").contains("Fully qualified name of")
+                .contains("==== Async Annotation").contains("> Observation that wraps a")
+                .contains("**Metric name** `%s` - since").contains("Fully qualified name of")
                 .contains("|`class`|Class name where a method got annotated with @Async.")
-                .contains("|`class2`|Class name where a method got annotated with a Sleuth annotation.")
+                .contains("|`class2`|Class name where a method got annotated.")
                 .contains("==== Annotation New Or Continue")
-                .contains("==== Test").contains("**Sample name** `fixed`.").contains("|`foooooo`|Test foo");
+                .contains("**Metric name** `my distribution`. **Type** `distribution summary` and **base unit** `bytes`");
     }
 
 }

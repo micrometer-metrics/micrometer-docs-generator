@@ -16,15 +16,16 @@
 
 package io.micrometer.docs.metrics;
 
+
 import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 
-enum AnnotationSample implements DocumentedObservation {
+enum AsyncObservation implements DocumentedObservation {
 
     /**
-     * Sample that wraps annotations.
+     * Observation that wraps a @Async annotation.
      */
-    ANNOTATION_NEW_OR_CONTINUE {
+    ASYNC_ANNOTATION {
         @Override
         public String getName() {
             return "%s";
@@ -32,23 +33,31 @@ enum AnnotationSample implements DocumentedObservation {
 
         @Override
         public TagKey[] getLowCardinalityTagKeys() {
-            return Tags.values();
+            return AsyncSpanTags.values();
+        }
+
+    },
+
+    /**
+     * FOO.
+     */
+    TEST {
+        @Override
+        public String getName() {
+            return "fixed";
         }
 
         @Override
-        public TagKey[] getHighCardinalityTagKeys() {
-            return Tags2.values();
+        public TagKey[] getLowCardinalityTagKeys() {
+            return TagKey.merge(TestSpanTags.values(), AsyncSpanTags.values());
         }
 
     };
 
-    /**
-     * Low cardinality tags.
-     */
-    enum Tags implements TagKey {
+    enum AsyncSpanTags implements TagKey {
 
         /**
-         * Class name where a method got annotated with a Sleuth annotation.
+         * Class name where a method got annotated with @Async.
          */
         CLASS {
             @Override
@@ -58,7 +67,7 @@ enum AnnotationSample implements DocumentedObservation {
         },
 
         /**
-         * Method name that got annotated with Sleuth annotation.
+         * Method name that got annotated with @Async.
          */
         METHOD {
             @Override
@@ -69,28 +78,15 @@ enum AnnotationSample implements DocumentedObservation {
 
     }
 
-    /**
-     * High cardinality tags.
-     */
-    enum Tags2 implements TagKey {
+    enum TestSpanTags implements TagKey {
 
         /**
-         * Class name where a method got annotated with a Sleuth annotation.
+         * Test foo
          */
-        CLASS2 {
+        FOO {
             @Override
             public String getKey() {
-                return "class2";
-            }
-        },
-
-        /**
-         * Method name that got annotated with Sleuth annotation.
-         */
-        METHOD2 {
-            @Override
-            public String getKey() {
-                return "method2";
+                return "foooooo";
             }
         }
 

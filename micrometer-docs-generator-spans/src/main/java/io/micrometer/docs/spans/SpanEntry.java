@@ -16,8 +16,11 @@
 
 package io.micrometer.docs.spans;
 
+import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
@@ -62,6 +65,23 @@ class SpanEntry implements Comparable<SpanEntry> {
         this.overridesDefaultSpanFrom = overridesDefaultSpanFrom;
     }
 
+    static void assertThatProperlyPrefixed(Collection<SpanEntry> entries) {
+        List<Map.Entry<SpanEntry, List<String>>> collect = entries.stream().map(SpanEntry::notProperlyPrefixedTags).filter(Objects::nonNull).collect(Collectors.toList());
+        if (collect.isEmpty()) {
+            return;
+        }
+        throw new IllegalStateException("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.\n\n" + collect.stream().map(e -> "\tName <" + e.getKey().enumName + "> in class <" + e.getKey().enclosingClass + "> has the following prefix <" + e.getKey().prefix + "> and following invalid tag keys " + e.getValue()).collect(Collectors.joining("\n")) + "\n\n");
+    }
+
+    Map.Entry<SpanEntry, List<String>> notProperlyPrefixedTags() {
+        if (!StringUtils.hasText(this.prefix)) {
+            return null;
+        }
+        List<KeyValueEntry> allTags = new ArrayList<>(this.tagKeys);
+        allTags.addAll(this.additionalTagKeys);
+        return new AbstractMap.SimpleEntry<>(this, allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList()));
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -92,7 +112,7 @@ class SpanEntry implements Comparable<SpanEntry> {
         String displayName = Arrays.stream(enumName.replace("_", " ").split(" "))
                 .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
         StringBuilder text = new StringBuilder()
-                .append("[[").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
+                .append("[[observability-spans-").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
                 .append("==== ")
                 .append(name())
                 .append("\n\n> ").append(description).append("\n\n")
@@ -103,7 +123,7 @@ class SpanEntry implements Comparable<SpanEntry> {
         else {
             text.append(".");
         }
-        text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`");
+        text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`.");
         if (StringUtils.hasText(prefix)) {
             text.append("\n\nIMPORTANT: All tags and event names must be prefixed with `").append(this.prefix).append("` prefix!");
         }

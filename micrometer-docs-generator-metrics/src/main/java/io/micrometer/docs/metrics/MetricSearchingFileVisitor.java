@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package io.micrometer.docs.spans;
+package io.micrometer.docs.metrics;
 
 import java.io.File;
 import java.io.IOException;
@@ -26,21 +26,20 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.micrometer.api.instrument.Meter;
+import io.micrometer.api.instrument.docs.DocumentedMeter;
 import io.micrometer.api.instrument.docs.DocumentedObservation;
 import io.micrometer.api.instrument.docs.TagKey;
 import io.micrometer.api.internal.logging.InternalLogger;
 import io.micrometer.api.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
-import io.micrometer.tracing.docs.DocumentedSpan;
-import io.micrometer.tracing.docs.EventValue;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.JavaType;
@@ -49,17 +48,17 @@ import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 
-class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
+class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(SpanSearchingFileVisitor.class);
+    private static final InternalLogger logger = InternalLoggerFactory.getInstance(MetricSearchingFileVisitor.class);
 
     private final Pattern pattern;
 
-    private final Collection<SpanEntry> spanEntries;
+    private final Collection<MetricEntry> sampleEntries;
 
-    SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries) {
+    MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> sampleEntries) {
         this.pattern = pattern;
-        this.spanEntries = spanEntries;
+        this.sampleEntries = sampleEntries;
     }
 
     @Override
@@ -77,7 +76,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-            if (Stream.of(DocumentedSpan.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
+            if (Stream.of(DocumentedMeter.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
             logger.info("Checking [" + myEnum.getName() + "]");
@@ -85,45 +84,32 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                SpanEntry entry = parseSpan(enumConstant, myEnum);
+                MetricEntry entry = parseMetric(enumConstant, myEnum);
                 if (entry != null) {
-                    if (entry.overridesDefaultSpanFrom != null && entry.tagKeys.isEmpty()) {
+                    sampleEntries.add(entry);
+                    logger.info(
+                            "Found [" + entry.lowCardinalityTagKeys.size() + "] low cardinality tags and [" + entry.highCardinalityTagKeys.size() + "] high cardinality tags");
+                }
+                if (entry != null) {
+                    if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityTagKeys.isEmpty()) {
                         addTagsFromOverride(file, entry);
                     }
-                    if (!entry.additionalTagKeys.isEmpty()) {
-                        entry.tagKeys.addAll(entry.additionalTagKeys);
-                    }
-                    spanEntries.add(entry);
+                    sampleEntries.add(entry);
                     logger.info(
-                            "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
+                            "Found [" + entry.lowCardinalityTagKeys.size() + "]");
                 }
             }
             return FileVisitResult.CONTINUE;
         }
     }
 
-    @Override
-    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        List<String> overridingNames = spanEntries.stream().filter(s -> s.overridesDefaultSpanFrom != null)
-                .map(spanEntry -> spanEntry.overridesDefaultSpanFrom.getKey())
-                .collect(Collectors.toList());
-        List<SpanEntry> spansToRemove = spanEntries.stream()
-                .filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT))))
-                .collect(Collectors.toList());
-        if (!spansToRemove.isEmpty()) {
-            logger.info("Will remove the span entries <" + spansToRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
-        }
-        spanEntries.removeAll(spansToRemove);
-        return FileVisitResult.CONTINUE;
-    }
-
     // if entry has overridesDefaultSpanFrom - read tags from that thing
     // if entry has overridesDefaultSpanFrom AND getTagKeys() - we pick only the latter
     // if entry has overridesDefaultSpanFrom AND getAdditionalTagKeys() - we pick both
-    private void addTagsFromOverride(Path file, SpanEntry entry) throws IOException {
-        Map.Entry<String, String> overridesDefaultSpanFrom = entry.overridesDefaultSpanFrom;
-        logger.info("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
-        String className = overridesDefaultSpanFrom.getKey();
+    private void addTagsFromOverride(Path file, MetricEntry entry) throws IOException {
+        Map.Entry<String, String> overrideDefaults = entry.overridesDefaultMetricFrom;
+        logger.info("Reading additional meta data from [" + overrideDefaults + "]");
+        String className = overrideDefaults.getKey();
         File parent = file.getParent().toFile();
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
             parent = parent.getParentFile();
@@ -144,22 +130,18 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return;
             }
             for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                if (!enumConstant.getName().equals(overridesDefaultSpanFrom.getValue())) {
+                if (!enumConstant.getName().equals(overrideDefaults.getValue())) {
                     continue;
                 }
                 Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityTagKeys");
-                Collection<KeyValueEntry> high = ParsingUtils.getTags(enumConstant, myEnum, "getHighCardinalityTagKeys");
                 if (low != null) {
-                    entry.tagKeys.addAll(low);
-                }
-                if (high != null) {
-                    entry.tagKeys.addAll(high);
+                    entry.lowCardinalityTagKeys.addAll(low);
                 }
             }
         }
     }
 
-    private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
+    private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return null;
@@ -167,10 +149,11 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String name = "";
         String description = enumConstant.getJavaDoc().getText();
         String prefix = "";
-        Collection<KeyValueEntry> tags = new TreeSet<>();
-        Collection<KeyValueEntry> additionalTagKeys = new TreeSet<>();
-        Collection<KeyValueEntry> events = new TreeSet<>();
-        Map.Entry<String, String> overridesDefaultSpanFrom = null;
+        String baseUnit = "seconds";
+        Meter.Type type = Meter.Type.TIMER;
+        Collection<KeyValueEntry> lowCardinalityTags = new TreeSet<>();
+        Collection<KeyValueEntry> highCardinalityTags = new TreeSet<>();
+        Map.Entry<String, String> overridesDefaultMetricFrom = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -181,30 +164,30 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
-            else if ("getTagKeys".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getLowCardinalityTagKeys".equals(methodName) || "getTagKeys".equals(methodName)) {
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
-            else if ("getLowCardinalityTags".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
-            }
-            else if ("getHighCardinalityTags".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
-            }
-            else if ("getAdditionalTagKeys".equals(methodName)) {
-                additionalTagKeys.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
-            }
-            else if ("getEvents".equals(methodName)) {
-                events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
+            else if ("getHighCardinalityTagKeys".equals(methodName)) {
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
-            else if ("overridesDefaultSpanFrom".equals(methodName)) {
-                overridesDefaultSpanFrom = ParsingUtils.readClassToEnum(methodDeclaration);
+            else if ("getBaseUnit".equals(methodName)) {
+                baseUnit = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
+            else if ("getType".equals(methodName)) {
+                type = ParsingUtils.enumFromReturnMethodDeclaration(methodDeclaration, Meter.Type.class);
+            }
+            else if ("getDescription".equals(methodName)) {
+                description = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
+            else if ("overridesDefaultMetricFrom".equals(methodName)) {
+                overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
         }
-        return new SpanEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
-                additionalTagKeys, events, overridesDefaultSpanFrom);
+        return new MetricEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
+                highCardinalityTags, overridesDefaultMetricFrom);
     }
 
 }

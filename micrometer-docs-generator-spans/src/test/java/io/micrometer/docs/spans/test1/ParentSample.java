@@ -22,7 +22,7 @@ import io.micrometer.api.instrument.docs.TagKey;
 enum ParentSample implements DocumentedObservation {
 
     /**
-     * Sample that wraps annotations.
+     * Observation that wraps annotations.
      */
     PARENT {
         @Override
@@ -48,7 +48,7 @@ enum ParentSample implements DocumentedObservation {
     enum Tags implements TagKey {
 
         /**
-         * Class name where a method got annotated with a Sleuth annotation.
+         * Class name where a method got annotated with a annotation.
          */
         CLASS {
             @Override
@@ -58,7 +58,7 @@ enum ParentSample implements DocumentedObservation {
         },
 
         /**
-         * Method name that got annotated with Sleuth annotation.
+         * Method name that got annotated with annotation.
          */
         METHOD {
             @Override
@@ -75,7 +75,7 @@ enum ParentSample implements DocumentedObservation {
     enum Tags2 implements TagKey {
 
         /**
-         * Class name where a method got annotated with a Sleuth annotation.
+         * Class name where a method got annotated with a annotation.
          */
         CLASS2 {
             @Override
@@ -85,7 +85,7 @@ enum ParentSample implements DocumentedObservation {
         },
 
         /**
-         * Method name that got annotated with Sleuth annotation.
+         * Method name that got annotated with annotation.
          */
         METHOD2 {
             @Override

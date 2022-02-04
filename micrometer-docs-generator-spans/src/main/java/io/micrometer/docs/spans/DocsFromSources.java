@@ -58,6 +58,7 @@ public class DocsFromSources {
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
             Files.walkFileTree(path, fv);
+            SpanEntry.assertThatProperlyPrefixed(spanEntries);
             Path output = new File(this.outputDir, "_spans.adoc").toPath();
             StringBuilder stringBuilder = new StringBuilder();
             logger.info("======================================");

@@ -16,9 +16,11 @@
 
 package io.micrometer.docs.commons;
 
+import java.util.AbstractMap;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,9 +28,12 @@ import java.util.regex.Pattern;
 import io.micrometer.api.instrument.docs.TagKey;
 import io.micrometer.api.internal.logging.InternalLogger;
 import io.micrometer.api.internal.logging.InternalLoggerFactory;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodInvocation;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ReturnStatement;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.StringLiteral;
 import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
@@ -142,5 +147,72 @@ public class ParsingUtils {
             return "";
         }
         return ((StringLiteral) expression).getLiteralValue();
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <T extends Enum> T enumFromReturnMethodDeclaration(MethodDeclaration methodDeclaration, Class<T> enumClass) {
+        Object statement = methodDeclaration.getBody().statements().get(0);
+        if (!(statement instanceof ReturnStatement)) {
+            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
+            return null;
+        }
+        ReturnStatement returnStatement = (ReturnStatement) statement;
+        Expression expression = returnStatement.getExpression();
+        if (!(expression instanceof QualifiedName)) {
+            logger.warn("Statement [" + statement.getClass() + "] is not a qualified statement.");
+            return null;
+        }
+        QualifiedName qualifiedName = (QualifiedName) expression;
+        String enumName = qualifiedName.getName().toString();
+        return (T) Enum.valueOf(enumClass, enumName);
+    }
+
+
+    public static Map.Entry<String, String> readClassToEnum(MethodDeclaration methodDeclaration) {
+        Object statement = methodDeclaration.getBody().statements().get(0);
+        if (!(statement instanceof ReturnStatement)) {
+            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
+            return null;
+        }
+        ReturnStatement returnStatement = (ReturnStatement) statement;
+        Expression expression = returnStatement.getExpression();
+        if (!(expression instanceof QualifiedName)) {
+            logger.warn("Statement [" + statement.getClass() + "] is not a qualified name.");
+            return null;
+        }
+        QualifiedName qualifiedName = (QualifiedName) expression;
+        String className = qualifiedName.getQualifier().toString();
+        String enumName = qualifiedName.getName().toString();
+        CompilationUnit compilationUnit = (CompilationUnit) expression.getRoot();
+        List imports = compilationUnit.imports();
+        String matchingImportStatement = compilationUnit.getPackage().getName().toString() + "." + className;
+        for (Object anImport : imports) {
+            ImportDeclaration importDeclaration = (ImportDeclaration) anImport;
+            String importStatement = importDeclaration.getName().toString();
+            if (importStatement.endsWith(className)) {
+                matchingImportStatement = importStatement;
+            }
+        }
+        return new AbstractMap.SimpleEntry<>(matchingImportStatement, enumName);
+    }
+
+    public static Collection<KeyValueEntry> getTags(EnumConstantSource enumConstant, JavaEnumImpl myEnum, String getterName) {
+        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
+        if (members.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Collection<KeyValueEntry> tags = new TreeSet<>();
+        for (MemberSource<EnumConstantSource.Body, ?> member : members) {
+            Object internal = member.getInternal();
+            if (!(internal instanceof MethodDeclaration)) {
+                return null;
+            }
+            MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
+            String methodName = methodDeclaration.getName().getIdentifier();
+            if (getterName.equals(methodName)) {
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            }
+        }
+        return tags;
     }
 }

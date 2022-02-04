@@ -44,7 +44,7 @@ enum AnnotationSpan implements DocumentedSpan {
     };
 
     /**
-     * Tags related to Sleuth annotations.
+     * Tags related to annotations.
      *
      * @author Marcin Grzejszczak
      * @since 3.0.3
@@ -52,7 +52,7 @@ enum AnnotationSpan implements DocumentedSpan {
     enum Tags implements TagKey {
 
         /**
-         * Class name where a method got annotated with a Sleuth annotation.
+         * Class name where a method got annotated with a annotation.
          */
         CLASS {
             @Override
@@ -62,7 +62,7 @@ enum AnnotationSpan implements DocumentedSpan {
         },
 
         /**
-         * Method name that got annotated with Sleuth annotation.
+         * Method name that got annotated with annotation.
          */
         METHOD {
             @Override

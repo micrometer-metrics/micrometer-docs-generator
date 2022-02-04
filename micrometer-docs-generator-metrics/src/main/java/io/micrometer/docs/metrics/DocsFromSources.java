@@ -56,10 +56,11 @@ public class DocsFromSources {
     public void generate() {
         Path path = this.projectRoot.toPath();
         logger.info("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
-        Collection<SampleEntry> spanEntries = new TreeSet<>();
-        FileVisitor<Path> fv = new SampleSearchingFileVisitor(this.inclusionPattern, spanEntries);
+        Collection<MetricEntry> entries = new TreeSet<>();
+        FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries);
         try {
             Files.walkFileTree(path, fv);
+            MetricEntry.assertThatProperlyPrefixed(entries);
             File file = new File(this.outputDir, "_metrics.adoc");
             if (!file.exists()) {
                 file.getParentFile().mkdirs();
@@ -70,13 +71,13 @@ public class DocsFromSources {
             Path output = file.toPath();
             logger.info("======================================");
             logger.info("Summary of sources analysis");
-            logger.info("Found [" + spanEntries.size() + "] samples");
+            logger.info("Found [" + entries.size() + "] samples");
             logger.info(
-                    "Found [" + spanEntries.stream().flatMap(e -> e.lowCardinalityTagKeys.stream()).distinct().count() + "] low cardinality tags");
+                    "Found [" + entries.stream().flatMap(e -> e.lowCardinalityTagKeys.stream()).distinct().count() + "] low cardinality tags");
             logger.info(
-                    "Found [" + spanEntries.stream().flatMap(e -> e.highCardinalityTagKeys.stream()).distinct().count() + "] high cardinality tags");
+                    "Found [" + entries.stream().flatMap(e -> e.highCardinalityTagKeys.stream()).distinct().count() + "] high cardinality tags");
             stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
-            spanEntries.forEach(sampleEntry -> stringBuilder.append(sampleEntry.toString()).append("\n\n"));
+            entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
             Files.write(output, stringBuilder.toString().getBytes());
         }
         catch (IOException e) {
