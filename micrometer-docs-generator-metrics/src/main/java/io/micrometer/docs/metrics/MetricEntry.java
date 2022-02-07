@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import io.micrometer.api.instrument.Meter;
@@ -62,7 +61,7 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.enumName = enumName;
         this.description = description;
         this.prefix = prefix;
-        this.baseUnit = baseUnit;
+        this.baseUnit = StringUtils.hasText(baseUnit) ? baseUnit : meterType == Meter.Type.TIMER ? "seconds" : "";
         this.type = meterType;
         this.lowCardinalityTagKeys = lowCardinalityTagKeys;
         this.highCardinalityTagKeys = highCardinalityTagKeys;
@@ -75,16 +74,22 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (collect.isEmpty()) {
             return;
         }
-        throw new IllegalStateException("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.\n\n" + collect.stream().map(e -> "\tName <" + e.getKey().enumName + "> in class <" + e.getKey().enclosingClass + "> has the following prefix <" + e.getKey().prefix + "> and following invalid tag keys " + e.getValue()).collect(Collectors.joining("\n")) + "\n\n");
+        throw new IllegalStateException("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.\n\n" + collect.stream()
+                .map(e -> "\tName <" + e.getKey().enumName + "> in class <" + e.getKey().enclosingClass + "> has the following prefix <" + e.getKey().prefix + "> and following invalid tag keys " + e.getValue())
+                .collect(Collectors.joining("\n")) + "\n\n");
     }
 
     Map.Entry<MetricEntry, List<String>> notProperlyPrefixedTags() {
-       if (!StringUtils.hasText(this.prefix)) {
-           return null;
-       }
-       List<KeyValueEntry> allTags = new ArrayList<>(this.lowCardinalityTagKeys);
-       allTags.addAll(this.highCardinalityTagKeys);
-       return new AbstractMap.SimpleEntry<>(this, allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList()));
+        if (!StringUtils.hasText(this.prefix)) {
+            return null;
+        }
+        List<KeyValueEntry> allTags = new ArrayList<>(this.lowCardinalityTagKeys);
+        allTags.addAll(this.highCardinalityTagKeys);
+        List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
+        if (collect.isEmpty()) {
+            return null;
+        }
+        return new AbstractMap.SimpleEntry<>(this, collect);
     }
 
     @Override
@@ -125,8 +130,11 @@ class MetricEntry implements Comparable<MetricEntry> {
         else {
             text.append(".");
         }
-        text.append(" **Type** `").append(type.toString().toLowerCase(Locale.ROOT).replace("_", " ")).append("` and **base unit** `").append(baseUnit.toLowerCase(Locale.ROOT)).append("`.");
-        text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`.");
+        text.append(" **Type** `").append(type.toString().toLowerCase(Locale.ROOT).replace("_", " "));
+        if (StringUtils.hasText(baseUnit)) {
+            text.append("` and **base unit** `").append(baseUnit.toLowerCase(Locale.ROOT));
+        }
+        text.append("`.").append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`.");
         if (StringUtils.hasText(prefix)) {
             text.append("\n\nIMPORTANT: All tags must be prefixed with `").append(this.prefix).append("` prefix!");
         }

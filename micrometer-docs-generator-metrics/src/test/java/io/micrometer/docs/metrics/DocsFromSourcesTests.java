@@ -39,7 +39,8 @@ class DocsFromSourcesTests {
                 .contains("|`class`|Class name where a method got annotated with @Async.")
                 .contains("|`class2`|Class name where a method got annotated.")
                 .contains("==== Annotation New Or Continue")
-                .contains("**Metric name** `my distribution`. **Type** `distribution summary` and **base unit** `bytes`");
+                .contains("**Metric name** `my distribution`. **Type** `distribution summary` and **base unit** `bytes`")
+                .contains("**Metric name** `my other distribution`. **Type** `distribution summary`.");
     }
 
 }

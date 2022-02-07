@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -149,7 +148,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String name = "";
         String description = enumConstant.getJavaDoc().getText();
         String prefix = "";
-        String baseUnit = "seconds";
+        String baseUnit = "";
         Meter.Type type = Meter.Type.TIMER;
         Collection<KeyValueEntry> lowCardinalityTags = new TreeSet<>();
         Collection<KeyValueEntry> highCardinalityTags = new TreeSet<>();

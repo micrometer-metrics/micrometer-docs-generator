@@ -79,7 +79,11 @@ class SpanEntry implements Comparable<SpanEntry> {
         }
         List<KeyValueEntry> allTags = new ArrayList<>(this.tagKeys);
         allTags.addAll(this.additionalTagKeys);
-        return new AbstractMap.SimpleEntry<>(this, allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList()));
+        List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
+        if (collect.isEmpty()) {
+            return null;
+        }
+        return new AbstractMap.SimpleEntry<>(this, collect);
     }
 
     @Override
