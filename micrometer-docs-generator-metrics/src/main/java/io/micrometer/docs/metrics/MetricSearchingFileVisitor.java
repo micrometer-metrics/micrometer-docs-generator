@@ -99,7 +99,10 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 }
             }
             return FileVisitResult.CONTINUE;
+        } catch (Exception e) {
+            logger.error("Failed to parse file [" + file + "] due to an error", e);
         }
+        return FileVisitResult.CONTINUE;
     }
 
     // if entry has overridesDefaultSpanFrom - read tags from that thing
