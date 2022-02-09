@@ -16,9 +16,6 @@
 
 package io.micrometer.docs.metrics;
 
-
-import java.util.concurrent.TimeUnit;
-
 import io.micrometer.api.instrument.Meter;
 import io.micrometer.api.instrument.docs.DocumentedMeter;
 import io.micrometer.api.instrument.docs.TagKey;
