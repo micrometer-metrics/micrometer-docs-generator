@@ -31,6 +31,11 @@ enum ParentSample implements DocumentedObservation {
         }
 
         @Override
+        public String getContextualName() {
+            return "span name";
+        }
+
+        @Override
         public TagKey[] getLowCardinalityTagKeys() {
             return Tags.values();
         }
@@ -53,7 +58,7 @@ enum ParentSample implements DocumentedObservation {
         CLASS {
             @Override
             public String getKey() {
-                return "class";
+                return "parent.class";
             }
         },
 
@@ -63,7 +68,7 @@ enum ParentSample implements DocumentedObservation {
         METHOD {
             @Override
             public String getKey() {
-                return "method";
+                return "parent.method";
             }
         }
 

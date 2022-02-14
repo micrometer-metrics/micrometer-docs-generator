@@ -168,6 +168,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return null;
         }
         String name = "";
+        String contextualName = null;
         String description = enumConstant.getJavaDoc().getText();
         String prefix = "";
         Collection<KeyValueEntry> tags = new TreeSet<>();
@@ -184,13 +185,16 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            else if ("getContextualName".equals(methodName)) {
+                contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
             else if ("getTagKeys".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
-            else if ("getLowCardinalityTags".equals(methodName)) {
+            else if ("getLowCardinalityTagKeys".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
-            else if ("getHighCardinalityTags".equals(methodName)) {
+            else if ("getHighCardinalityTagKeys".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
             }
             else if ("getAdditionalTagKeys".equals(methodName)) {
@@ -206,7 +210,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 overridesDefaultSpanFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
         }
-        return new SpanEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
+        return new SpanEntry(contextualName != null ? contextualName : name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 additionalTagKeys, events, overridesDefaultSpanFrom);
     }
 

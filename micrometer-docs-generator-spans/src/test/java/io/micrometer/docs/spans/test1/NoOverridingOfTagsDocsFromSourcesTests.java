@@ -42,7 +42,8 @@ class NoOverridingOfTagsDocsFromSourcesTests {
                 .contains("==== Annotation New Or Continue Span")
                 .contains("|`%s.before`|Annotated before executing a method annotated with @ContinueSpan or @NewSpan.")
                 .contains("==== Test Span").contains("**Span name** `fixed`.").contains("|`foooooo`|Test foo")
-                .contains("==== Parent Span");
+                .contains("==== Parent Span")
+                .contains("|`parent.class`|Class name where a method got annotated with a annotation.");
     }
 
 }
