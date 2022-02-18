@@ -94,7 +94,7 @@ Example for a Maven setup that scans your sources from the root project and crea
             <executions>
                 <execution>
                     <id>generate-metrics-metadata</id>
-                    <phase>pre-site</phase>
+                    <phase>prepare-package</phase>
                     <goals>
                         <goal>java</goal>
                     </goals>
@@ -104,7 +104,7 @@ Example for a Maven setup that scans your sources from the root project and crea
                 </execution>
                 <execution>
                     <id>generate-tracing-metadata</id>
-                    <phase>pre-site</phase>
+                    <phase>prepare-package</phase>
                     <goals>
                         <goal>java</goal>
                     </goals>
