@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import io.micrometer.api.instrument.Meter;
+import io.micrometer.core.instrument.Meter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;

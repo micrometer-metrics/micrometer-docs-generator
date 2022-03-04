@@ -31,12 +31,12 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import io.micrometer.api.instrument.Meter;
-import io.micrometer.api.instrument.docs.DocumentedMeter;
-import io.micrometer.api.instrument.docs.DocumentedObservation;
-import io.micrometer.api.instrument.docs.TagKey;
-import io.micrometer.api.internal.logging.InternalLogger;
-import io.micrometer.api.internal.logging.InternalLoggerFactory;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.docs.DocumentedMeter;
+import io.micrometer.core.instrument.docs.DocumentedObservation;
+import io.micrometer.core.instrument.docs.TagKey;
+import io.micrometer.core.util.internal.logging.InternalLogger;
+import io.micrometer.core.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
 import org.jboss.forge.roaster.Roaster;

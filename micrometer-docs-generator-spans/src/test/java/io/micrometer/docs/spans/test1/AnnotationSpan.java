@@ -16,7 +16,7 @@
 
 package io.micrometer.docs.spans.test1;
 
-import io.micrometer.api.instrument.docs.TagKey;
+import io.micrometer.core.instrument.docs.TagKey;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
 
