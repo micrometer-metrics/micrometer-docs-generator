@@ -5,7 +5,7 @@ plugins {
 dependencies {
 	api 'org.jboss.forge.roaster:roaster-api'
 	api 'org.jboss.forge.roaster:roaster-jdt'
-	api 'io.micrometer:micrometer-core'
+	api 'io.micrometer:micrometer-observation'
 
 	testImplementation 'org.junit.jupiter:junit-jupiter'
 	testImplementation 'org.assertj:assertj-core'

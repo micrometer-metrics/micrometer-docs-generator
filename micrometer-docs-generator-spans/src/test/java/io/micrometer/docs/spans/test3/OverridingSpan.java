@@ -17,8 +17,8 @@
 package io.micrometer.docs.spans.test3;
 
 
-import io.micrometer.core.instrument.docs.DocumentedObservation;
-import io.micrometer.core.instrument.docs.TagKey;
+import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.TagKey;
 import io.micrometer.tracing.docs.DocumentedSpan;
 
 enum OverridingSpan implements DocumentedSpan {

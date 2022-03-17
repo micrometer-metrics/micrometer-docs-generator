@@ -25,9 +25,9 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.micrometer.core.instrument.docs.TagKey;
-import io.micrometer.core.util.internal.logging.InternalLogger;
-import io.micrometer.core.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.observation.docs.TagKey;
+import io.micrometer.observation.util.internal.logging.InternalLogger;
+import io.micrometer.observation.util.internal.logging.InternalLoggerFactory;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
