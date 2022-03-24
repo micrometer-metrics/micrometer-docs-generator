@@ -16,9 +16,9 @@
 
 package io.micrometer.docs.metrics;
 
+import io.micrometer.common.docs.TagKey;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.DocumentedMeter;
-import io.micrometer.observation.docs.TagKey;
 
 enum MyOtherDistributionSummary implements DocumentedMeter {
 

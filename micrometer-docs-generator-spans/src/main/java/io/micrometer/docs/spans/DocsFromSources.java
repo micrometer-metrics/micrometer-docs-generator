@@ -25,8 +25,9 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import io.micrometer.tracing.util.logging.InternalLogger;
-import io.micrometer.tracing.util.logging.InternalLoggerFactory;
+import io.micrometer.common.util.internal.logging.InternalLogger;
+import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+
 
 public class DocsFromSources {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(DocsFromSources.class);

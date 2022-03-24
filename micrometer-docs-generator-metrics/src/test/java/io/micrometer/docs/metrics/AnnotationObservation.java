@@ -16,8 +16,8 @@
 
 package io.micrometer.docs.metrics;
 
+import io.micrometer.common.docs.TagKey;
 import io.micrometer.observation.docs.DocumentedObservation;
-import io.micrometer.observation.docs.TagKey;
 
 ;
 

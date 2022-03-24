@@ -5,6 +5,7 @@ plugins {
 dependencies {
 	api 'org.jboss.forge.roaster:roaster-api'
 	api 'org.jboss.forge.roaster:roaster-jdt'
+	api 'io.micrometer:micrometer-commons'
 	api 'io.micrometer:micrometer-observation'
 
 	testImplementation 'org.junit.jupiter:junit-jupiter'
