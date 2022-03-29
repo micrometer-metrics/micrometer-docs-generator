@@ -16,8 +16,8 @@
 
 package io.micrometer.docs.spans.test3;
 
+import io.micrometer.common.docs.TagKey;
 import io.micrometer.observation.docs.DocumentedObservation;
-import io.micrometer.observation.docs.TagKey;
 
 enum ParentSample implements DocumentedObservation {
 

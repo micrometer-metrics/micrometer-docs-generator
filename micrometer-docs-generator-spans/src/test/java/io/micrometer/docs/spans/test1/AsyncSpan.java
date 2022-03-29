@@ -17,7 +17,7 @@
 package io.micrometer.docs.spans.test1;
 
 
-import io.micrometer.observation.docs.TagKey;
+import io.micrometer.common.docs.TagKey;
 import io.micrometer.tracing.docs.DocumentedSpan;
 
 enum AsyncSpan implements DocumentedSpan {
