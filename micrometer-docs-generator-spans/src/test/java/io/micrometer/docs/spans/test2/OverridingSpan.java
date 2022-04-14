@@ -16,7 +16,7 @@
 
 package io.micrometer.docs.spans.test2;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.tracing.docs.DocumentedSpan;
 
 enum OverridingSpan implements DocumentedSpan {
@@ -31,7 +31,7 @@ enum OverridingSpan implements DocumentedSpan {
         }
 
         @Override
-        public TagKey[] getTagKeys() {
+        public KeyName[] getKeyNames() {
             return TestSpanTags.values();
         }
 
@@ -41,14 +41,14 @@ enum OverridingSpan implements DocumentedSpan {
         }
     };
 
-    enum TestSpanTags implements TagKey {
+    enum TestSpanTags implements KeyName {
 
         /**
          * Test foo
          */
         FOO {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "foooooo";
             }
         }

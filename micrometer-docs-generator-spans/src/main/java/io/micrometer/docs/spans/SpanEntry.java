@@ -44,14 +44,14 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final Collection<KeyValueEntry> tagKeys;
 
-    final Collection<KeyValueEntry> additionalTagKeys;
+    final Collection<KeyValueEntry> additionalKeyNames;
 
     final Collection<KeyValueEntry> events;
 
     final Map.Entry<String, String> overridesDefaultSpanFrom;
 
     SpanEntry(String name, String enclosingClass, String enumName, String description, String prefix,
-            Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> additionalTagKeys, Collection<KeyValueEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
+            Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> additionalKeyNames, Collection<KeyValueEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
         Assert.hasText(name, "Span name must not be empty");
         Assert.hasText(description, "Span description must not be empty");
         this.name = name;
@@ -60,7 +60,7 @@ class SpanEntry implements Comparable<SpanEntry> {
         this.description = description;
         this.prefix = prefix;
         this.tagKeys = tagKeys;
-        this.additionalTagKeys = additionalTagKeys;
+        this.additionalKeyNames = additionalKeyNames;
         this.events = events;
         this.overridesDefaultSpanFrom = overridesDefaultSpanFrom;
     }
@@ -78,7 +78,7 @@ class SpanEntry implements Comparable<SpanEntry> {
             return null;
         }
         List<KeyValueEntry> allTags = new ArrayList<>(this.tagKeys);
-        allTags.addAll(this.additionalTagKeys);
+        allTags.addAll(this.additionalKeyNames);
         List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
         if (collect.isEmpty()) {
             return null;
@@ -97,13 +97,13 @@ class SpanEntry implements Comparable<SpanEntry> {
         SpanEntry spanEntry = (SpanEntry) o;
         return Objects.equals(name, spanEntry.name) && Objects.equals(enclosingClass, spanEntry.enclosingClass)
                 && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description)
-                && Objects.equals(additionalTagKeys, spanEntry.additionalTagKeys) && Objects.equals(tagKeys, spanEntry.tagKeys)
+                && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(tagKeys, spanEntry.tagKeys)
                 && Objects.equals(events, spanEntry.events) && Objects.equals(overridesDefaultSpanFrom, spanEntry.overridesDefaultSpanFrom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, enclosingClass, enumName, description, additionalTagKeys, tagKeys, events, overridesDefaultSpanFrom);
+        return Objects.hash(name, enclosingClass, enumName, description, additionalKeyNames, tagKeys, events, overridesDefaultSpanFrom);
     }
 
     @Override

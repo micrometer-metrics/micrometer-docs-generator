@@ -31,7 +31,7 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.DocumentedMeter;
 import io.micrometer.core.util.internal.logging.InternalLogger;
@@ -87,15 +87,15 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 if (entry != null) {
                     sampleEntries.add(entry);
                     logger.info(
-                            "Found [" + entry.lowCardinalityTagKeys.size() + "] low cardinality tags and [" + entry.highCardinalityTagKeys.size() + "] high cardinality tags");
+                            "Found [" + entry.lowCardinalityKeyNames.size() + "] low cardinality tags and [" + entry.highCardinalityKeyNames.size() + "] high cardinality tags");
                 }
                 if (entry != null) {
-                    if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityTagKeys.isEmpty()) {
+                    if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityKeyNames.isEmpty()) {
                         addTagsFromOverride(file, entry);
                     }
                     sampleEntries.add(entry);
                     logger.info(
-                            "Found [" + entry.lowCardinalityTagKeys.size() + "]");
+                            "Found [" + entry.lowCardinalityKeyNames.size() + "]");
                 }
             }
             return FileVisitResult.CONTINUE;
@@ -106,8 +106,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     // if entry has overridesDefaultSpanFrom - read tags from that thing
-    // if entry has overridesDefaultSpanFrom AND getTagKeys() - we pick only the latter
-    // if entry has overridesDefaultSpanFrom AND getAdditionalTagKeys() - we pick both
+    // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
+    // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
     private void addTagsFromOverride(Path file, MetricEntry entry) throws IOException {
         Map.Entry<String, String> overrideDefaults = entry.overridesDefaultMetricFrom;
         logger.info("Reading additional meta data from [" + overrideDefaults + "]");
@@ -135,9 +135,9 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 if (!enumConstant.getName().equals(overrideDefaults.getValue())) {
                     continue;
                 }
-                Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityTagKeys");
+                Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
                 if (low != null) {
-                    entry.lowCardinalityTagKeys.addAll(low);
+                    entry.lowCardinalityKeyNames.addAll(low);
                 }
             }
         }
@@ -166,11 +166,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
-            else if ("getLowCardinalityTagKeys".equals(methodName) || "getTagKeys".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getLowCardinalityKeyNames".equals(methodName) || "getKeyNames".equals(methodName)) {
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
-            else if ("getHighCardinalityTagKeys".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getHighCardinalityKeyNames".equals(methodName)) {
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);

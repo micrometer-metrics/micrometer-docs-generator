@@ -25,7 +25,7 @@ import io.micrometer.docs.spans.DocsFromSources;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
 
-class TagsFromTagKeysDocsFromSourcesTests {
+class TagsFromKeyNamesDocsFromSourcesTests {
 
     @Test
     void should_take_tags_from_tag_keys() throws IOException {

@@ -73,9 +73,9 @@ public class DocsFromSources {
             logger.info("Summary of sources analysis");
             logger.info("Found [" + entries.size() + "] samples");
             logger.info(
-                    "Found [" + entries.stream().flatMap(e -> e.lowCardinalityTagKeys.stream()).distinct().count() + "] low cardinality tags");
+                    "Found [" + entries.stream().flatMap(e -> e.lowCardinalityKeyNames.stream()).distinct().count() + "] low cardinality tags");
             logger.info(
-                    "Found [" + entries.stream().flatMap(e -> e.highCardinalityTagKeys.stream()).distinct().count() + "] high cardinality tags");
+                    "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
             stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
             entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
             Files.write(output, stringBuilder.toString().getBytes());

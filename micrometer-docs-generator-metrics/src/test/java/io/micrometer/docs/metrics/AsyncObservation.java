@@ -17,7 +17,7 @@
 package io.micrometer.docs.metrics;
 
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum AsyncObservation implements DocumentedObservation {
@@ -32,7 +32,7 @@ enum AsyncObservation implements DocumentedObservation {
         }
 
         @Override
-        public TagKey[] getLowCardinalityTagKeys() {
+        public KeyName[] getLowCardinalityKeyNames() {
             return AsyncSpanTags.values();
         }
 
@@ -48,20 +48,20 @@ enum AsyncObservation implements DocumentedObservation {
         }
 
         @Override
-        public TagKey[] getLowCardinalityTagKeys() {
-            return TagKey.merge(TestSpanTags.values(), AsyncSpanTags.values());
+        public KeyName[] getLowCardinalityKeyNames() {
+            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
         }
 
     };
 
-    enum AsyncSpanTags implements TagKey {
+    enum AsyncSpanTags implements KeyName {
 
         /**
          * Class name where a method got annotated with @Async.
          */
         CLASS {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "class";
             }
         },
@@ -71,21 +71,21 @@ enum AsyncObservation implements DocumentedObservation {
          */
         METHOD {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "method";
             }
         }
 
     }
 
-    enum TestSpanTags implements TagKey {
+    enum TestSpanTags implements KeyName {
 
         /**
          * Test foo
          */
         FOO {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "foooooo";
             }
         }

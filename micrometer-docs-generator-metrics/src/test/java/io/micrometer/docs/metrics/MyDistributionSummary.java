@@ -16,7 +16,7 @@
 
 package io.micrometer.docs.metrics;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.DocumentedMeter;
 
@@ -42,20 +42,20 @@ enum MyDistributionSummary implements DocumentedMeter {
         }
 
         @Override
-        public TagKey[] getTagKeys() {
+        public KeyName[] getKeyNames() {
             return TestSpanTags.values();
         }
 
     };
 
-    enum TestSpanTags implements TagKey {
+    enum TestSpanTags implements KeyName {
 
         /**
          * Test bar.
          */
         BAR {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "baaaar";
             }
         }

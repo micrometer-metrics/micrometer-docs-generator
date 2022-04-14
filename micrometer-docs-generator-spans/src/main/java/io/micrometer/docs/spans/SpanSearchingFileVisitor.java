@@ -33,7 +33,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
@@ -90,8 +90,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                     if (entry.overridesDefaultSpanFrom != null && entry.tagKeys.isEmpty()) {
                         addTagsFromOverride(file, entry);
                     }
-                    if (!entry.additionalTagKeys.isEmpty()) {
-                        entry.tagKeys.addAll(entry.additionalTagKeys);
+                    if (!entry.additionalKeyNames.isEmpty()) {
+                        entry.tagKeys.addAll(entry.additionalKeyNames);
                     }
                     spanEntries.add(entry);
                     logger.info(
@@ -121,8 +121,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     // if entry has overridesDefaultSpanFrom - read tags from that thing
-    // if entry has overridesDefaultSpanFrom AND getTagKeys() - we pick only the latter
-    // if entry has overridesDefaultSpanFrom AND getAdditionalTagKeys() - we pick both
+    // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
+    // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
     private void addTagsFromOverride(Path file, SpanEntry entry) throws IOException {
         Map.Entry<String, String> overridesDefaultSpanFrom = entry.overridesDefaultSpanFrom;
         logger.info("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
@@ -150,8 +150,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 if (!enumConstant.getName().equals(overridesDefaultSpanFrom.getValue())) {
                     continue;
                 }
-                Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityTagKeys");
-                Collection<KeyValueEntry> high = ParsingUtils.getTags(enumConstant, myEnum, "getHighCardinalityTagKeys");
+                Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
+                Collection<KeyValueEntry> high = ParsingUtils.getTags(enumConstant, myEnum, "getHighCardinalityKeyNames");
                 if (low != null) {
                     entry.tagKeys.addAll(low);
                 }
@@ -172,7 +172,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String description = enumConstant.getJavaDoc().getText();
         String prefix = "";
         Collection<KeyValueEntry> tags = new TreeSet<>();
-        Collection<KeyValueEntry> additionalTagKeys = new TreeSet<>();
+        Collection<KeyValueEntry> additionalKeyNames = new TreeSet<>();
         Collection<KeyValueEntry> events = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultSpanFrom = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
@@ -188,17 +188,17 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             else if ("getContextualName".equals(methodName)) {
                 contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
-            else if ("getTagKeys".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getKeyNames".equals(methodName)) {
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
-            else if ("getLowCardinalityTagKeys".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getLowCardinalityKeyNames".equals(methodName)) {
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
-            else if ("getHighCardinalityTagKeys".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getHighCardinalityKeyNames".equals(methodName)) {
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
-            else if ("getAdditionalTagKeys".equals(methodName)) {
-                additionalTagKeys.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+            else if ("getAdditionalKeyNames".equals(methodName)) {
+                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
             else if ("getEvents".equals(methodName)) {
                 events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
@@ -211,7 +211,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
         }
         return new SpanEntry(contextualName != null ? contextualName : name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
-                additionalTagKeys, events, overridesDefaultSpanFrom);
+                additionalKeyNames, events, overridesDefaultSpanFrom);
     }
 
 }

@@ -17,7 +17,7 @@
 package io.micrometer.docs.spans.test1;
 
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum ParentSample implements DocumentedObservation {
@@ -37,12 +37,12 @@ enum ParentSample implements DocumentedObservation {
         }
 
         @Override
-        public TagKey[] getLowCardinalityTagKeys() {
+        public KeyName[] getLowCardinalityKeyNames() {
             return Tags.values();
         }
 
         @Override
-        public TagKey[] getHighCardinalityTagKeys() {
+        public KeyName[] getHighCardinalityKeyNames() {
             return Tags2.values();
         }
 
@@ -51,14 +51,14 @@ enum ParentSample implements DocumentedObservation {
     /**
      * Low cardinality tags.
      */
-    enum Tags implements TagKey {
+    enum Tags implements KeyName {
 
         /**
          * Class name where a method got annotated with a annotation.
          */
         CLASS {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "parent.class";
             }
         },
@@ -68,7 +68,7 @@ enum ParentSample implements DocumentedObservation {
          */
         METHOD {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "parent.method";
             }
         }
@@ -78,14 +78,14 @@ enum ParentSample implements DocumentedObservation {
     /**
      * High cardinality tags.
      */
-    enum Tags2 implements TagKey {
+    enum Tags2 implements KeyName {
 
         /**
          * Class name where a method got annotated with a annotation.
          */
         CLASS2 {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "class2";
             }
         },
@@ -95,7 +95,7 @@ enum ParentSample implements DocumentedObservation {
          */
         METHOD2 {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "method2";
             }
         }
