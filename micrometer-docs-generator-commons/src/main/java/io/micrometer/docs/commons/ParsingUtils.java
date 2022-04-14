@@ -25,7 +25,7 @@ import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
@@ -97,7 +97,7 @@ public class ParsingUtils {
         MethodInvocation methodInvocation = (MethodInvocation) expression;
         if ("merge".equals(methodInvocation.getName().getIdentifier())) {
             // TODO: There must be a better way to do this...
-            // TagKey.merge(TestSpanTags.values(),AsyncSpanTags.values())
+            // KeyName.merge(TestSpanTags.values(),AsyncSpanTags.values())
             String invocationString = methodInvocation.toString();
             Matcher matcher = Pattern.compile("([a-zA-Z]+.values)").matcher(invocationString);
             Collection<String> classNames = new TreeSet<>();
@@ -109,7 +109,7 @@ public class ParsingUtils {
         }
         else if (!methodInvocation.toString().endsWith(".values()")) {
             throw new IllegalStateException("You have to use the static .values() method on the enum that implements "
-                    + TagKey.class + " interface or use [TagKey.merge(...)] method to merge multiple values from tags");
+                    + KeyName.class + " interface or use [KeyName.merge(...)] method to merge multiple values from tags");
         }
         // will return Tags
         return Collections.singletonList(methodInvocation.getExpression().toString());
@@ -210,7 +210,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, TagKey.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
         }
         return tags;

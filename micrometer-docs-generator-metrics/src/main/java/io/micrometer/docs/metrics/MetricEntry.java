@@ -47,13 +47,13 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Meter.Type type;
 
-    final Collection<KeyValueEntry> lowCardinalityTagKeys;
+    final Collection<KeyValueEntry> lowCardinalityKeyNames;
 
-    final Collection<KeyValueEntry> highCardinalityTagKeys;
+    final Collection<KeyValueEntry> highCardinalityKeyNames;
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    MetricEntry(String name, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityTagKeys, Collection<KeyValueEntry> highCardinalityTagKeys, Map.Entry<String, String> overridesDefaultMetricFrom) {
+    MetricEntry(String name, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
         Assert.hasText(name, "Observation / Meter name must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         Assert.hasText(description, "Observation / Meter description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
@@ -63,8 +63,8 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.prefix = prefix;
         this.baseUnit = StringUtils.hasText(baseUnit) ? baseUnit : meterType == Meter.Type.TIMER ? "seconds" : "";
         this.type = meterType;
-        this.lowCardinalityTagKeys = lowCardinalityTagKeys;
-        this.highCardinalityTagKeys = highCardinalityTagKeys;
+        this.lowCardinalityKeyNames = lowCardinalityKeyNames;
+        this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.overridesDefaultMetricFrom = overridesDefaultMetricFrom;
 
     }
@@ -83,8 +83,8 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (!StringUtils.hasText(this.prefix)) {
             return null;
         }
-        List<KeyValueEntry> allTags = new ArrayList<>(this.lowCardinalityTagKeys);
-        allTags.addAll(this.highCardinalityTagKeys);
+        List<KeyValueEntry> allTags = new ArrayList<>(this.lowCardinalityKeyNames);
+        allTags.addAll(this.highCardinalityKeyNames);
         List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
         if (collect.isEmpty()) {
             return null;
@@ -101,12 +101,12 @@ class MetricEntry implements Comparable<MetricEntry> {
             return false;
         }
         MetricEntry that = (MetricEntry) o;
-        return Objects.equals(name, that.name) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(baseUnit, that.baseUnit) && type == that.type && Objects.equals(lowCardinalityTagKeys, that.lowCardinalityTagKeys) && Objects.equals(highCardinalityTagKeys, that.highCardinalityTagKeys) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
+        return Objects.equals(name, that.name) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(baseUnit, that.baseUnit) && type == that.type && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, enclosingClass, enumName, description, prefix, baseUnit, type, lowCardinalityTagKeys, highCardinalityTagKeys, overridesDefaultMetricFrom);
+        return Objects.hash(name, enclosingClass, enumName, description, prefix, baseUnit, type, lowCardinalityKeyNames, highCardinalityKeyNames, overridesDefaultMetricFrom);
     }
 
     @Override
@@ -138,14 +138,14 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (StringUtils.hasText(prefix)) {
             text.append("\n\nIMPORTANT: All tags must be prefixed with `").append(this.prefix).append("` prefix!");
         }
-        if (!lowCardinalityTagKeys.isEmpty()) {
+        if (!lowCardinalityKeyNames.isEmpty()) {
             text.append("\n\n.Low cardinality Keys\n|===\n|Name | Description\n")
-                    .append(this.lowCardinalityTagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+                    .append(this.lowCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }
-        if (!highCardinalityTagKeys.isEmpty()) {
+        if (!highCardinalityKeyNames.isEmpty()) {
             text.append("\n\n.High cardinality Keys\n|===\n|Name | Description\n")
-                    .append(this.highCardinalityTagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+                    .append(this.highCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }
         return text.toString();

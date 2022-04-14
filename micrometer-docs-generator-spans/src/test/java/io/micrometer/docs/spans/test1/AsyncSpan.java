@@ -17,7 +17,7 @@
 package io.micrometer.docs.spans.test1;
 
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.tracing.docs.DocumentedSpan;
 
 enum AsyncSpan implements DocumentedSpan {
@@ -33,7 +33,7 @@ enum AsyncSpan implements DocumentedSpan {
         }
 
         @Override
-        public TagKey[] getTagKeys() {
+        public KeyName[] getKeyNames() {
             return AsyncSpanTags.values();
         }
 
@@ -49,20 +49,20 @@ enum AsyncSpan implements DocumentedSpan {
         }
 
         @Override
-        public TagKey[] getTagKeys() {
-            return TagKey.merge(TestSpanTags.values(), AsyncSpanTags.values());
+        public KeyName[] getKeyNames() {
+            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
         }
 
     };
 
-    enum AsyncSpanTags implements TagKey {
+    enum AsyncSpanTags implements KeyName {
 
         /**
          * Class name where a method got annotated with @Async.
          */
         CLASS {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "class";
             }
         },
@@ -72,21 +72,21 @@ enum AsyncSpan implements DocumentedSpan {
          */
         METHOD {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "method";
             }
         }
 
     }
 
-    enum TestSpanTags implements TagKey {
+    enum TestSpanTags implements KeyName {
 
         /**
          * Test foo
          */
         FOO {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "foooooo";
             }
         }

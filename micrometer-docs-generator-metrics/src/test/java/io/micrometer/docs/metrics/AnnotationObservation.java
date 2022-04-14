@@ -16,7 +16,7 @@
 
 package io.micrometer.docs.metrics;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 ;
@@ -33,12 +33,12 @@ enum AnnotationObservation implements DocumentedObservation {
         }
 
         @Override
-        public TagKey[] getLowCardinalityTagKeys() {
+        public KeyName[] getLowCardinalityKeyNames() {
             return Tags.values();
         }
 
         @Override
-        public TagKey[] getHighCardinalityTagKeys() {
+        public KeyName[] getHighCardinalityKeyNames() {
             return Tags2.values();
         }
 
@@ -47,14 +47,14 @@ enum AnnotationObservation implements DocumentedObservation {
     /**
      * Low cardinality tags.
      */
-    enum Tags implements TagKey {
+    enum Tags implements KeyName {
 
         /**
          * Class name where a method got annotated.
          */
         CLASS {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "class";
             }
         },
@@ -64,7 +64,7 @@ enum AnnotationObservation implements DocumentedObservation {
          */
         METHOD {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "method";
             }
         }
@@ -74,14 +74,14 @@ enum AnnotationObservation implements DocumentedObservation {
     /**
      * High cardinality tags.
      */
-    enum Tags2 implements TagKey {
+    enum Tags2 implements KeyName {
 
         /**
          * Class name where a method got annotated.
          */
         CLASS2 {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "class2";
             }
         },
@@ -91,7 +91,7 @@ enum AnnotationObservation implements DocumentedObservation {
          */
         METHOD2 {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "method2";
             }
         }

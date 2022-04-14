@@ -16,7 +16,7 @@
 
 package io.micrometer.docs.spans.test1;
 
-import io.micrometer.common.docs.TagKey;
+import io.micrometer.common.docs.KeyName;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
 
@@ -32,7 +32,7 @@ enum AnnotationSpan implements DocumentedSpan {
         }
 
         @Override
-        public TagKey[] getTagKeys() {
+        public KeyName[] getKeyNames() {
             return Tags.values();
         }
 
@@ -49,14 +49,14 @@ enum AnnotationSpan implements DocumentedSpan {
      * @author Marcin Grzejszczak
      * @since 3.0.3
      */
-    enum Tags implements TagKey {
+    enum Tags implements KeyName {
 
         /**
          * Class name where a method got annotated with a annotation.
          */
         CLASS {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "class";
             }
         },
@@ -66,7 +66,7 @@ enum AnnotationSpan implements DocumentedSpan {
          */
         METHOD {
             @Override
-            public String getKey() {
+            public String getKeyName() {
                 return "method";
             }
         }
