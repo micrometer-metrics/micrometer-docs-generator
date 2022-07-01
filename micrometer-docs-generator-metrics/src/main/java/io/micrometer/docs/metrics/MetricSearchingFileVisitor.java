@@ -38,6 +38,8 @@ import io.micrometer.core.util.internal.logging.InternalLogger;
 import io.micrometer.core.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
+import io.micrometer.docs.commons.utils.ClassUtils;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -83,7 +85,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                MetricEntry entry = parseMetric(enumConstant, myEnum);
+                MetricEntry entry = parseMetric(file, enumConstant, myEnum);
                 if (entry != null) {
                     sampleEntries.add(entry);
                     logger.info(
@@ -143,7 +145,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
-    private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
+    private MetricEntry parseMetric(Path file, EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return null;
@@ -156,6 +158,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collection<KeyValueEntry> lowCardinalityTags = new TreeSet<>();
         Collection<KeyValueEntry> highCardinalityTags = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
+        Class<? extends Observation.ObservationConvention<?>> conventionClass = null;
+        String nameFromConventionClass = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -165,6 +169,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             String methodName = methodDeclaration.getName().getIdentifier();
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
+            else if ("getDefaultConvention".equals(methodName)) {
+                String fqn = ParsingUtils.readClass(methodDeclaration);
+                conventionClass = ClassUtils.clazz(fqn);
+                nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
             else if ("getLowCardinalityKeyNames".equals(methodName) || "getKeyNames".equals(methodName)) {
                 lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
@@ -188,7 +197,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
         }
-        return new MetricEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
+        return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
                 highCardinalityTags, overridesDefaultMetricFrom);
     }
 

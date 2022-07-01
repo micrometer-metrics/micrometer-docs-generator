@@ -30,10 +30,15 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
+import io.micrometer.observation.Observation;
 
 class MetricEntry implements Comparable<MetricEntry> {
 
     final String name;
+
+    final Class<? extends Observation.ObservationConvention<?>> conventionClass;
+
+    final String nameFromConventionClass;
 
     final String enclosingClass;
 
@@ -53,10 +58,12 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    MetricEntry(String name, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
+    MetricEntry(String name, Class<? extends Observation.ObservationConvention<?>> conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
         Assert.hasText(name, "Observation / Meter name must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         Assert.hasText(description, "Observation / Meter description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
+        this.conventionClass = conventionClass;
+        this.nameFromConventionClass = nameFromConventionClass;
         this.enclosingClass = enclosingClass;
         this.enumName = enumName;
         this.description = description;
@@ -66,7 +73,11 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.lowCardinalityKeyNames = lowCardinalityKeyNames;
         this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.overridesDefaultMetricFrom = overridesDefaultMetricFrom;
-
+        if (this.name != null && this.conventionClass != null) {
+            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
+        } else if (this.name == null && this.conventionClass == null) {
+            throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
+        }
     }
 
     static void assertThatProperlyPrefixed(Collection<MetricEntry> entries) {

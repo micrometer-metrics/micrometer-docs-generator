@@ -16,7 +16,13 @@
 
 package io.micrometer.docs.commons;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.AbstractMap;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -26,8 +32,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.docs.KeyName;
+import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.observation.Observation;
+import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -36,10 +46,19 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodInvocation;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ReturnStatement;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.StringLiteral;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Type;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TypeLiteral;
+import org.jboss.forge.roaster.model.JavaType;
+import org.jboss.forge.roaster.model.JavaUnit;
+import org.jboss.forge.roaster.model.impl.AbstractJavaSource;
+import org.jboss.forge.roaster.model.impl.JavaClassImpl;
 import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
+import org.jboss.forge.roaster.model.impl.MethodImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
+import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
+import org.jboss.forge.roaster.model.source.MethodSource;
 
 public class ParsingUtils {
 
@@ -66,6 +85,65 @@ public class ParsingUtils {
 
     public static String readStringReturnValue(MethodDeclaration methodDeclaration) {
         return stringFromReturnMethodDeclaration(methodDeclaration);
+    }
+
+    @Nullable
+    public static String tryToReadStringReturnValue(Path file, Class<? extends Observation.ObservationConvention<?>> clazz) {
+        try {
+            return tryToReadNameFromConventionClass(file, clazz);
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static String tryToReadNameFromConventionClass(Path file, Class<?> clazz) {
+        String className = clazz.getName();
+        File parent = file.getParent().toFile();
+        while (!parent.getAbsolutePath().endsWith(File.separator + "java")) { // TODO: Works only for Java
+            parent = parent.getParentFile();
+        }
+        String filePath = new File(parent, className.replace(".", File.separator).substring(0, className.indexOf("$")) + ".java").getAbsolutePath();
+        try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
+            JavaUnit parsedClass = Roaster.parseUnit(streamForOverride);
+            JavaType actualConventionImplementation;
+            if (className.contains("$")) {
+                String actualName = className.substring(className.indexOf("$") + 1);
+                List<AbstractJavaSource> nestedTypes = ((AbstractJavaSource) parsedClass.getGoverningType()).getNestedTypes();
+                Object foundType = nestedTypes.stream().filter(o -> (o).getName().equals(actualName)).findFirst().orElseThrow(() -> new IllegalStateException("Can't find a class with fqb [" + className + "]"));
+                actualConventionImplementation = (JavaType) foundType;
+            } else if (parsedClass instanceof JavaType) {
+                actualConventionImplementation = parsedClass.getGoverningType();
+            } else {
+                return null;
+            }
+            System.out.println(actualConventionImplementation);
+            if (actualConventionImplementation instanceof JavaClassImpl) {
+                List<String> interfaces = ((JavaClassImpl) actualConventionImplementation).getInterfaces();
+                if (interfaces.stream().noneMatch(s -> s.contains(Observation.ObservationConvention.class.getSimpleName()))) {
+                    return null;
+                }
+                MethodSource<JavaClassSource> name = ((JavaClassImpl) actualConventionImplementation).getMethod("getName");
+                try {
+                    MethodDeclaration methodDeclaration = (MethodDeclaration) Arrays.stream(MethodImpl.class.getDeclaredFields()).filter(f -> f.getName().equals("method")).findFirst().map(f -> {
+                        try {
+                            f.setAccessible(true);
+                            return f.get(name);
+                        }
+                        catch (IllegalAccessException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }).get();
+                    return ParsingUtils.readStringReturnValue(methodDeclaration);
+                } catch (Exception ex) {
+                    return name.toString().replace("return ", "").replace("\"", "");
+                }
+            }
+
+        }
+        catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+        return "";
     }
 
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
@@ -167,6 +245,23 @@ public class ParsingUtils {
         return (T) Enum.valueOf(enumClass, enumName);
     }
 
+    public static String readClass(MethodDeclaration methodDeclaration) {
+        Object statement = methodDeclaration.getBody().statements().get(0);
+        if (!(statement instanceof ReturnStatement)) {
+            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
+            return null;
+        }
+        ReturnStatement returnStatement = (ReturnStatement) statement;
+        Expression expression = returnStatement.getExpression();
+        if (!(expression instanceof TypeLiteral)) {
+            logger.warn("Statement [" + statement.getClass() + "] is not a qualified name.");
+            return null;
+        }
+        TypeLiteral typeLiteral = (TypeLiteral) expression;
+        Type type = typeLiteral.getType();
+        String className = type.toString();
+        return matchingImportStatement(expression, className);
+    }
 
     public static Map.Entry<String, String> readClassToEnum(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
@@ -183,17 +278,42 @@ public class ParsingUtils {
         QualifiedName qualifiedName = (QualifiedName) expression;
         String className = qualifiedName.getQualifier().toString();
         String enumName = qualifiedName.getName().toString();
+        String matchingImportStatement = matchingImportStatement(expression, className);
+        return new AbstractMap.SimpleEntry<>(matchingImportStatement, enumName);
+    }
+
+    private static String matchingImportStatement(Expression expression, String className) {
         CompilationUnit compilationUnit = (CompilationUnit) expression.getRoot();
         List imports = compilationUnit.imports();
+        // Class is in the same package
         String matchingImportStatement = compilationUnit.getPackage().getName().toString() + "." + className;
         for (Object anImport : imports) {
             ImportDeclaration importDeclaration = (ImportDeclaration) anImport;
             String importStatement = importDeclaration.getName().toString();
             if (importStatement.endsWith(className)) {
+                // Class got imported from a different package
                 matchingImportStatement = importStatement;
             }
         }
-        return new AbstractMap.SimpleEntry<>(matchingImportStatement, enumName);
+        return matchingStatementFromInnerClasses(className, compilationUnit, matchingImportStatement);
+    }
+
+    private static String matchingStatementFromInnerClasses(String className, CompilationUnit compilationUnit, String matchingImportStatement) {
+        for (Object type : compilationUnit.types()) {
+            if (!(type instanceof AbstractTypeDeclaration)) {
+                continue;
+            }
+            AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) type;
+            List declarations = typeDeclaration.bodyDeclarations();
+            for (Object declaration : declarations) {
+                AbstractTypeDeclaration childDeclaration = (AbstractTypeDeclaration) declaration;
+                if (className.equals(childDeclaration.getName().toString())) {
+                    // Class is an inner class (we support 1 level of such nesting for now - we can do recursion in the future
+                    return compilationUnit.getPackage().getName().toString() + "." + typeDeclaration.getName() + "$" + childDeclaration.getName();
+                }
+            }
+        }
+        return matchingImportStatement;
     }
 
     public static Collection<KeyValueEntry> getTags(EnumConstantSource enumConstant, JavaEnumImpl myEnum, String getterName) {

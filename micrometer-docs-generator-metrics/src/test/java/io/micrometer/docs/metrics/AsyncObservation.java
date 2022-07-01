@@ -18,6 +18,7 @@ package io.micrometer.docs.metrics;
 
 
 import io.micrometer.common.docs.KeyName;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum AsyncObservation implements DocumentedObservation {
@@ -52,7 +53,36 @@ enum AsyncObservation implements DocumentedObservation {
             return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
         }
 
+    },
+
+    /**
+     * FOO.
+     */
+    TEST_WITH_CONVENTION {
+        @Override
+        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+            return MyConvention.class;
+        }
+
+        @Override
+        public KeyName[] getLowCardinalityKeyNames() {
+            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
+        }
+
     };
+
+    static class MyConvention implements Observation.ObservationConvention<Observation.Context> {
+
+        @Override
+        public String getName() {
+            return "name.from.convention";
+        }
+
+        @Override
+        public boolean supportsContext(Observation.Context context) {
+            return true;
+        }
+    }
 
     enum AsyncSpanTags implements KeyName {
 
