@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2020 the original author or authors.
+ * Copyright 2013-2021 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
-package io.micrometer.docs.commons.utils;
+package io.micrometer.docs.spans.conventions;
 
-public final class ClassUtils {
-    public static <T> Class<T> clazz(String fqn) {
-        try {
-            return (Class<T>) Class.forName(fqn);
-        }
-        catch (ClassNotFoundException e) {
-            throw new IllegalStateException(e);
-        }
+import io.micrometer.observation.Observation;
+
+public class DynamicObservationConvention implements Observation.ObservationConvention<Observation.Context> {
+
+    @Override
+    public String getName() {
+        return "A" + "foo" + "B";
+    }
+
+    @Override
+    public boolean supportsContext(Observation.Context context) {
+        return context instanceof Observation.Context;
     }
 }

@@ -38,8 +38,6 @@ import io.micrometer.core.util.internal.logging.InternalLogger;
 import io.micrometer.core.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
-import io.micrometer.docs.commons.utils.ClassUtils;
-import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -158,7 +156,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collection<KeyValueEntry> lowCardinalityTags = new TreeSet<>();
         Collection<KeyValueEntry> highCardinalityTags = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
-        Class<? extends Observation.ObservationConvention<?>> conventionClass = null;
+        String conventionClass = null;
         String nameFromConventionClass = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
@@ -171,8 +169,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getDefaultConvention".equals(methodName)) {
-                String fqn = ParsingUtils.readClass(methodDeclaration);
-                conventionClass = ClassUtils.clazz(fqn);
+                conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
             else if ("getLowCardinalityKeyNames".equals(methodName) || "getKeyNames".equals(methodName)) {

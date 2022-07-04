@@ -40,7 +40,10 @@ class DocsFromSourcesTests {
                 .contains("|`class2`|Class name where a method got annotated.")
                 .contains("==== Annotation New Or Continue")
                 .contains("**Metric name** `my distribution`. **Type** `distribution summary` and **base unit** `bytes`")
-                .contains("**Metric name** `my other distribution`. **Type** `distribution summary`.");
+                .contains("**Metric name** `my other distribution`. **Type** `distribution summary`.")
+                .contains("**Metric name** `name.from.convention` (defined by convention class `io.micrometer.docs.metrics.AsyncObservation$MyConvention`).")
+                .contains("**Metric name** `foo` (defined by convention class `io.micrometer.docs.metrics.PublicObservationConvention`)")
+                .contains("**Metric name** Unable to resolve the name - please check the convention class `io.micrometer.docs.metrics.AsyncObservation$MyDynamicConvention`");
     }
 
 }

@@ -34,6 +34,10 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final String name;
 
+    final String conventionClass;
+
+    final String nameFromConventionClass;
+
     final String enclosingClass;
 
     final String enumName;
@@ -50,10 +54,11 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final Map.Entry<String, String> overridesDefaultSpanFrom;
 
-    SpanEntry(String name, String enclosingClass, String enumName, String description, String prefix,
+    SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
             Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> additionalKeyNames, Collection<KeyValueEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
-        Assert.hasText(name, "Span name must not be empty");
         Assert.hasText(description, "Span description must not be empty");
+        this.conventionClass = conventionClass;
+        this.nameFromConventionClass = nameFromConventionClass;
         this.name = name;
         this.enclosingClass = enclosingClass;
         this.enumName = enumName;
@@ -63,6 +68,11 @@ class SpanEntry implements Comparable<SpanEntry> {
         this.additionalKeyNames = additionalKeyNames;
         this.events = events;
         this.overridesDefaultSpanFrom = overridesDefaultSpanFrom;
+        if (StringUtils.hasText(this.name) && this.conventionClass != null) {
+            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
+        } else if (this.name == null && this.conventionClass == null) {
+            throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
+        }
     }
 
     static void assertThatProperlyPrefixed(Collection<SpanEntry> entries) {
@@ -88,22 +98,15 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         SpanEntry spanEntry = (SpanEntry) o;
-        return Objects.equals(name, spanEntry.name) && Objects.equals(enclosingClass, spanEntry.enclosingClass)
-                && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description)
-                && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(tagKeys, spanEntry.tagKeys)
-                && Objects.equals(events, spanEntry.events) && Objects.equals(overridesDefaultSpanFrom, spanEntry.overridesDefaultSpanFrom);
+        return Objects.equals(name, spanEntry.name) && Objects.equals(conventionClass, spanEntry.conventionClass) && Objects.equals(nameFromConventionClass, spanEntry.nameFromConventionClass) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(events, spanEntry.events) && Objects.equals(overridesDefaultSpanFrom, spanEntry.overridesDefaultSpanFrom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, enclosingClass, enumName, description, additionalKeyNames, tagKeys, events, overridesDefaultSpanFrom);
+        return Objects.hash(name, conventionClass, nameFromConventionClass, enclosingClass, enumName, description, prefix, tagKeys, additionalKeyNames, events, overridesDefaultSpanFrom);
     }
 
     @Override
@@ -118,9 +121,9 @@ class SpanEntry implements Comparable<SpanEntry> {
         StringBuilder text = new StringBuilder()
                 .append("[[observability-spans-").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
                 .append("==== ")
-                .append(name())
+                .append(spanName())
                 .append("\n\n> ").append(description).append("\n\n")
-                .append("**Span name** `").append(name).append("`");
+                .append("**Span name** ").append(name());
         if (name.contains("%s")) {
             text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
         }
@@ -142,11 +145,20 @@ class SpanEntry implements Comparable<SpanEntry> {
         return text.toString();
     }
 
-    private String name() {
+    private String spanName() {
         String name = Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
         if (!name.toLowerCase(Locale.ROOT).endsWith("span")) {
             return name + " Span";
         }
         return name;
+    }
+
+    private String name() {
+        if (StringUtils.hasText(this.name)) {
+            return "`" + this.name + "`";
+        } else if (StringUtils.hasText(this.nameFromConventionClass)) {
+            return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
+        }
+        return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
     }
 }

@@ -17,7 +17,6 @@
 package io.micrometer.docs.commons;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -53,6 +52,7 @@ import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.impl.AbstractJavaSource;
 import org.jboss.forge.roaster.model.impl.JavaClassImpl;
 import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
+import org.jboss.forge.roaster.model.impl.JavaUnitImpl;
 import org.jboss.forge.roaster.model.impl.MethodImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
@@ -88,7 +88,7 @@ public class ParsingUtils {
     }
 
     @Nullable
-    public static String tryToReadStringReturnValue(Path file, Class<? extends Observation.ObservationConvention<?>> clazz) {
+    public static String tryToReadStringReturnValue(Path file, String clazz) {
         try {
             return tryToReadNameFromConventionClass(file, clazz);
         } catch (Exception ex) {
@@ -96,13 +96,12 @@ public class ParsingUtils {
         }
     }
 
-    private static String tryToReadNameFromConventionClass(Path file, Class<?> clazz) {
-        String className = clazz.getName();
+    private static String tryToReadNameFromConventionClass(Path file, String className) {
         File parent = file.getParent().toFile();
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) { // TODO: Works only for Java
             parent = parent.getParentFile();
         }
-        String filePath = new File(parent, className.replace(".", File.separator).substring(0, className.indexOf("$")) + ".java").getAbsolutePath();
+        String filePath = filePath(className, parent);
         try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
             JavaUnit parsedClass = Roaster.parseUnit(streamForOverride);
             JavaType actualConventionImplementation;
@@ -111,12 +110,11 @@ public class ParsingUtils {
                 List<AbstractJavaSource> nestedTypes = ((AbstractJavaSource) parsedClass.getGoverningType()).getNestedTypes();
                 Object foundType = nestedTypes.stream().filter(o -> (o).getName().equals(actualName)).findFirst().orElseThrow(() -> new IllegalStateException("Can't find a class with fqb [" + className + "]"));
                 actualConventionImplementation = (JavaType) foundType;
-            } else if (parsedClass instanceof JavaType) {
+            } else if (parsedClass instanceof JavaUnitImpl) {
                 actualConventionImplementation = parsedClass.getGoverningType();
             } else {
                 return null;
             }
-            System.out.println(actualConventionImplementation);
             if (actualConventionImplementation instanceof JavaClassImpl) {
                 List<String> interfaces = ((JavaClassImpl) actualConventionImplementation).getInterfaces();
                 if (interfaces.stream().noneMatch(s -> s.contains(Observation.ObservationConvention.class.getSimpleName()))) {
@@ -144,6 +142,13 @@ public class ParsingUtils {
             throw new RuntimeException(e);
         }
         return "";
+    }
+
+    private static String filePath(String className, File parent) {
+        if (className.contains("$")) {
+            return new File(parent, className.replace(".", File.separator).substring(0, className.indexOf("$")) + ".java").getAbsolutePath();
+        }
+        return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,

@@ -30,13 +30,12 @@ import io.micrometer.core.instrument.Meter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
-import io.micrometer.observation.Observation;
 
 class MetricEntry implements Comparable<MetricEntry> {
 
     final String name;
 
-    final Class<? extends Observation.ObservationConvention<?>> conventionClass;
+    final String conventionClass;
 
     final String nameFromConventionClass;
 
@@ -58,8 +57,7 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    MetricEntry(String name, Class<? extends Observation.ObservationConvention<?>> conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
-        Assert.hasText(name, "Observation / Meter name must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
+    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
         Assert.hasText(description, "Observation / Meter description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
@@ -73,9 +71,10 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.lowCardinalityKeyNames = lowCardinalityKeyNames;
         this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.overridesDefaultMetricFrom = overridesDefaultMetricFrom;
-        if (this.name != null && this.conventionClass != null) {
+        if (StringUtils.hasText(this.name) && this.conventionClass != null) {
             throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
-        } else if (this.name == null && this.conventionClass == null) {
+        }
+        else if (this.name == null && this.conventionClass == null) {
             throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
         }
     }
@@ -105,19 +104,15 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         MetricEntry that = (MetricEntry) o;
-        return Objects.equals(name, that.name) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(baseUnit, that.baseUnit) && type == that.type && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
+        return Objects.equals(name, that.name) && Objects.equals(conventionClass, that.conventionClass) && Objects.equals(nameFromConventionClass, that.nameFromConventionClass) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(baseUnit, that.baseUnit) && type == that.type && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, enclosingClass, enumName, description, prefix, baseUnit, type, lowCardinalityKeyNames, highCardinalityKeyNames, overridesDefaultMetricFrom);
+        return Objects.hash(name, conventionClass, nameFromConventionClass, enclosingClass, enumName, description, prefix, baseUnit, type, lowCardinalityKeyNames, highCardinalityKeyNames, overridesDefaultMetricFrom);
     }
 
     @Override
@@ -134,7 +129,7 @@ class MetricEntry implements Comparable<MetricEntry> {
                 .append("==== ")
                 .append(displayName)
                 .append("\n\n> ").append(description).append("\n\n")
-                .append("**Metric name** `").append(this.name).append("`");
+                .append("**Metric name** ").append(name());
         if (this.name.contains("%s")) {
             text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
         }
@@ -160,6 +155,16 @@ class MetricEntry implements Comparable<MetricEntry> {
                     .append("\n|===");
         }
         return text.toString();
+    }
+
+    private String name() {
+        if (StringUtils.hasText(this.name)) {
+            return "`" + this.name + "`";
+        }
+        else if (StringUtils.hasText(this.nameFromConventionClass)) {
+            return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
+        }
+        return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
     }
 
 }

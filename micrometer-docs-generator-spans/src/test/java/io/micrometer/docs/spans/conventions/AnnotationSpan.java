@@ -14,67 +14,18 @@
  * limitations under the License.
  */
 
-package io.micrometer.docs.metrics;
-
+package io.micrometer.docs.spans.conventions;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 
-enum AsyncObservation implements DocumentedObservation {
+enum AnnotationSpan implements DocumentedObservation {
 
     /**
-     * Observation that wraps a @Async annotation.
+     * Observation that wraps annotations.
      */
-    ASYNC_ANNOTATION {
-        @Override
-        public String getName() {
-            return "%s";
-        }
-
-        @Override
-        public KeyName[] getLowCardinalityKeyNames() {
-            return AsyncSpanTags.values();
-        }
-
-    },
-
-    /**
-     * FOO.
-     */
-    TEST {
-        @Override
-        public String getName() {
-            return "fixed";
-        }
-
-        @Override
-        public KeyName[] getLowCardinalityKeyNames() {
-            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
-        }
-
-    },
-
-    /**
-     * FOO.
-     */
-    TEST_WITH_CONVENTION {
-        @Override
-        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
-            return MyConvention.class;
-        }
-
-        @Override
-        public KeyName[] getLowCardinalityKeyNames() {
-            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
-        }
-
-    },
-
-    /**
-     * FOO2.
-     */
-    TEST_WITH_CONVENTION_2 {
+    PUBLIC_CONVENTION {
         @Override
         public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return PublicObservationConvention.class;
@@ -82,57 +33,78 @@ enum AsyncObservation implements DocumentedObservation {
 
         @Override
         public KeyName[] getLowCardinalityKeyNames() {
-            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
+            return Tags.values();
+        }
+
+        @Override
+        public KeyName[] getHighCardinalityKeyNames() {
+            return Tags2.values();
         }
 
     },
 
     /**
-     * FOO23
+     * Observation that wraps annotations.
      */
-    TEST_WITH_CONVENTION_3 {
+    NESTED_CONVENTION {
         @Override
         public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
-            return MyDynamicConvention.class;
+            return NestedConvention.class;
         }
 
         @Override
         public KeyName[] getLowCardinalityKeyNames() {
-            return KeyName.merge(TestSpanTags.values(), AsyncSpanTags.values());
+            return Tags.values();
+        }
+
+        @Override
+        public KeyName[] getHighCardinalityKeyNames() {
+            return Tags2.values();
+        }
+
+    },
+
+    /**
+     * Observation that wraps annotations.
+     */
+    DYNAMIC_CONVENTION {
+        @Override
+        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+            return DynamicObservationConvention.class;
+        }
+
+        @Override
+        public KeyName[] getLowCardinalityKeyNames() {
+            return Tags.values();
+        }
+
+        @Override
+        public KeyName[] getHighCardinalityKeyNames() {
+            return Tags2.values();
         }
 
     };
 
-    static class MyConvention implements Observation.ObservationConvention<Observation.Context> {
+    static class NestedConvention implements Observation.ObservationConvention<Observation.Context> {
 
         @Override
         public String getName() {
-            return "name.from.convention";
+            return "nested convention";
         }
 
         @Override
         public boolean supportsContext(Observation.Context context) {
-            return true;
+            return false;
         }
     }
 
-    static class MyDynamicConvention implements Observation.ObservationConvention<Observation.Context> {
-
-        @Override
-        public String getName() {
-            return "A" + "name.from.convention" + "C";
-        }
-
-        @Override
-        public boolean supportsContext(Observation.Context context) {
-            return true;
-        }
-    }
-
-    enum AsyncSpanTags implements KeyName {
+    /**
+     * Low cardinality tags.
+     */
+    enum Tags implements KeyName {
 
         /**
-         * Class name where a method got annotated with @Async.
+         * Class name where a method got annotated with a annotation.
          */
         CLASS {
             @Override
@@ -142,7 +114,7 @@ enum AsyncObservation implements DocumentedObservation {
         },
 
         /**
-         * Method name that got annotated with @Async.
+         * Method name that got annotated with annotation.
          */
         METHOD {
             @Override
@@ -153,15 +125,28 @@ enum AsyncObservation implements DocumentedObservation {
 
     }
 
-    enum TestSpanTags implements KeyName {
+    /**
+     * High cardinality tags.
+     */
+    enum Tags2 implements KeyName {
 
         /**
-         * Test foo
+         * Class name where a method got annotated with a annotation.
          */
-        FOO {
+        CLASS2 {
             @Override
             public String getKeyName() {
-                return "foooooo";
+                return "class2";
+            }
+        },
+
+        /**
+         * Method name that got annotated with annotation.
+         */
+        METHOD2 {
+            @Override
+            public String getKeyName() {
+                return "method2";
             }
         }
 
