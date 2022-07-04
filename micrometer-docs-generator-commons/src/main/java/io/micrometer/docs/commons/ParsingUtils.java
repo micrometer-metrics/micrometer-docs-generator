@@ -54,7 +54,7 @@ public class ParsingUtils {
         if (!myEnum.getInterfaces().contains(requiredClass.getCanonicalName())) {
             return;
         }
-        logger.info("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
+        logger.debug("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
         if (myEnum.getEnumConstants().size() == 0) {
             return;
         }

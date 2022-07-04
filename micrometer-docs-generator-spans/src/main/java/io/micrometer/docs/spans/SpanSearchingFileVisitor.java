@@ -80,7 +80,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if (Stream.of(DocumentedSpan.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
-            logger.info("Checking [" + myEnum.getName() + "]");
+            logger.debug("Checking [" + myEnum.getName() + "]");
             if (myEnum.getEnumConstants().size() == 0) {
                 return FileVisitResult.CONTINUE;
             }
@@ -94,7 +94,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                         entry.tagKeys.addAll(entry.additionalKeyNames);
                     }
                     spanEntries.add(entry);
-                    logger.info(
+                    logger.debug(
                             "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
                 }
             }
@@ -114,7 +114,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 .filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT))))
                 .collect(Collectors.toList());
         if (!spansToRemove.isEmpty()) {
-            logger.info("Will remove the span entries <" + spansToRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
+            logger.debug("Will remove the span entries <" + spansToRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
         }
         spanEntries.removeAll(spansToRemove);
         return FileVisitResult.CONTINUE;
@@ -125,7 +125,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
     // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
     private void addTagsFromOverride(Path file, SpanEntry entry) throws IOException {
         Map.Entry<String, String> overridesDefaultSpanFrom = entry.overridesDefaultSpanFrom;
-        logger.info("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
+        logger.debug("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
         String className = overridesDefaultSpanFrom.getKey();
         File parent = file.getParent().toFile();
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
@@ -142,7 +142,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if (!myEnum.getInterfaces().contains(DocumentedObservation.class.getCanonicalName())) {
                 return;
             }
-            logger.info("Checking [" + myEnum.getName() + "]");
+            logger.debug("Checking [" + myEnum.getName() + "]");
             if (myEnum.getEnumConstants().size() == 0) {
                 return;
             }

@@ -54,7 +54,7 @@ public class DocsFromSources {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        logger.info("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SpanEntry> spanEntries = new TreeSet<>();
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
         try {
@@ -62,12 +62,12 @@ public class DocsFromSources {
             SpanEntry.assertThatProperlyPrefixed(spanEntries);
             Path output = new File(this.outputDir, "_spans.adoc").toPath();
             StringBuilder stringBuilder = new StringBuilder();
-            logger.info("======================================");
-            logger.info("Summary of sources analysis");
-            logger.info("Found [" + spanEntries.size() + "] spans");
-            logger.info(
+            logger.debug("======================================");
+            logger.debug("Summary of sources analysis");
+            logger.debug("Found [" + spanEntries.size() + "] spans");
+            logger.debug(
                     "Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
-            logger.info(
+            logger.debug(
                     "Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
             stringBuilder.append("[[observability-spans]]\n=== Observability - Spans\n\nBelow you can find a list of all spans declared by this project.\n\n");
             spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));

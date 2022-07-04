@@ -78,7 +78,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if (Stream.of(DocumentedMeter.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
-            logger.info("Checking [" + myEnum.getName() + "]");
+            logger.debug("Checking [" + myEnum.getName() + "]");
             if (myEnum.getEnumConstants().size() == 0) {
                 return FileVisitResult.CONTINUE;
             }
@@ -86,7 +86,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 MetricEntry entry = parseMetric(enumConstant, myEnum);
                 if (entry != null) {
                     sampleEntries.add(entry);
-                    logger.info(
+                    logger.debug(
                             "Found [" + entry.lowCardinalityKeyNames.size() + "] low cardinality tags and [" + entry.highCardinalityKeyNames.size() + "] high cardinality tags");
                 }
                 if (entry != null) {
@@ -94,7 +94,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                         addTagsFromOverride(file, entry);
                     }
                     sampleEntries.add(entry);
-                    logger.info(
+                    logger.debug(
                             "Found [" + entry.lowCardinalityKeyNames.size() + "]");
                 }
             }
@@ -110,7 +110,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
     // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
     private void addTagsFromOverride(Path file, MetricEntry entry) throws IOException {
         Map.Entry<String, String> overrideDefaults = entry.overridesDefaultMetricFrom;
-        logger.info("Reading additional meta data from [" + overrideDefaults + "]");
+        logger.debug("Reading additional meta data from [" + overrideDefaults + "]");
         String className = overrideDefaults.getKey();
         File parent = file.getParent().toFile();
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
@@ -127,7 +127,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if (!myEnum.getInterfaces().contains(DocumentedObservation.class.getCanonicalName())) {
                 return;
             }
-            logger.info("Checking [" + myEnum.getName() + "]");
+            logger.debug("Checking [" + myEnum.getName() + "]");
             if (myEnum.getEnumConstants().size() == 0) {
                 return;
             }

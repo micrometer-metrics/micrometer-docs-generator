@@ -55,7 +55,7 @@ public class DocsFromSources {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        logger.info("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<MetricEntry> entries = new TreeSet<>();
         FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries);
         try {
@@ -66,15 +66,15 @@ public class DocsFromSources {
                 file.getParentFile().mkdirs();
                 file.createNewFile();
             }
-            logger.info("Will create files under [" + file + "]");
+            logger.debug("Will create files under [" + file + "]");
             StringBuilder stringBuilder = new StringBuilder();
             Path output = file.toPath();
-            logger.info("======================================");
-            logger.info("Summary of sources analysis");
-            logger.info("Found [" + entries.size() + "] samples");
-            logger.info(
+            logger.debug("======================================");
+            logger.debug("Summary of sources analysis");
+            logger.debug("Found [" + entries.size() + "] samples");
+            logger.debug(
                     "Found [" + entries.stream().flatMap(e -> e.lowCardinalityKeyNames.stream()).distinct().count() + "] low cardinality tags");
-            logger.info(
+            logger.debug(
                     "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
             stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
             entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
