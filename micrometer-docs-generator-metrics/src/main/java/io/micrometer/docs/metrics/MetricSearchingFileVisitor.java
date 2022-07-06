@@ -83,7 +83,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                MetricEntry entry = parseMetric(enumConstant, myEnum);
+                MetricEntry entry = parseMetric(file, enumConstant, myEnum);
                 if (entry != null) {
                     sampleEntries.add(entry);
                     logger.debug(
@@ -143,7 +143,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
-    private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
+    private MetricEntry parseMetric(Path file, EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return null;
@@ -156,6 +156,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collection<KeyValueEntry> lowCardinalityTags = new TreeSet<>();
         Collection<KeyValueEntry> highCardinalityTags = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
+        String conventionClass = null;
+        String nameFromConventionClass = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -165,6 +167,10 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             String methodName = methodDeclaration.getName().getIdentifier();
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
+            else if ("getDefaultConvention".equals(methodName)) {
+                conventionClass = ParsingUtils.readClass(methodDeclaration);
+                nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
             else if ("getLowCardinalityKeyNames".equals(methodName) || "getKeyNames".equals(methodName)) {
                 lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
@@ -188,7 +194,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
         }
-        return new MetricEntry(name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
+        return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
                 highCardinalityTags, overridesDefaultMetricFrom);
     }
 

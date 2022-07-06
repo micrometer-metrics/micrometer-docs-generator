@@ -85,7 +85,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                SpanEntry entry = parseSpan(enumConstant, myEnum);
+                SpanEntry entry = parseSpan(file, enumConstant, myEnum);
                 if (entry != null) {
                     if (entry.overridesDefaultSpanFrom != null && entry.tagKeys.isEmpty()) {
                         addTagsFromOverride(file, entry);
@@ -162,7 +162,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
-    private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
+    private SpanEntry parseSpan(Path file, EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return null;
@@ -175,6 +175,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collection<KeyValueEntry> additionalKeyNames = new TreeSet<>();
         Collection<KeyValueEntry> events = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultSpanFrom = null;
+        String conventionClass = null;
+        String nameFromConventionClass = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -184,6 +186,10 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             String methodName = methodDeclaration.getName().getIdentifier();
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
+            }
+            else if ("getDefaultConvention".equals(methodName)) {
+                conventionClass = ParsingUtils.readClass(methodDeclaration);
+                nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
             else if ("getContextualName".equals(methodName)) {
                 contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
@@ -210,7 +216,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 overridesDefaultSpanFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
         }
-        return new SpanEntry(contextualName != null ? contextualName : name, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
+        return new SpanEntry(contextualName != null ? contextualName : name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 additionalKeyNames, events, overridesDefaultSpanFrom);
     }
 
