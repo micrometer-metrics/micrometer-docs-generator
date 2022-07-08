@@ -5,7 +5,7 @@ plugins {
 dependencies {
 	api project(':micrometer-docs-generator-commons')
 	api 'io.micrometer:micrometer-observation'
-	api 'io.micrometer:micrometer-tracing-api'
+	api 'io.micrometer:micrometer-tracing'
 	api 'org.jboss.forge.roaster:roaster-api'
 	api 'org.jboss.forge.roaster:roaster-jdt'
 
