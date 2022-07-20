@@ -8,6 +8,8 @@
 
 Generating adoc tables for metrics and spans.
 
+IMPORTANT: This project is in an incubating stage.
+
 ## Join the discussion
 
 Join the [Micrometer Slack](https://slack.micrometer.io) to share your questions, concerns, and feature requests.
