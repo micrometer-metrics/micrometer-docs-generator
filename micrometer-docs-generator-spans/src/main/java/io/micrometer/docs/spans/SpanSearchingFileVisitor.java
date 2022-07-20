@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.TreeSet;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,7 +38,9 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
@@ -45,6 +48,7 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
+import org.jboss.forge.roaster.model.impl.JavaClassImpl;
 import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
@@ -57,9 +61,12 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     private final Collection<SpanEntry> spanEntries;
 
-    SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries) {
+    private final Collection<ObservationConventionEntry> observationConventionEntries;
+
+    SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries, Collection<ObservationConventionEntry> observationConventionEntries) {
         this.pattern = pattern;
         this.spanEntries = spanEntries;
+        this.observationConventionEntries = observationConventionEntries;
     }
 
     @Override
@@ -74,10 +81,22 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             JavaUnit unit = Roaster.parseUnit(stream);
             JavaType myClass = unit.getGoverningType();
             if (!(myClass instanceof JavaEnumImpl)) {
+                if (myClass instanceof JavaClassImpl) {
+                    Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
+                    JavaClassImpl holder = (JavaClassImpl) myClass;
+                    for (String anInterface : holder.getInterfaces()) {
+                        if (isGlobalObservationConvention(anInterface)) {
+                            this.observationConventionEntries.add(new ObservationConventionEntry(unit.getGoverningType().getCanonicalName(), ObservationConventionEntry.Type.GLOBAL, contextClassName(classPattern, anInterface)));
+                        } else if (isLocalObservationConvention(anInterface)) {
+                            this.observationConventionEntries.add(new ObservationConventionEntry(unit.getGoverningType().getCanonicalName(), ObservationConventionEntry.Type.LOCAL, contextClassName(classPattern, anInterface)));
+                        }
+                    }
+                    return FileVisitResult.CONTINUE;
+                }
                 return FileVisitResult.CONTINUE;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-            if (Stream.of(DocumentedSpan.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
+            if (Stream.of(DocumentedSpan.class.getName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
             logger.debug("Checking [" + myEnum.getName() + "]");
@@ -103,6 +122,24 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             logger.error("Failed to parse file [" + file + "] due to an error", e);
         }
         return FileVisitResult.CONTINUE;
+    }
+
+    private String contextClassName(Pattern classPattern, String anInterface) {
+        Matcher matcher = classPattern.matcher(anInterface);
+        if (matcher.matches()) {
+            return matcher.group(1);
+        }
+        if (!anInterface.contains("<") && !anInterface.contains(">")) {
+            return "n/a";
+        }
+        return "";
+    }
+
+    private boolean isLocalObservationConvention(String interf) {
+        return interf.contains(Observation.ObservationConvention.class.getSimpleName()) || interf.contains(Observation.ObservationConvention.class.getCanonicalName());
+    }
+    private boolean isGlobalObservationConvention(String interf) {
+        return interf.contains(Observation.GlobalObservationConvention.class.getSimpleName()) || interf.contains(Observation.GlobalObservationConvention.class.getCanonicalName());
     }
 
     @Override

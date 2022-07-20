@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import io.micrometer.core.util.internal.logging.InternalLogger;
 import io.micrometer.core.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.ObservationConventionEntry;
 
 // TODO: Assert on prefixes
 public class DocsFromSources {
@@ -57,32 +58,37 @@ public class DocsFromSources {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<MetricEntry> entries = new TreeSet<>();
-        FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries);
+        Collection<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
+        FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries, observationConventionEntries);
         try {
             Files.walkFileTree(path, fv);
             MetricEntry.assertThatProperlyPrefixed(entries);
-            File file = new File(this.outputDir, "_metrics.adoc");
-            if (!file.exists()) {
-                file.getParentFile().mkdirs();
-                file.createNewFile();
-            }
-            logger.debug("Will create files under [" + file + "]");
-            StringBuilder stringBuilder = new StringBuilder();
-            Path output = file.toPath();
-            logger.debug("======================================");
-            logger.debug("Summary of sources analysis");
-            logger.debug("Found [" + entries.size() + "] samples");
-            logger.debug(
-                    "Found [" + entries.stream().flatMap(e -> e.lowCardinalityKeyNames.stream()).distinct().count() + "] low cardinality tags");
-            logger.debug(
-                    "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
-            stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
-            entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
-            Files.write(output, stringBuilder.toString().getBytes());
+            printMetricsAdoc(entries);
+            ObservationConventionEntry.saveEntriesAsAdocTableInAFile(observationConventionEntries, new File(this.outputDir, "_conventions.adoc"));
         }
         catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
     }
 
+    private void printMetricsAdoc(Collection<MetricEntry> entries) throws IOException {
+        File file = new File(this.outputDir, "_metrics.adoc");
+        if (!file.exists()) {
+            file.getParentFile().mkdirs();
+            file.createNewFile();
+        }
+        logger.debug("Will create files under [" + file + "]");
+        StringBuilder stringBuilder = new StringBuilder();
+        Path output = file.toPath();
+        logger.debug("======================================");
+        logger.debug("Summary of sources analysis");
+        logger.debug("Found [" + entries.size() + "] samples");
+        logger.debug(
+                "Found [" + entries.stream().flatMap(e -> e.lowCardinalityKeyNames.stream()).distinct().count() + "] low cardinality tags");
+        logger.debug(
+                "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
+        stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
+        entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
+        Files.write(output, stringBuilder.toString().getBytes());
+    }
 }

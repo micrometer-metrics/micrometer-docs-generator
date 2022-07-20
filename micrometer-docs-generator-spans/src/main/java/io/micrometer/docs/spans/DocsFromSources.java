@@ -27,6 +27,7 @@ import java.util.regex.Pattern;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.ObservationConventionEntry;
 
 
 public class DocsFromSources {
@@ -56,26 +57,33 @@ public class DocsFromSources {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SpanEntry> spanEntries = new TreeSet<>();
-        FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
+        Collection<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
+        FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries, observationConventionEntries);
         try {
             Files.walkFileTree(path, fv);
             SpanEntry.assertThatProperlyPrefixed(spanEntries);
-            Path output = new File(this.outputDir, "_spans.adoc").toPath();
-            StringBuilder stringBuilder = new StringBuilder();
-            logger.debug("======================================");
-            logger.debug("Summary of sources analysis");
-            logger.debug("Found [" + spanEntries.size() + "] spans");
-            logger.debug(
-                    "Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
-            logger.debug(
-                    "Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
-            stringBuilder.append("[[observability-spans]]\n=== Observability - Spans\n\nBelow you can find a list of all spans declared by this project.\n\n");
-            spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
-            Files.write(output, stringBuilder.toString().getBytes());
+            printSpansAdoc(spanEntries);
+            ObservationConventionEntry.saveEntriesAsAdocTableInAFile(observationConventionEntries, new File(this.outputDir, "_conventions.adoc"));
         }
         catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
     }
+
+    private void printSpansAdoc(Collection<SpanEntry> spanEntries) throws IOException {
+        Path output = new File(this.outputDir, "_spans.adoc").toPath();
+        StringBuilder stringBuilder = new StringBuilder();
+        logger.debug("======================================");
+        logger.debug("Summary of sources analysis");
+        logger.debug("Found [" + spanEntries.size() + "] spans");
+        logger.debug(
+                "Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
+        logger.debug(
+                "Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
+        stringBuilder.append("[[observability-spans]]\n=== Observability - Spans\n\nBelow you can find a list of all spans declared by this project.\n\n");
+        spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
+        Files.write(output, stringBuilder.toString().getBytes());
+    }
+
 
 }
