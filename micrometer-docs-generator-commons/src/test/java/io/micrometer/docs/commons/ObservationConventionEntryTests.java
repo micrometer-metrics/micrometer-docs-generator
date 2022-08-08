@@ -25,8 +25,6 @@ import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class ObservationConventionEntryTests {
     File output = new File(".", "build/conventions");
 

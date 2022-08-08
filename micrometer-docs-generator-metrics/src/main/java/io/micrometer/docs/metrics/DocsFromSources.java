@@ -25,8 +25,8 @@ import java.util.Collection;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import io.micrometer.core.util.internal.logging.InternalLogger;
-import io.micrometer.core.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.common.util.internal.logging.InternalLogger;
+import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 
 // TODO: Assert on prefixes
