@@ -56,7 +56,7 @@ enum AnnotationSpan implements DocumentedSpan {
          */
         CLASS {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "class";
             }
         },
@@ -66,7 +66,7 @@ enum AnnotationSpan implements DocumentedSpan {
          */
         METHOD {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "method";
             }
         }

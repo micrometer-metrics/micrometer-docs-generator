@@ -49,7 +49,7 @@ enum OverridingSpan implements DocumentedSpan {
          */
         FOO {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "foooooo";
             }
         }

@@ -136,7 +136,7 @@ enum AsyncObservation implements DocumentedObservation {
          */
         CLASS {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "class";
             }
         },
@@ -146,7 +146,7 @@ enum AsyncObservation implements DocumentedObservation {
          */
         METHOD {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "method";
             }
         }
@@ -160,7 +160,7 @@ enum AsyncObservation implements DocumentedObservation {
          */
         FOO {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "foooooo";
             }
         }

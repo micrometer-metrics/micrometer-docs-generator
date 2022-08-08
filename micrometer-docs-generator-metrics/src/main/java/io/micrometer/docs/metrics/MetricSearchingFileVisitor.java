@@ -214,7 +214,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
-            else if ("getLowCardinalityKeyNames".equals(methodName) || "getKeyNames".equals(methodName)) {
+            else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
                 lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
             else if ("getHighCardinalityKeyNames".equals(methodName)) {

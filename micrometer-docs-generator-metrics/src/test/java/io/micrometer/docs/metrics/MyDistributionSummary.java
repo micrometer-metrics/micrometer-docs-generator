@@ -55,7 +55,7 @@ enum MyDistributionSummary implements DocumentedMeter {
          */
         BAR {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "baaaar";
             }
         }

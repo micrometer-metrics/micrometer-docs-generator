@@ -62,7 +62,7 @@ enum AsyncSpan implements DocumentedSpan {
          */
         CLASS {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "class";
             }
         },
@@ -72,7 +72,7 @@ enum AsyncSpan implements DocumentedSpan {
          */
         METHOD {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "method";
             }
         }
@@ -86,7 +86,7 @@ enum AsyncSpan implements DocumentedSpan {
          */
         FOO {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "foooooo";
             }
         }

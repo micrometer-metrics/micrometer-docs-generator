@@ -58,7 +58,7 @@ enum ParentSample implements DocumentedObservation {
          */
         CLASS {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "parent.class";
             }
         },
@@ -68,7 +68,7 @@ enum ParentSample implements DocumentedObservation {
          */
         METHOD {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "parent.method";
             }
         }
@@ -85,7 +85,7 @@ enum ParentSample implements DocumentedObservation {
          */
         CLASS2 {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "class2";
             }
         },
@@ -95,7 +95,7 @@ enum ParentSample implements DocumentedObservation {
          */
         METHOD2 {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "method2";
             }
         }

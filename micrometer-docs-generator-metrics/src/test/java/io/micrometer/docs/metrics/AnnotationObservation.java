@@ -54,7 +54,7 @@ enum AnnotationObservation implements DocumentedObservation {
          */
         CLASS {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "class";
             }
         },
@@ -64,7 +64,7 @@ enum AnnotationObservation implements DocumentedObservation {
          */
         METHOD {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "method";
             }
         }
@@ -81,7 +81,7 @@ enum AnnotationObservation implements DocumentedObservation {
          */
         CLASS2 {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "class2";
             }
         },
@@ -91,7 +91,7 @@ enum AnnotationObservation implements DocumentedObservation {
          */
         METHOD2 {
             @Override
-            public String getKeyName() {
+            public String asString() {
                 return "method2";
             }
         }
