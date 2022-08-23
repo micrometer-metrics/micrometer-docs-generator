@@ -43,7 +43,16 @@ class DocsFromSourcesTests {
                 .contains("**Metric name** `my other distribution`. **Type** `distribution summary`.")
                 .contains("**Metric name** `name.from.convention` (defined by convention class `io.micrometer.docs.metrics.AsyncObservation$MyConvention`).")
                 .contains("**Metric name** `foo` (defined by convention class `io.micrometer.docs.metrics.PublicObservationConvention`)")
-                .contains("**Metric name** Unable to resolve the name - please check the convention class `io.micrometer.docs.metrics.AsyncObservation$MyDynamicConvention`");
+                .contains("**Metric name** Unable to resolve the name - please check the convention class `io.micrometer.docs.metrics.AsyncObservation$MyDynamicConvention`")
+                .contains("Since, events were set on this documented entry, they will be converted to the following counters.")
+                .contains("[[observability-metrics-events-having-observation-foo-start]]")
+                .contains("===== Events Having Observation - foo start")
+                .contains("> Start event.")
+                .contains("**Metric name** `foo.start`. **Type** `counter`.")
+                .contains("[[observability-metrics-events-having-observation-foo-stop]]")
+                .contains("===== Events Having Observation - foo stop")
+                .contains("> Stop event.")
+                .contains("**Metric name** `foo.stop`. **Type** `counter`.");
     }
 
 }

@@ -35,6 +35,7 @@ import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.observation.Observation;
+import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
@@ -65,7 +66,7 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class requiredClass,
-            Collection<KeyValueEntry> keyValues) {
+            Collection<KeyValueEntry> keyValues, @Nullable String methodName) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -78,7 +79,7 @@ public class ParsingUtils {
             return;
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            String keyValue = enumKeyValue(enumConstant);
+            String keyValue = enumKeyValue(enumConstant, methodName);
             keyValues.add(new KeyValueEntry(keyValue, enumConstant.getJavaDoc().getText()));
         }
     }
@@ -153,6 +154,11 @@ public class ParsingUtils {
 
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
             Class requiredClass) {
+        return keyValueEntries(myEnum, methodDeclaration, requiredClass, null);
+    }
+
+    public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
+            Class requiredClass, @Nullable String methodName) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         Collection<KeyValueEntry> keyValues = new TreeSet<>();
         enumNames.forEach(enumName -> {
@@ -160,7 +166,7 @@ public class ParsingUtils {
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues);
+            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues, methodName);
         });
         return keyValues;
     }
@@ -198,13 +204,18 @@ public class ParsingUtils {
         return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
-    private static String enumKeyValue(EnumConstantSource enumConstant) {
+    private static String enumKeyValue(EnumConstantSource enumConstant, @Nullable String methodName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             logger.warn("No method declarations in the enum.");
             return "";
         }
-        Object internal = members.get(0).getInternal();
+        Object internal;
+        if (methodName == null) {
+            internal = members.get(0).getInternal();
+        } else {
+            internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
+        }
         if (!(internal instanceof MethodDeclaration)) {
             logger.warn("Can't read the member [" + internal.getClass() + "] as a method declaration.");
             return "";
