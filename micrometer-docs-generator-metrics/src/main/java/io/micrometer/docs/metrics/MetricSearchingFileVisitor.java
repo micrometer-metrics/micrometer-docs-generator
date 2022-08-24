@@ -120,9 +120,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             return FileVisitResult.CONTINUE;
         } catch (Exception e) {
-            logger.error("Failed to parse file [" + file + "] due to an error", e);
+            throw new IOException("Failed to parse file [" + file + "] due to an error", e);
         }
-        return FileVisitResult.CONTINUE;
     }
 
     // TODO: Duplication

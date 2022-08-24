@@ -58,7 +58,7 @@ class MetricEntry implements Comparable<MetricEntry> {
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
     MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
-        Assert.hasText(description, "Observation / Meter description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
+        Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;

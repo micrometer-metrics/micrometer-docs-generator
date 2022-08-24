@@ -56,7 +56,7 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
             Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> additionalKeyNames, Collection<KeyValueEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
-        Assert.hasText(description, "Span description must not be empty");
+        Assert.hasText(description, "Span javadoc description must not be empty");
         this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;
         this.name = name;
