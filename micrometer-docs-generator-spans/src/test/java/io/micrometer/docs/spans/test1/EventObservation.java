@@ -16,7 +16,7 @@
 
 package io.micrometer.docs.spans.test1;
 
-import io.micrometer.common.Event;
+import io.micrometer.observation.Observation;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum EventObservation implements DocumentedObservation {
@@ -36,7 +36,7 @@ enum EventObservation implements DocumentedObservation {
         }
 
         @Override
-        public Event[] getEvents() {
+        public Observation.Event[] getEvents() {
             return Events.values();
         }
     };
@@ -44,7 +44,7 @@ enum EventObservation implements DocumentedObservation {
     /**
      * Observation events.
      */
-    enum Events implements Event {
+    enum Events implements Observation.Event {
 
         /**
          * Start event.

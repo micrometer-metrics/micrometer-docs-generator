@@ -71,7 +71,11 @@ public class ParsingUtils {
             return;
         }
         JavaEnumImpl myEnum = (JavaEnumImpl) source;
-        if (!myEnum.getInterfaces().contains(requiredClass.getCanonicalName())) {
+        String name = requiredClass.getName(); // requiredClass.getCanonicalName()
+        if (name.contains("$")) {
+            name = requiredClass.getName().substring(requiredClass.getName().lastIndexOf(".") + 1).replace("$", ".");
+        }
+        if (!myEnum.getInterfaces().contains(name)) {
             return;
         }
         logger.debug("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");

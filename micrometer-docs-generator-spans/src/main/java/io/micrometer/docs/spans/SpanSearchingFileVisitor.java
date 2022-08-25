@@ -34,7 +34,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import io.micrometer.common.Event;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
@@ -248,7 +247,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
                     events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
                 } else {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Event.class, "getContextualName"));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getContextualName"));
                 }
             }
             else if ("getPrefix".equals(methodName)) {
