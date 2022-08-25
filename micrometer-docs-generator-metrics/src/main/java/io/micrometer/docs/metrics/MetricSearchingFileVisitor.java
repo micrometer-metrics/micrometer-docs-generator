@@ -24,12 +24,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.micrometer.common.docs.KeyName;
@@ -199,6 +201,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
+        Collection<MetricEntry> events = new ArrayList<>();
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -234,9 +237,16 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             else if ("overridesDefaultMetricFrom".equals(methodName)) {
                 overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
+            else if ("getEvents".equals(methodName)) {
+                Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getName");
+                Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
+                events.addAll(counters);
+            }
         }
+        final String newName = name;
+        events = events.stream().map(m -> new MetricEntry(newName + "." + m.name, m.conventionClass, m.nameFromConventionClass, m.enclosingClass, m.enumName, m.description, m.prefix, m.baseUnit, m.type, m.lowCardinalityKeyNames, m.highCardinalityKeyNames, m.overridesDefaultMetricFrom, m.events)).collect(Collectors.toList());
         return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
-                highCardinalityTags, overridesDefaultMetricFrom);
+                highCardinalityTags, overridesDefaultMetricFrom, events);
     }
 
 }

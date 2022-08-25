@@ -57,7 +57,9 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom) {
+    final Collection<MetricEntry> events;
+
+    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<MetricEntry> events) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
@@ -77,6 +79,7 @@ class MetricEntry implements Comparable<MetricEntry> {
         else if (this.name == null && this.conventionClass == null) {
             throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
         }
+        this.events = events;
     }
 
     static void assertThatProperlyPrefixed(Collection<MetricEntry> entries) {
@@ -124,8 +127,9 @@ class MetricEntry implements Comparable<MetricEntry> {
     public String toString() {
         String displayName = Arrays.stream(enumName.replace("_", " ").split(" "))
                 .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
+        String metricDisplayName = "observability-metrics-" + displayName.toLowerCase(Locale.ROOT).replace(" ", "-");
         StringBuilder text = new StringBuilder()
-                .append("[[observability-metrics-").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
+                .append("[[").append(metricDisplayName).append("]]\n")
                 .append("==== ")
                 .append(displayName)
                 .append("\n\n> ").append(description).append("\n\n")
@@ -153,6 +157,26 @@ class MetricEntry implements Comparable<MetricEntry> {
             text.append("\n\n.High cardinality Keys\n|===\n|Name | Description\n")
                     .append(this.highCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
                     .append("\n|===");
+        }
+        if (!events.isEmpty()) {
+            text.append("\n\nSince, events were set on this documented entry, they will be converted to the following counters.\n\n");
+
+            events.forEach(metricEntry -> {
+                String counterName = metricEntry.name;
+                text.append("[[").append(metricDisplayName).append("-").append(counterName.replace(".", "-")).append("]]\n")
+                        .append("===== ")
+                        .append(displayName).append(" - ").append(counterName.replace(".", " "))
+                        .append("\n\n> ").append(metricEntry.description).append("\n\n")
+                        .append("**Metric name** `").append(counterName).append("`");
+                if (this.name.contains("%s")) {
+                    text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
+                }
+                else {
+                    text.append(".");
+                }
+                text.append(" **Type** `").append(metricEntry.type.toString().toLowerCase(Locale.ROOT).replace("_", " ")).append("`.\n\n");
+            });
+
         }
         return text.toString();
     }

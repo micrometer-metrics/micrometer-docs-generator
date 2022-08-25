@@ -244,7 +244,11 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
             else if ("getEvents".equals(methodName)) {
-                events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
+                if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
+                } else {
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getContextualName"));
+                }
             }
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
