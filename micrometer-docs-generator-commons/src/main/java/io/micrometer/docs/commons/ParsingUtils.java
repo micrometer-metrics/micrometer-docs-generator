@@ -65,17 +65,22 @@ public class ParsingUtils {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
-    public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class requiredClass,
+    public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class<?> requiredClass,
             Collection<KeyValueEntry> keyValues, @Nullable String methodName) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
         JavaEnumImpl myEnum = (JavaEnumImpl) source;
-        String name = requiredClass.getName(); // requiredClass.getCanonicalName()
-        if (name.contains("$")) {
-            name = requiredClass.getName().substring(requiredClass.getName().lastIndexOf(".") + 1).replace("$", ".");
-        }
-        if (!myEnum.getInterfaces().contains(name)) {
+
+        // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
+        // For example, "MyEnum" implements "Observation.Event" interface as:
+        //  - "enum MyEnum implements Observation.Event {"
+        //      "getInterfaces()" returns ["Observation.Event"]
+        //  - "enum MyEnum implements Event {"
+        //      "getInterfaces()" returns ["io.micrometer.observation.Observation.Event"]
+        //
+        // To make both cases work, use the simple name("Event" in the above example) for comparison.
+        if (!myEnum.hasInterface(requiredClass.getSimpleName())) {
             return;
         }
         logger.debug("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
@@ -219,6 +224,10 @@ public class ParsingUtils {
             internal = members.get(0).getInternal();
         } else {
             internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
+            if (internal == null) {
+                logger.warn("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
+                return "";
+            }
         }
         if (!(internal instanceof MethodDeclaration)) {
             logger.warn("Can't read the member [" + internal.getClass() + "] as a method declaration.");
