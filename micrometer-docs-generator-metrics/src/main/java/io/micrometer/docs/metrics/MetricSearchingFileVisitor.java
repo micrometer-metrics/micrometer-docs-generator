@@ -210,6 +210,9 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            else if ("getKeyNames".equals(methodName)) {
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+            }
             else if ("getDefaultConvention".equals(methodName)) {
                 conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
