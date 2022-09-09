@@ -17,8 +17,9 @@
 package io.micrometer.docs.metrics;
 
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 
-public class PublicObservationConvention implements Observation.ObservationConvention<Observation.Context> {
+public class PublicObservationConvention implements ObservationConvention<Observation.Context> {
 
     @Override
     public String getName() {
