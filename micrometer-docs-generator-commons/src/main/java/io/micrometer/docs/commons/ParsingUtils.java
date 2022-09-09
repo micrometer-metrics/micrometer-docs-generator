@@ -34,7 +34,7 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
-import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
@@ -127,7 +127,7 @@ public class ParsingUtils {
             }
             if (actualConventionImplementation instanceof JavaClassImpl) {
                 List<String> interfaces = ((JavaClassImpl) actualConventionImplementation).getInterfaces();
-                if (interfaces.stream().noneMatch(s -> s.contains(Observation.ObservationConvention.class.getSimpleName()))) {
+                if (interfaces.stream().noneMatch(s -> s.contains(ObservationConvention.class.getSimpleName()))) {
                     return null;
                 }
                 MethodSource<JavaClassSource> name = ((JavaClassImpl) actualConventionImplementation).getMethod("getName");

@@ -17,8 +17,9 @@
 package io.micrometer.docs.spans.conventions;
 
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 
-public class DynamicObservationConvention implements Observation.ObservationConvention<Observation.Context> {
+public class DynamicObservationConvention implements ObservationConvention<Observation.Context> {
 
     @Override
     public String getName() {

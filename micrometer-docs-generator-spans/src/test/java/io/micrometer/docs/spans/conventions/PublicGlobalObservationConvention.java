@@ -16,9 +16,10 @@
 
 package io.micrometer.docs.spans.conventions;
 
+import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.Observation;
 
-public class PublicGlobalObservationConvention implements Observation.GlobalObservationConvention<Observation.Context> {
+public class PublicGlobalObservationConvention implements GlobalObservationConvention<Observation.Context> {
 
     @Override
     public String getName() {
