@@ -19,7 +19,6 @@ package io.micrometer.docs.metrics;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum AsyncObservation implements DocumentedObservation {
@@ -61,7 +60,7 @@ enum AsyncObservation implements DocumentedObservation {
      */
     TEST_WITH_CONVENTION {
         @Override
-        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return MyConvention.class;
         }
 
@@ -77,7 +76,7 @@ enum AsyncObservation implements DocumentedObservation {
      */
     TEST_WITH_CONVENTION_2 {
         @Override
-        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return PublicObservationConvention.class;
         }
 
@@ -93,7 +92,7 @@ enum AsyncObservation implements DocumentedObservation {
      */
     TEST_WITH_CONVENTION_3 {
         @Override
-        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return MyDynamicConvention.class;
         }
 
@@ -104,7 +103,7 @@ enum AsyncObservation implements DocumentedObservation {
 
     };
 
-    static class MyConvention implements ObservationConvention<Observation.Context> {
+    static class MyConvention implements Observation.ObservationConvention<Observation.Context> {
 
         @Override
         public String getName() {
@@ -117,7 +116,7 @@ enum AsyncObservation implements DocumentedObservation {
         }
     }
 
-    static class MyDynamicConvention implements ObservationConvention<Observation.Context> {
+    static class MyDynamicConvention implements Observation.ObservationConvention<Observation.Context> {
 
         @Override
         public String getName() {

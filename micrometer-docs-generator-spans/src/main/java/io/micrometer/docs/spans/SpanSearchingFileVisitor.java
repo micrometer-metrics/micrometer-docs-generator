@@ -40,9 +40,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
-import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.Observation;
-import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.docs.DocumentedObservation;
 import io.micrometer.tracing.docs.DocumentedSpan;
 import io.micrometer.tracing.docs.EventValue;
@@ -137,10 +135,10 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     private boolean isLocalObservationConvention(String interf) {
-        return interf.contains(ObservationConvention.class.getSimpleName()) || interf.contains(ObservationConvention.class.getCanonicalName());
+        return interf.contains(Observation.ObservationConvention.class.getSimpleName()) || interf.contains(Observation.ObservationConvention.class.getCanonicalName());
     }
     private boolean isGlobalObservationConvention(String interf) {
-        return interf.contains(GlobalObservationConvention.class.getSimpleName()) || interf.contains(GlobalObservationConvention.class.getCanonicalName());
+        return interf.contains(Observation.GlobalObservationConvention.class.getSimpleName()) || interf.contains(Observation.GlobalObservationConvention.class.getCanonicalName());
     }
 
     @Override
