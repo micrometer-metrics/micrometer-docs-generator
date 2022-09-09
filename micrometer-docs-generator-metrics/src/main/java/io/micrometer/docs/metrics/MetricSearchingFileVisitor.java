@@ -42,7 +42,9 @@ import io.micrometer.core.instrument.docs.DocumentedMeter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
+import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.docs.DocumentedObservation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -140,12 +142,12 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     // TODO: Duplication
     private boolean isLocalObservationConvention(String interf) {
-        return interf.contains(Observation.ObservationConvention.class.getSimpleName()) || interf.contains(Observation.ObservationConvention.class.getCanonicalName());
+        return interf.contains(ObservationConvention.class.getSimpleName()) || interf.contains(ObservationConvention.class.getCanonicalName());
     }
 
     // TODO: Duplication
     private boolean isGlobalObservationConvention(String interf) {
-        return interf.contains(Observation.GlobalObservationConvention.class.getSimpleName()) || interf.contains(Observation.GlobalObservationConvention.class.getCanonicalName());
+        return interf.contains(GlobalObservationConvention.class.getSimpleName()) || interf.contains(GlobalObservationConvention.class.getCanonicalName());
     }
 
     // if entry has overridesDefaultSpanFrom - read tags from that thing

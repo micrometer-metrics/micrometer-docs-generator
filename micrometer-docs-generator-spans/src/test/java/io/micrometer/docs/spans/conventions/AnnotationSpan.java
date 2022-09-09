@@ -18,6 +18,7 @@ package io.micrometer.docs.spans.conventions;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.docs.DocumentedObservation;
 
 enum AnnotationSpan implements DocumentedObservation {
@@ -27,7 +28,7 @@ enum AnnotationSpan implements DocumentedObservation {
      */
     PUBLIC_CONVENTION {
         @Override
-        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return PublicObservationConvention.class;
         }
 
@@ -48,7 +49,7 @@ enum AnnotationSpan implements DocumentedObservation {
      */
     NESTED_CONVENTION {
         @Override
-        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return NestedConvention.class;
         }
 
@@ -69,7 +70,7 @@ enum AnnotationSpan implements DocumentedObservation {
      */
     DYNAMIC_CONVENTION {
         @Override
-        public Class<? extends Observation.ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
             return DynamicObservationConvention.class;
         }
 
@@ -85,7 +86,7 @@ enum AnnotationSpan implements DocumentedObservation {
 
     };
 
-    static class NestedConvention implements Observation.ObservationConvention<Observation.Context> {
+    static class NestedConvention implements ObservationConvention<Observation.Context> {
 
         @Override
         public String getName() {
