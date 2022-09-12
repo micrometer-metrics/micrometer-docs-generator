@@ -19,8 +19,8 @@ def VERSIONS = [
 ]
 
 def PLATFORM_VERSIONS = [
-		'io.micrometer:micrometer-bom:1.10.0-SNAPSHOT',
-		'io.micrometer:micrometer-tracing-bom:1.0.0-SNAPSHOT',
+		'io.micrometer:micrometer-bom:1.10.0-M5',
+		'io.micrometer:micrometer-tracing-bom:1.0.0-M8',
 		'org.junit:junit-bom:5.8.+'
 ]
 
