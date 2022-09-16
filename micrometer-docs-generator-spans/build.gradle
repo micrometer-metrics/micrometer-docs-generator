@@ -8,6 +8,7 @@ dependencies {
 	api 'io.micrometer:micrometer-tracing'
 	api 'org.jboss.forge.roaster:roaster-api'
 	api 'org.jboss.forge.roaster:roaster-jdt'
+	api 'ch.qos.logback:logback-classic'
 
 	testImplementation 'org.junit.jupiter:junit-jupiter'
 	testImplementation 'org.assertj:assertj-core'
