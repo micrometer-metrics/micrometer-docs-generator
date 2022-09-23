@@ -132,7 +132,10 @@ class MetricEntry implements Comparable<MetricEntry> {
                 .append("[[").append(metricDisplayName).append("]]\n")
                 .append("==== ")
                 .append(displayName)
-                .append("\n\n> ").append(description).append("\n\n")
+                //use the quote block style to correctly render asciidoc inside the quote
+                .append("\n\n____\n")
+                .append(description)
+                .append("\n____\n\n")
                 .append("**Metric name** ").append(name());
         if (this.name.contains("%s")) {
             text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
@@ -149,12 +152,18 @@ class MetricEntry implements Comparable<MetricEntry> {
             text.append("\n\nIMPORTANT: All tags must be prefixed with `").append(this.prefix).append("` prefix!");
         }
         if (!lowCardinalityKeyNames.isEmpty()) {
-            text.append("\n\n.Low cardinality Keys\n|===\n|Name | Description\n")
+            text.append("\n\n.Low cardinality Keys")
+                    //we use a,a column types to ensure nested asciidoc is rendered
+                    .append("\n[cols=\"a,a\"]")
+                    .append("\n|===\n|Name | Description\n")
                     .append(this.lowCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }
         if (!highCardinalityKeyNames.isEmpty()) {
-            text.append("\n\n.High cardinality Keys\n|===\n|Name | Description\n")
+            text.append("\n\n.High cardinality Keys")
+                    //we use a,a column types to ensure nested asciidoc is rendered
+                    .append("\n[cols=\"a,a\"]")
+                    .append("\n|===\n|Name | Description\n")
                     .append(this.highCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }

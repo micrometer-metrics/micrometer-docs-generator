@@ -40,6 +40,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
+import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
@@ -207,7 +208,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
         String name = "";
         String contextualName = null;
-        String description = enumConstant.getJavaDoc().getText();
+        String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         Collection<KeyValueEntry> tags = new TreeSet<>();
         Collection<KeyValueEntry> additionalKeyNames = new TreeSet<>();
