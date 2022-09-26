@@ -42,6 +42,7 @@ import io.micrometer.core.instrument.docs.DocumentedMeter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
+import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
@@ -194,7 +195,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return null;
         }
         String name = "";
-        String description = enumConstant.getJavaDoc().getText();
+        String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         String baseUnit = "";
         Meter.Type type = Meter.Type.TIMER;

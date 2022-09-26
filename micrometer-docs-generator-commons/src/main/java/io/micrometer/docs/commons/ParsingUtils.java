@@ -34,6 +34,7 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
@@ -89,7 +90,7 @@ public class ParsingUtils {
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
             String keyValue = enumKeyValue(enumConstant, methodName);
-            keyValues.add(new KeyValueEntry(keyValue, enumConstant.getJavaDoc().getText()));
+            keyValues.add(new KeyValueEntry(keyValue, AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc())));
         }
     }
 

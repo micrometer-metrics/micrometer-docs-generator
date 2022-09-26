@@ -31,10 +31,14 @@ class DocsFromSourcesTests {
         File root = new File(".");
         File output = new File(root, "build");
 
-        new DocsFromSources(root, Pattern.compile(".*"), output).generate();
+        //FIXME consider isolating classes relevant to this test into their own package and use that as source root
+        //for now only consider the java classes at the root of package io.micrometer.docs.metrics
+        File sourceRoot = new File(root, "src/test");
+        new DocsFromSources(sourceRoot, Pattern.compile(".*/docs/metrics/[a-zA-Z]+\\.java"), output).generate();
 
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_metrics.adoc").toPath())))
-                .contains("==== Async Annotation").contains("> Observation that wraps a")
+                .contains("==== Async Annotation")
+                .contains("____" + System.lineSeparator() + "Observation that wraps a")
                 .contains("**Metric name** `%s` - since").contains("Fully qualified name of")
                 .contains("|`class`|Class name where a method got annotated with @Async.")
                 .contains("|`class2`|Class name where a method got annotated.")
@@ -53,7 +57,8 @@ class DocsFromSourcesTests {
                 .contains("[[observability-metrics-events-having-observation-foo-stop]]")
                 .contains("===== Events Having Observation - foo stop")
                 .contains("> Stop event.")
-                .contains("**Metric name** `foo.stop`. **Type** `counter`.");
+                .contains("**Metric name** `foo.stop`. **Type** `counter`.")
+                .doesNotContain("docs.metrics.usecases"); //smoke test that usecases have been excluded
     }
 
 }
