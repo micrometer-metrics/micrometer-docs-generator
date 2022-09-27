@@ -19,9 +19,9 @@ package io.micrometer.docs.metrics.usecases.sanitizing;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.docs.DocumentedMeter;
+import io.micrometer.core.instrument.docs.MeterDocumentation;
 
-enum WithComplexJavadocDocumentedMeter implements DocumentedMeter {
+enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
 
     /**
      * This javadoc includes sanitized HTML elements and should result in multi-line output,

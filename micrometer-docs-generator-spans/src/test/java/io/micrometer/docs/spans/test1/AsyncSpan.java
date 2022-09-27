@@ -18,9 +18,9 @@ package io.micrometer.docs.spans.test1;
 
 
 import io.micrometer.common.docs.KeyName;
-import io.micrometer.tracing.docs.DocumentedSpan;
+import io.micrometer.tracing.docs.SpanDocumentation;
 
-enum AsyncSpan implements DocumentedSpan {
+enum AsyncSpan implements SpanDocumentation {
 
     /**
      * Span that wraps a @Async annotation. Either continues an existing one or creates a

@@ -19,9 +19,9 @@ package io.micrometer.docs.spans.conventions;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
-enum AnnotationSpan implements DocumentedObservation {
+enum AnnotationSpan implements ObservationDocumentation {
 
     /**
      * Observation that wraps annotations.

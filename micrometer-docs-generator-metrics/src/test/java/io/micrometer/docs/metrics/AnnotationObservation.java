@@ -17,11 +17,11 @@
 package io.micrometer.docs.metrics;
 
 import io.micrometer.common.docs.KeyName;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
 ;
 
-enum AnnotationObservation implements DocumentedObservation {
+enum AnnotationObservation implements ObservationDocumentation {
 
     /**
      * Observation that wraps annotations.

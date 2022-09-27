@@ -17,9 +17,9 @@
 package io.micrometer.docs.spans.test1;
 
 import io.micrometer.observation.Observation;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
-enum EventObservation implements DocumentedObservation {
+enum EventObservation implements ObservationDocumentation {
 
     /**
      * Events having observation.
