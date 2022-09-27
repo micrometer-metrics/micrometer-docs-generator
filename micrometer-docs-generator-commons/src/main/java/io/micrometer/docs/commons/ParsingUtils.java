@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
@@ -54,10 +55,10 @@ import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.impl.AbstractJavaSource;
 import org.jboss.forge.roaster.model.impl.JavaClassImpl;
 import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
+import org.jboss.forge.roaster.model.impl.JavaInterfaceImpl;
 import org.jboss.forge.roaster.model.impl.JavaUnitImpl;
 import org.jboss.forge.roaster.model.impl.MethodImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
-import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -131,12 +132,27 @@ public class ParsingUtils {
                 if (interfaces.stream().noneMatch(s -> s.contains(ObservationConvention.class.getSimpleName()))) {
                     return null;
                 }
-                MethodSource<JavaClassSource> name = ((JavaClassImpl) actualConventionImplementation).getMethod("getName");
+                MethodSource<?> name = ((JavaClassImpl) actualConventionImplementation).getMethod("getName");
+                if (name == null) {
+                    // look for the implementing interfaces
+                    for (String iface : interfaces) {
+                        String interfaceFilePath = filePath(iface, parent);
+                        try (InputStream stream = Files.newInputStream(Paths.get(interfaceFilePath))) {
+                            JavaUnit parsed = Roaster.parseUnit(stream);
+                            name = ((JavaInterfaceImpl) parsed.getGoverningType()).getMethod("getName");
+                        }
+                        if (name != null) {
+                            break;
+                        }
+                    }
+                }
+
+                MethodSource<?> nameToUse = name;
                 try {
                     MethodDeclaration methodDeclaration = (MethodDeclaration) Arrays.stream(MethodImpl.class.getDeclaredFields()).filter(f -> f.getName().equals("method")).findFirst().map(f -> {
                         try {
                             f.setAccessible(true);
-                            return f.get(name);
+                            return f.get(nameToUse);
                         }
                         catch (IllegalAccessException e) {
                             throw new RuntimeException(e);

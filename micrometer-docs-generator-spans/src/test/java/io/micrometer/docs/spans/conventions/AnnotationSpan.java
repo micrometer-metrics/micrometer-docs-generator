@@ -84,6 +84,27 @@ enum AnnotationSpan implements ObservationDocumentation {
             return Tags2.values();
         }
 
+    },
+
+    /**
+     * Observation with interface that implements getName method.
+     */
+    CONCRETE_CONVENTION {
+        @Override
+        public Class<? extends ObservationConvention<? extends Observation.Context>> getDefaultConvention() {
+            return UseInterfaceObservationConvention.class;
+        }
+
+        @Override
+        public KeyName[] getLowCardinalityKeyNames() {
+            return Tags.values();
+        }
+
+        @Override
+        public KeyName[] getHighCardinalityKeyNames() {
+            return Tags2.values();
+        }
+
     };
 
     static class NestedConvention implements ObservationConvention<Observation.Context> {
