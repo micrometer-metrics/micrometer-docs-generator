@@ -38,6 +38,7 @@ class ConventionsTests {
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
                 .contains("**Span name** `nested convention` (defined by convention class `io.micrometer.docs.spans.conventions.AnnotationSpan$NestedConvention`)")
                 .contains("**Span name** `foo` (defined by convention class `io.micrometer.docs.spans.conventions.PublicObservationConvention`)")
+                .contains("**Span name** `foo-iface` (defined by convention class `io.micrometer.docs.spans.conventions.UseInterfaceObservationConvention`)")
                 .contains("**Span name** Unable to resolve the name - please check the convention class `io.micrometer.docs.spans.conventions.DynamicObservationConvention` for more details.");
     }
 
