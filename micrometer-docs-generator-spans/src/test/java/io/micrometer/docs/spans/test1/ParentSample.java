@@ -18,9 +18,9 @@ package io.micrometer.docs.spans.test1;
 
 
 import io.micrometer.common.docs.KeyName;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
-enum ParentSample implements DocumentedObservation {
+enum ParentSample implements ObservationDocumentation {
 
     /**
      * Observation that wraps annotations.

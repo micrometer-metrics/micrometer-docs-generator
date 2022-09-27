@@ -24,7 +24,7 @@ ____
 
 **Metric name** `html`. **Type** `timer` and **base unit** `seconds`.
 
-Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocDocumentedMeter`.
+Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
 [[observability-metrics-inline-html-tags]]
 ==== Inline Html Tags
@@ -40,7 +40,7 @@ ____
 
 **Metric name** `inline_html_tags`. **Type** `timer` and **base unit** `seconds`.
 
-Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocDocumentedMeter`.
+Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
 [[observability-metrics-taglets]]
 ==== Taglets
@@ -51,7 +51,7 @@ ____
 
 **Metric name** `taglets`. **Type** `timer` and **base unit** `seconds`.
 
-Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocDocumentedMeter`.
+Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
 [[observability-metrics-with-tags]]
 ==== With Tags
@@ -62,7 +62,7 @@ ____
 
 **Metric name** `tags`. **Type** `timer` and **base unit** `seconds`.
 
-Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocDocumentedMeter`.
+Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
 .Low cardinality Keys
 [cols="a,a"]

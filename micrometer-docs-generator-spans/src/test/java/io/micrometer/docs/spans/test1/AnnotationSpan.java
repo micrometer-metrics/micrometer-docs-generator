@@ -17,10 +17,10 @@
 package io.micrometer.docs.spans.test1;
 
 import io.micrometer.common.docs.KeyName;
-import io.micrometer.tracing.docs.DocumentedSpan;
+import io.micrometer.tracing.docs.SpanDocumentation;
 import io.micrometer.tracing.docs.EventValue;
 
-enum AnnotationSpan implements DocumentedSpan {
+enum AnnotationSpan implements SpanDocumentation {
 
     /**
      * Span that wraps a @NewSpan or @ContinueSpan annotations.

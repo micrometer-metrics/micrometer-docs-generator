@@ -20,9 +20,9 @@ package io.micrometer.docs.metrics;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 
-enum AsyncObservation implements DocumentedObservation {
+enum AsyncObservation implements ObservationDocumentation {
 
     /**
      * Observation that wraps a @Async annotation.

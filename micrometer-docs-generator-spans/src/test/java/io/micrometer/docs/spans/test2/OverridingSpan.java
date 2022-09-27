@@ -17,9 +17,9 @@
 package io.micrometer.docs.spans.test2;
 
 import io.micrometer.common.docs.KeyName;
-import io.micrometer.tracing.docs.DocumentedSpan;
+import io.micrometer.tracing.docs.SpanDocumentation;
 
-enum OverridingSpan implements DocumentedSpan {
+enum OverridingSpan implements SpanDocumentation {
 
     /**
      * Span.

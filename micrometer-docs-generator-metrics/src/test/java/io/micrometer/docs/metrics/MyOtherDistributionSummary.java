@@ -18,9 +18,9 @@ package io.micrometer.docs.metrics;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.docs.DocumentedMeter;
+import io.micrometer.core.instrument.docs.MeterDocumentation;
 
-enum MyOtherDistributionSummary implements DocumentedMeter {
+enum MyOtherDistributionSummary implements MeterDocumentation {
 
     /**
      * A test distribution.

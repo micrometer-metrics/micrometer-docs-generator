@@ -38,7 +38,7 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
-import io.micrometer.core.instrument.docs.DocumentedMeter;
+import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
@@ -46,7 +46,7 @@ import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
-import io.micrometer.observation.docs.DocumentedObservation;
+import io.micrometer.observation.docs.ObservationDocumentation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.JavaType;
@@ -100,7 +100,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return FileVisitResult.CONTINUE;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
-            if (Stream.of(DocumentedMeter.class.getCanonicalName(), DocumentedObservation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
+            if (Stream.of(MeterDocumentation.class.getCanonicalName(), ObservationDocumentation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
             logger.debug("Checking [" + myEnum.getName() + "]");
@@ -170,7 +170,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 return;
             }
             JavaEnumImpl myEnum = (JavaEnumImpl) overrideClass;
-            if (!myEnum.getInterfaces().contains(DocumentedObservation.class.getCanonicalName())) {
+            if (!myEnum.getInterfaces().contains(ObservationDocumentation.class.getCanonicalName())) {
                 return;
             }
             logger.debug("Checking [" + myEnum.getName() + "]");
