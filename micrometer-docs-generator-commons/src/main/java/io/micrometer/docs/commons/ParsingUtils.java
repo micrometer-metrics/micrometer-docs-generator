@@ -35,6 +35,7 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.KeyValueEntry.ExtraAttributesExtractor;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
@@ -68,7 +69,7 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class<?> requiredClass,
-            Collection<KeyValueEntry> keyValues, @Nullable String methodName) {
+            Collection<KeyValueEntry> keyValues, @Nullable String methodName, ExtraAttributesExtractor extraAttributesExtractor) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -91,7 +92,8 @@ public class ParsingUtils {
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
             String keyValue = enumKeyValue(enumConstant, methodName);
-            keyValues.add(new KeyValueEntry(keyValue, AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc())));
+            Map<String, String> extra = extraAttributesExtractor.apply(enumConstant);
+            keyValues.add(new KeyValueEntry(keyValue, AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc()), extra));
         }
     }
 
@@ -179,12 +181,22 @@ public class ParsingUtils {
     }
 
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass) {
-        return keyValueEntries(myEnum, methodDeclaration, requiredClass, null);
+            Class requiredClass, ExtraAttributesExtractor extraAttributesExtractor) {
+        return keyValueEntries(myEnum, methodDeclaration, requiredClass, null, extraAttributesExtractor);
     }
 
+    /**
+     * Retrieve Key-Value pair type of information from the given enum.
+     * When {@code methodName} is {@code null}, the first implemented method on the enum is used to retrieve the value.
+     * @param myEnum container enum class
+     * @param methodDeclaration method to retrieve target key-value enum instances
+     * @param requiredClass the required enum class
+     * @param methodName method name to extract value. If {@code null}, then first visible method is used
+     * @param extraAttributesExtractor a function to extract extra attributes
+     * @return collection of key-value entries
+     */
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass, @Nullable String methodName) {
+            Class requiredClass, @Nullable String methodName, ExtraAttributesExtractor extraAttributesExtractor) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         Collection<KeyValueEntry> keyValues = new TreeSet<>();
         enumNames.forEach(enumName -> {
@@ -192,7 +204,7 @@ public class ParsingUtils {
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues, methodName);
+            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues, methodName, extraAttributesExtractor);
         });
         return keyValues;
     }
@@ -376,7 +388,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
         }
         return tags;

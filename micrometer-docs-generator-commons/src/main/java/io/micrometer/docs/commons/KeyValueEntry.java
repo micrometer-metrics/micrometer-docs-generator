@@ -16,17 +16,33 @@
 
 package io.micrometer.docs.commons;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 
+import io.micrometer.common.docs.KeyName;
+import io.micrometer.observation.Observation;
+import org.jboss.forge.roaster.model.source.EnumConstantSource;
+
+/**
+ * Hold Key and Value type of information.
+ * For example, it is used to hold the data of {@link KeyName}, {@code EventValue}, and {@link Observation.Event}.
+ * Additionally, each entry can have map based extra attributes.
+ */
 public class KeyValueEntry implements Comparable<KeyValueEntry> {
 
     private final String name;
 
     private final String description;
 
-    public KeyValueEntry(String name, String description) {
+    private final Map<String, String> extra = new HashMap<>();
+
+    public KeyValueEntry(String name, String description, Map<String, String> extra) {
         this.name = name;
         this.description = description;
+        this.extra.putAll(extra);
     }
 
     @Override
@@ -37,13 +53,13 @@ public class KeyValueEntry implements Comparable<KeyValueEntry> {
         if (o == null || getClass() != o.getClass()) {
             return false;
         }
-        KeyValueEntry tag = (KeyValueEntry) o;
-        return Objects.equals(name, tag.name) && Objects.equals(description, tag.description);
+        KeyValueEntry that = (KeyValueEntry) o;
+        return Objects.equals(name, that.name) && Objects.equals(description, that.description) && Objects.equals(extra, that.extra);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, description);
+        return Objects.hash(name, description, extra);
     }
 
     @Override
@@ -71,4 +87,17 @@ public class KeyValueEntry implements Comparable<KeyValueEntry> {
     public String getDescription() {
         return description;
     }
+
+    public Map<String, String> getExtra() {
+        return this.extra;
+    }
+
+    /**
+     * Extract extra attribute information from the enum.
+     */
+    @FunctionalInterface
+    public interface ExtraAttributesExtractor extends Function<EnumConstantSource, Map<String, String>> {
+        ExtraAttributesExtractor EMPTY = (myEnum) -> Collections.emptyMap();
+    }
+
 }

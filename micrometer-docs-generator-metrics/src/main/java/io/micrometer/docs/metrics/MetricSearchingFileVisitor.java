@@ -40,6 +40,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.KeyValueEntry.ExtraAttributesExtractor;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
@@ -216,17 +217,17 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getDefaultConvention".equals(methodName)) {
                 conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
@@ -244,7 +245,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
             else if ("getEvents".equals(methodName)) {
-                Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getName");
+                Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getName", ExtraAttributesExtractor.EMPTY);
                 Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
                 events.addAll(counters);
             }

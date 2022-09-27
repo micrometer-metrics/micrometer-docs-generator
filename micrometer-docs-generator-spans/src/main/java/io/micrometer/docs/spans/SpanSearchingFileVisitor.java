@@ -38,6 +38,7 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.KeyValueEntry.ExtraAttributesExtractor;
 import io.micrometer.docs.commons.ObservationConventionEntry;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
@@ -234,22 +235,22 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
             }
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class, ExtraAttributesExtractor.EMPTY));
                 } else {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getContextualName"));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getContextualName", ExtraAttributesExtractor.EMPTY));
                 }
             }
             else if ("getPrefix".equals(methodName)) {
