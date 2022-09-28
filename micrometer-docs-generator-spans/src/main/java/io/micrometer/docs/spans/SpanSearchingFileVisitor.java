@@ -37,6 +37,7 @@ import java.util.stream.Stream;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.KeyNameAttributesExtractor;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.KeyValueEntry.ExtraAttributesExtractor;
 import io.micrometer.docs.commons.ObservationConventionEntry;
@@ -235,16 +236,16 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {

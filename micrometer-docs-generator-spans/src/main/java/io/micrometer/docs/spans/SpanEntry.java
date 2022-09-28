@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.micrometer.docs.commons.KeyNameWriter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
@@ -135,7 +136,7 @@ class SpanEntry implements Comparable<SpanEntry> {
             text.append("\n\nIMPORTANT: All tags and event names must be prefixed with `").append(this.prefix).append("` prefix!");
         }
         if (!tagKeys.isEmpty()) {
-            text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+            text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyNameWriter.INSTANCE::write).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }
         if (!events.isEmpty()) {

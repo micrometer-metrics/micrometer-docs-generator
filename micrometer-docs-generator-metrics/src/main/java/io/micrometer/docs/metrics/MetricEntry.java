@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.docs.commons.KeyNameWriter;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
@@ -156,7 +157,7 @@ class MetricEntry implements Comparable<MetricEntry> {
                     //we use a,a column types to ensure nested asciidoc is rendered
                     .append("\n[cols=\"a,a\"]")
                     .append("\n|===\n|Name | Description\n")
-                    .append(this.lowCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+                    .append(this.lowCardinalityKeyNames.stream().map(KeyNameWriter.INSTANCE::write).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }
         if (!highCardinalityKeyNames.isEmpty()) {
@@ -164,7 +165,7 @@ class MetricEntry implements Comparable<MetricEntry> {
                     //we use a,a column types to ensure nested asciidoc is rendered
                     .append("\n[cols=\"a,a\"]")
                     .append("\n|===\n|Name | Description\n")
-                    .append(this.highCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
+                    .append(this.highCardinalityKeyNames.stream().map(KeyNameWriter.INSTANCE::write).collect(Collectors.joining("\n")))
                     .append("\n|===");
         }
         if (!events.isEmpty()) {

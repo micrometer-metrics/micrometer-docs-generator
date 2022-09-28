@@ -39,6 +39,7 @@ import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
+import io.micrometer.docs.commons.KeyNameAttributesExtractor;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.KeyValueEntry.ExtraAttributesExtractor;
 import io.micrometer.docs.commons.ObservationConventionEntry;
@@ -92,7 +93,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                     for (String anInterface : holder.getInterfaces()) {
                         if (isGlobalObservationConvention(anInterface)) {
                             this.observationConventionEntries.add(new ObservationConventionEntry(unit.getGoverningType().getCanonicalName(), ObservationConventionEntry.Type.GLOBAL, contextClassName(classPattern, anInterface)));
-                        } else if (isLocalObservationConvention(anInterface)) {
+                        }
+                        else if (isLocalObservationConvention(anInterface)) {
                             this.observationConventionEntries.add(new ObservationConventionEntry(unit.getGoverningType().getCanonicalName(), ObservationConventionEntry.Type.LOCAL, contextClassName(classPattern, anInterface)));
                         }
                     }
@@ -125,7 +127,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 }
             }
             return FileVisitResult.CONTINUE;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             throw new IOException("Failed to parse file [" + file + "] due to an error", e);
         }
     }
@@ -217,17 +220,17 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getDefaultConvention".equals(methodName)) {
                 conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, ExtraAttributesExtractor.EMPTY));
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, KeyNameAttributesExtractor.INSTANCE));
             }
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);

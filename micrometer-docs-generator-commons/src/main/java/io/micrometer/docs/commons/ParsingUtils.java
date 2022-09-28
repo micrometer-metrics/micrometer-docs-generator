@@ -41,6 +41,7 @@ import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -270,7 +271,7 @@ public class ParsingUtils {
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
 
-    private static String stringFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
+    public static String stringFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
             logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
@@ -278,11 +279,14 @@ public class ParsingUtils {
         }
         ReturnStatement returnStatement = (ReturnStatement) statement;
         Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof StringLiteral)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
-            return "";
+        if (expression instanceof StringLiteral) {
+            return ((StringLiteral) expression).getLiteralValue();
         }
-        return ((StringLiteral) expression).getLiteralValue();
+        else if (expression instanceof BooleanLiteral) {
+            return Boolean.toString(((BooleanLiteral) expression).booleanValue());
+        }
+        logger.warn("Statement [" + statement.getClass() + "] can not be read as a string.");
+        return "";
     }
 
     @SuppressWarnings("unchecked")

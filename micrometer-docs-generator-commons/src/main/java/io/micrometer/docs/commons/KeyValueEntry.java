@@ -30,6 +30,8 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
  * Hold Key and Value type of information.
  * For example, it is used to hold the data of {@link KeyName}, {@code EventValue}, and {@link Observation.Event}.
  * Additionally, each entry can have map based extra attributes.
+ * If you need to differentiate the string representation by extra attributes, do not use
+ * the {@link #toString()} method. Rather, construct the representation outside this class.
  */
 public class KeyValueEntry implements Comparable<KeyValueEntry> {
 
@@ -97,6 +99,9 @@ public class KeyValueEntry implements Comparable<KeyValueEntry> {
      */
     @FunctionalInterface
     public interface ExtraAttributesExtractor extends Function<EnumConstantSource, Map<String, String>> {
+        // If we have a reference to the parent(enclosing enum as JavaEnumSource), it can
+        // resolve interface names as String. However, they are in jar files, not as code.
+        // So, Roaster cannot read it.
         ExtraAttributesExtractor EMPTY = (myEnum) -> Collections.emptyMap();
     }
 

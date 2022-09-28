@@ -38,15 +38,18 @@ class NoOverridingOfTagsDocsFromSourcesTests {
         BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
                 .contains("==== Async Annotation Span").contains("> Span that wraps a")
                 .contains("**Span name** `%s` - since").contains("Fully qualified name of")
-                .contains("|`class`|Class name where a method got annotated with @Async.")
+                .contains("|`class` _(* Required)_|Class name where a method got annotated with @Async.")
                 .contains("==== Annotation New Or Continue Span")
                 .contains("|`%s.before`|Annotated before executing a method annotated with @ContinueSpan or @NewSpan.")
-                .contains("==== Test Span").contains("**Span name** `fixed`.").contains("|`foooooo`|Test foo")
+                .contains("==== Test Span").contains("**Span name** `fixed`.").contains("|`foooooo` _(* Required)_|Test foo")
                 .contains("==== Parent Span")
-                .contains("|`parent.class`|Class name where a method got annotated with a annotation.")
+                .contains("|`parent.class` _(* Required)_|Class name where a method got annotated with a annotation.")
                 .contains("Events Having Observation Span")
                 .contains("|`start annotation`|Start event.")
-                .contains("|`stop %s %s foo`|Stop event. (since the name contains `%s` the final value will be resolved at runtime)");
+                .contains("|`stop %s %s foo`|Stop event. (since the name contains `%s` the final value will be resolved at runtime)")
+                .contains("|`optional`|Optional key.")
+                .contains("|`mandatory` _(* Required)_|Mandatory key.")
+        ;
     }
 
 }
