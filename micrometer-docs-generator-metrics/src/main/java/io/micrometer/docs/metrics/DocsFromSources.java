@@ -28,6 +28,11 @@ import java.util.regex.Pattern;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.ObservationConventionEntry;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 // TODO: Assert on prefixes
 public class DocsFromSources {
@@ -89,6 +94,32 @@ public class DocsFromSources {
                 "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
         stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
         entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
-        Files.write(output, stringBuilder.toString().getBytes());
+
+        //// tying thymeleaf - start
+        FileTemplateResolver templateResolver = new FileTemplateResolver();
+        templateResolver.setTemplateMode(TemplateMode.TEXT);
+        templateResolver.setCheckExistence(true);
+
+        ClassLoaderTemplateResolver classLoaderTemplateResolver = new ClassLoaderTemplateResolver();
+        classLoaderTemplateResolver.setTemplateMode(TemplateMode.TEXT);
+        classLoaderTemplateResolver.setCheckExistence(true);
+
+        Context context = new Context();
+        context.setVariable("entries", entries);
+
+        String template = "templates/metrics.adoc";
+
+        TemplateEngine templateEngine = new TemplateEngine();
+        templateEngine.setTemplateResolver(templateResolver);
+        templateEngine.addTemplateResolver(classLoaderTemplateResolver);
+        String result = templateEngine.process(template, context);
+
+        Files.write(new File(this.outputDir, "_metrics2.adoc").toPath(), result.getBytes());
+        Files.write(new File(this.outputDir, "_metrics-org.adoc").toPath(), stringBuilder.toString().getBytes());
+
+        Files.write(output, result.getBytes());
+        //// tying thymeleaf - end
+
+//        Files.write(output, stringBuilder.toString().getBytes());
     }
 }

@@ -71,4 +71,8 @@ public class KeyValueEntry implements Comparable<KeyValueEntry> {
     public String getDescription() {
         return description;
     }
+
+    public String getDisplayDescription() {
+        return description();
+    }
 }

@@ -1,0 +1,65 @@
+/*[- */
+  This is a thymeleaf template file for metrics documentation.
+/* -]*/
+[[[[observability-metrics]]]]
+=== Observability - Metrics
+
+Below you can find a list of all samples declared by this project.
+[# th:each="entry : ${entries}"]
+
+[[observability-metrics-[# th:utext="${entry.titleName}" /]]]
+==== [(${entry.displayName})]
+
+____
+[(${entry.description})]
+____
+
+
+**Metric name** [(${entry.metricName})]
+[(${#strings.contains(entry.name,'%s') ? " - since it contains `%s`, the name is dynamic and will be resolved at runtime." : "."})]
+**Type** `[(${entry.displayType})]` [(${#strings.isEmpty(entry.baseUnit)? "" : "and **base unit** `" + #strings.toLowerCase(entry.baseUnit) + "`"})].
+
+Fully qualified name of the enclosing class `[(${entry.enclosingClass})]`.
+
+[# th:if="${#strings.length(entry.prefix) > 0}"]
+IMPORTANT: All tags must be prefixed with `[(${entry.prefix})]` prefix!
+[/]
+
+[# th:if="${not #sets.isEmpty(entry.lowCardinalityKeyNames)}"]
+.Low cardinality Keys
+[cols="a,a"]
+|===
+|Name | Description
+  [# th:each="lowKey : ${entry.lowCardinalityKeyNames}"]
+|`[(${lowKey.name})]`|[(${lowKey.displayDescription})]
+  [/]
+|===
+[/]
+
+[# th:if="${not #sets.isEmpty(entry.highCardinalityKeyNames)}"]
+.High cardinality Keys
+[cols="a,a"]
+|===
+|Name | Description
+  [# th:each="highKey : ${entry.highCardinalityKeyNames}"]
+|`[(${highKey.name})]`|[(${highKey.displayDescription})]
+  [/]
+|===
+[/]
+
+[# th:if="${not #sets.isEmpty(entry.events)}"]
+Since, events were set on this documented entry, they will be converted to the following counters.
+  [# th:each="event : ${entry.events}"]
+    [# th:with="eventTitleName=${#strings.replace(event.name, '.', '-')}"]
+[[observability-metrics-[# th:utext="${entry.titleName} + ${eventTitleName}" /]]]
+===== [(${entry.displayName})] - [(${#strings.replace(event.name, '.', ' ')})]
+
+> [(${event.description})]
+
+**Metric name** `[(${eventTitleName})]`[(${#strings.contains(entry.name,'%s') ? " - since it contains `%s`, the name is dynamic and will be resolved at runtime." : "."})] **Type** `[(${event.displayType})]`.
+
+    [/]
+  [/]
+[/]
+
+[/]

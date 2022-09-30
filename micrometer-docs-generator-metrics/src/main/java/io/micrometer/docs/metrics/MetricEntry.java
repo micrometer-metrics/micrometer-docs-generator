@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Meter;
@@ -190,6 +191,19 @@ class MetricEntry implements Comparable<MetricEntry> {
         return text.toString();
     }
 
+    public String getTitleName() {
+        return getDisplayName().toLowerCase(Locale.ROOT).replace(" ", "-");
+    }
+
+    public String getDisplayName() {
+        return Arrays.stream(enumName.replace("_", " ").split(" "))
+                .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
     private String name() {
         if (StringUtils.hasText(this.name)) {
             return "`" + this.name + "`";
@@ -200,4 +214,45 @@ class MetricEntry implements Comparable<MetricEntry> {
         return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
     }
 
+    public String getMetricName() {
+        return name();
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public String getDisplayType() {
+        return this.type.toString().toLowerCase(Locale.ROOT).replace("_", " ");
+    }
+
+    public String getBaseUnit() {
+        return this.baseUnit;
+    }
+
+    public String getEnclosingClass() {
+        return this.enclosingClass;
+    }
+
+    public String getPrefix() {
+        return this.prefix;
+    }
+
+    public TreeSet<KeyValueEntry> getLowCardinalityKeyNames() {
+        // Use TreeSet which is the originally passed collection type.
+        // Since thymeleaf differentiate list and set, concrete type is needed.
+        return new TreeSet<>(this.lowCardinalityKeyNames);
+    }
+
+    public TreeSet<KeyValueEntry> getHighCardinalityKeyNames() {
+        // Use TreeSet which is the originally passed collection type.
+        // Since thymeleaf differentiate list and set, concrete type is needed.
+        return new TreeSet<>(this.highCardinalityKeyNames);
+    }
+
+    public Collection<MetricEntry> getEvents() {
+        // Use TreeSet which is the originally passed collection type.
+        // Since thymeleaf differentiate list and set, concrete type is needed.
+        return new TreeSet<>(this.events);
+    }
 }
