@@ -87,7 +87,7 @@ public class DocsFromSources {
                 "Found [" + entries.stream().flatMap(e -> e.lowCardinalityKeyNames.stream()).distinct().count() + "] low cardinality tags");
         logger.debug(
                 "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
-        stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all samples declared by this project.\n\n");
+        stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all metrics declared by this project.\n\n");
         entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
         Files.write(output, stringBuilder.toString().getBytes());
     }

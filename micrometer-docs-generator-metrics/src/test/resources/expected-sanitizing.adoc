@@ -1,7 +1,7 @@
 [[observability-metrics]]
 === Observability - Metrics
 
-Below you can find a list of all samples declared by this project.
+Below you can find a list of all metrics declared by this project.
 
 [[observability-metrics-html]]
 ==== Html
