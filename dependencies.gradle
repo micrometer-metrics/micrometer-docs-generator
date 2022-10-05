@@ -1,28 +1,28 @@
 def VERSIONS = [
-		'org.jboss.forge.roaster:roaster-api:2.22.3.Final', // last using jdk8
-		'org.jboss.forge.roaster:roaster-jdt:2.22.3.Final', // last using jdk8
-		'com.github.jknack:handlebars:latest.release',
+	'org.jboss.forge.roaster:roaster-api:2.22.3.Final', // last using jdk8
+	'org.jboss.forge.roaster:roaster-jdt:2.22.3.Final', // last using jdk8
+	'com.github.jknack:handlebars:latest.release',
 
-		// logging
-		'ch.qos.logback:logback-classic:1.2.+',
-		'org.slf4j:slf4j-api:1.7.+',
+	// logging
+	'ch.qos.logback:logback-classic:1.2.+',
+	'org.slf4j:slf4j-api:1.7.+',
 
-		// test
-		'org.assertj:assertj-core:latest.release',
-		'org.awaitility:awaitility:latest.release',
-		'org.junit.jupiter:junit-jupiter:5.8.+',
-		'org.junit.platform:junit-platform-launcher:1.8.+',
-		'org.junit.vintage:junit-vintage-engine:5.8.+',
-		'org.mockito:mockito-core:latest.release',
-		'org.mockito:mockito-inline:latest.release',
-		'org.testcontainers:testcontainers:latest.release',
-		'org.testcontainers:junit-jupiter:latest.release'
+	// test
+	'org.assertj:assertj-core:latest.release',
+	'org.awaitility:awaitility:latest.release',
+	'org.junit.jupiter:junit-jupiter:5.8.+',
+	'org.junit.platform:junit-platform-launcher:1.8.+',
+	'org.junit.vintage:junit-vintage-engine:5.8.+',
+	'org.mockito:mockito-core:latest.release',
+	'org.mockito:mockito-inline:latest.release',
+	'org.testcontainers:testcontainers:latest.release',
+	'org.testcontainers:junit-jupiter:latest.release'
 ]
 
 def PLATFORM_VERSIONS = [
-		'io.micrometer:micrometer-bom:1.10.0-SNAPSHOT',
-		'io.micrometer:micrometer-tracing-bom:1.0.0-SNAPSHOT',
-		'org.junit:junit-bom:5.8.+'
+	'io.micrometer:micrometer-bom:1.10.0-SNAPSHOT',
+	'io.micrometer:micrometer-tracing-bom:1.0.0-SNAPSHOT',
+	'org.junit:junit-bom:5.8.+'
 ]
 
 subprojects {
