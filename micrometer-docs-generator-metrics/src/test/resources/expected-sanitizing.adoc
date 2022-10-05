@@ -26,6 +26,12 @@ ____
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
+
+
+
+
+
+
 [[observability-metrics-inline-html-tags]]
 ==== Inline Html Tags
 
@@ -42,6 +48,12 @@ ____
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
+
+
+
+
+
+
 [[observability-metrics-taglets]]
 ==== Taglets
 
@@ -53,6 +65,12 @@ ____
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
+
+
+
+
+
+
 [[observability-metrics-with-tags]]
 ==== With Tags
 
@@ -63,6 +81,8 @@ ____
 **Metric name** `tags`. **Type** `timer` and **base unit** `seconds`.
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
+
+
 
 .Low cardinality Keys
 [cols="a,a"]
@@ -80,4 +100,7 @@ A closed in single tag BR.
  - an unordered list
 |`method`|This tag javadoc includes sanitized taglets elements which should all result in a single line: This is code: `someCode`. This is a simple link: `#HTML`. This is a link with alias text: alias.
 |===
+
+
+
 

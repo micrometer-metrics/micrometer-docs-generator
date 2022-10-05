@@ -114,37 +114,6 @@ class SpanEntry implements Comparable<SpanEntry> {
         return enumName.compareTo(o.enumName);
     }
 
-    @Override
-    public String toString() {
-        String displayName = Arrays.stream(enumName.replace("_", " ").split(" "))
-                .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
-        StringBuilder text = new StringBuilder()
-                .append("[[observability-spans-").append(displayName.toLowerCase(Locale.ROOT).replace(" ", "-")).append("]]\n")
-                .append("==== ")
-                .append(spanName())
-                .append("\n\n> ").append(description).append("\n\n")
-                .append("**Span name** ").append(name());
-        if (name.contains("%s")) {
-            text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
-        }
-        else {
-            text.append(".");
-        }
-        text.append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`.");
-        if (StringUtils.hasText(prefix)) {
-            text.append("\n\nIMPORTANT: All tags and event names must be prefixed with `").append(this.prefix).append("` prefix!");
-        }
-        if (!tagKeys.isEmpty()) {
-            text.append("\n\n.Tag Keys\n|===\n|Name | Description\n").append(this.tagKeys.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
-                    .append("\n|===");
-        }
-        if (!events.isEmpty()) {
-            text.append("\n\n.Event Values\n|===\n|Name | Description\n").append(this.events.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
-                    .append("\n|===");
-        }
-        return text.toString();
-    }
-
     private String spanName() {
         String name = Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
         if (!name.toLowerCase(Locale.ROOT).endsWith("span")) {
@@ -160,5 +129,41 @@ class SpanEntry implements Comparable<SpanEntry> {
             return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
         }
         return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
+    }
+
+    public String getSpanTitle() {
+        // TODO: convert to handlebar helper
+        return spanName();
+    }
+    public String getDisplayName() {
+        return name();
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public String getEnumName() {
+        return this.enumName;
+    }
+
+    public String getDescription() {
+        return this.description;
+    }
+
+    public String getEnclosingClass() {
+        return this.enclosingClass;
+    }
+
+    public String getPrefix() {
+        return this.prefix;
+    }
+
+    public Collection<KeyValueEntry> getTagKeys() {
+        return this.tagKeys;
+    }
+
+    public Collection<KeyValueEntry> getEvents() {
+        return this.events;
     }
 }

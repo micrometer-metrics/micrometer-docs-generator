@@ -22,12 +22,20 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.ObservationConventionEntry;
+import io.micrometer.docs.commons.ObservationConventionEntry.Type;
+import io.micrometer.docs.commons.templates.HandlebarsUtils;
 
 // TODO: Assert on prefixes
 public class DocsFromSources {
@@ -58,13 +66,15 @@ public class DocsFromSources {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<MetricEntry> entries = new TreeSet<>();
-        Collection<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
+        TreeSet<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
         FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries, observationConventionEntries);
         try {
             Files.walkFileTree(path, fv);
             MetricEntry.assertThatProperlyPrefixed(entries);
+
+            this.outputDir.mkdirs();
             printMetricsAdoc(entries);
-            ObservationConventionEntry.saveEntriesAsAdocTableInAFile(observationConventionEntries, new File(this.outputDir, "_conventions.adoc"));
+            printObservationConventionsAdoc(observationConventionEntries);
         }
         catch (IOException e) {
             throw new IllegalArgumentException(e);
@@ -72,23 +82,32 @@ public class DocsFromSources {
     }
 
     private void printMetricsAdoc(Collection<MetricEntry> entries) throws IOException {
-        File file = new File(this.outputDir, "_metrics.adoc");
-        if (!file.exists()) {
-            file.getParentFile().mkdirs();
-            file.createNewFile();
-        }
-        logger.debug("Will create files under [" + file + "]");
-        StringBuilder stringBuilder = new StringBuilder();
-        Path output = file.toPath();
-        logger.debug("======================================");
-        logger.debug("Summary of sources analysis");
-        logger.debug("Found [" + entries.size() + "] samples");
-        logger.debug(
-                "Found [" + entries.stream().flatMap(e -> e.lowCardinalityKeyNames.stream()).distinct().count() + "] low cardinality tags");
-        logger.debug(
-                "Found [" + entries.stream().flatMap(e -> e.highCardinalityKeyNames.stream()).distinct().count() + "] high cardinality tags");
-        stringBuilder.append("[[observability-metrics]]\n=== Observability - Metrics\n\nBelow you can find a list of all metrics declared by this project.\n\n");
-        entries.forEach(metricEntry -> stringBuilder.append(metricEntry.toString()).append("\n\n"));
-        Files.write(output, stringBuilder.toString().getBytes());
+        String location = "templates/metrics.adoc.hbs";
+        Handlebars handlebars = HandlebarsUtils.createHandlebars();
+        Template template = handlebars.compile(location);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("entries", entries);
+        String result = template.apply(map);
+
+        Path output = new File(this.outputDir, "_metrics.adoc").toPath();
+        Files.write(output, result.getBytes());
     }
+    private void printObservationConventionsAdoc(TreeSet<ObservationConventionEntry> entries) throws IOException {
+        List<ObservationConventionEntry> globals = entries.stream().filter(e -> e.getType() == Type.GLOBAL).collect(Collectors.toList());
+        List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL).collect(Collectors.toList());
+
+        String location = "templates/conventions.adoc.hbs";
+        Handlebars handlebars = HandlebarsUtils.createHandlebars();
+        Template template = handlebars.compile(location);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("globals", globals);
+        map.put("locals", locals);
+        String result = template.apply(map);
+
+        Path output = new File(this.outputDir, "_conventions.adoc").toPath();
+        Files.write(output, result.getBytes());
+    }
+
 }

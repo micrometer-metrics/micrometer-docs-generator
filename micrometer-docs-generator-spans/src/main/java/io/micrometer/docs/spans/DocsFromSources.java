@@ -22,12 +22,20 @@ import java.nio.file.FileVisitor;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
+import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.ObservationConventionEntry;
+import io.micrometer.docs.commons.ObservationConventionEntry.Type;
+import io.micrometer.docs.commons.templates.HandlebarsUtils;
 
 
 public class DocsFromSources {
@@ -57,13 +65,14 @@ public class DocsFromSources {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         Collection<SpanEntry> spanEntries = new TreeSet<>();
-        Collection<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
+        TreeSet<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries, observationConventionEntries);
         try {
             Files.walkFileTree(path, fv);
             SpanEntry.assertThatProperlyPrefixed(spanEntries);
+
             printSpansAdoc(spanEntries);
-            ObservationConventionEntry.saveEntriesAsAdocTableInAFile(observationConventionEntries, new File(this.outputDir, "_conventions.adoc"));
+            printObservationConventionsAdoc(observationConventionEntries);
         }
         catch (IOException e) {
             throw new IllegalArgumentException(e);
@@ -71,19 +80,33 @@ public class DocsFromSources {
     }
 
     private void printSpansAdoc(Collection<SpanEntry> spanEntries) throws IOException {
+        String location = "templates/spans.adoc.hbs";
+        Handlebars handlebars = HandlebarsUtils.createHandlebars();
+        Template template = handlebars.compile(location);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("entries", spanEntries);
+        String result = template.apply(map);
+
         Path output = new File(this.outputDir, "_spans.adoc").toPath();
-        StringBuilder stringBuilder = new StringBuilder();
-        logger.debug("======================================");
-        logger.debug("Summary of sources analysis");
-        logger.debug("Found [" + spanEntries.size() + "] spans");
-        logger.debug(
-                "Found [" + spanEntries.stream().flatMap(e -> e.tagKeys.stream()).distinct().count() + "] tags");
-        logger.debug(
-                "Found [" + spanEntries.stream().flatMap(e -> e.events.stream()).distinct().count() + "] events");
-        stringBuilder.append("[[observability-spans]]\n=== Observability - Spans\n\nBelow you can find a list of all spans declared by this project.\n\n");
-        spanEntries.forEach(spanEntry -> stringBuilder.append(spanEntry.toString()).append("\n\n"));
-        Files.write(output, stringBuilder.toString().getBytes());
+        Files.write(output, result.getBytes());
     }
 
+    private void printObservationConventionsAdoc(TreeSet<ObservationConventionEntry> entries) throws IOException {
+        List<ObservationConventionEntry> globals = entries.stream().filter(e -> e.getType() == Type.GLOBAL).collect(Collectors.toList());
+        List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL).collect(Collectors.toList());
+
+        String location = "templates/conventions.adoc.hbs";
+        Handlebars handlebars = HandlebarsUtils.createHandlebars();
+        Template template = handlebars.compile(location);
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("globals", globals);
+        map.put("locals", locals);
+        String result = template.apply(map);
+
+        Path output = new File(this.outputDir, "_conventions.adoc").toPath();
+        Files.write(output, result.getBytes());
+    }
 
 }

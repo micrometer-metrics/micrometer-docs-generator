@@ -71,4 +71,9 @@ public class KeyValueEntry implements Comparable<KeyValueEntry> {
     public String getDescription() {
         return description;
     }
+
+    public String getDisplayDescription() {
+        // TODO: use handlebar helper to compose the description
+        return description();
+    }
 }
