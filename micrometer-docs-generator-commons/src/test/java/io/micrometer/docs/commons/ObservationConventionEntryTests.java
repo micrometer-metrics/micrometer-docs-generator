@@ -18,9 +18,13 @@ package io.micrometer.docs.commons;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
+import com.github.jknack.handlebars.Handlebars;
+import io.micrometer.docs.commons.templates.HandlebarsUtils;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,11 +42,20 @@ class ObservationConventionEntryTests {
     void should_save_conventions_as_adoc_table() throws IOException {
         ObservationConventionEntry localEntry = new ObservationConventionEntry("foo.bar.LocalBaz", ObservationConventionEntry.Type.LOCAL, "Observation.Context");
         ObservationConventionEntry globalEntry = new ObservationConventionEntry("foo.bar.GlobalBaz", ObservationConventionEntry.Type.GLOBAL, "Foo");
-        File file = new File(this.output, "_success.adoc");
+        List<ObservationConventionEntry> globals = Collections.singletonList(globalEntry);
+        List<ObservationConventionEntry> locals = Collections.singletonList(localEntry);
 
-        ObservationConventionEntry.saveEntriesAsAdocTableInAFile(Arrays.asList(localEntry, globalEntry), file);
+        Handlebars handlebars = HandlebarsUtils.createHandlebars();
 
-        BDDAssertions.then(new String(Files.readAllBytes(file.toPath())))
+        Map<String, Object> map = new HashMap<>();
+        map.put("globals", globals);
+        map.put("locals", locals);
+
+        String template = "templates/conventions.adoc.hbs";
+
+        String result = handlebars.compile(template).apply(map);
+
+        BDDAssertions.then(result)
                 .contains("|`foo.bar.GlobalBaz`|`Foo`")
                 .contains("|`foo.bar.LocalBaz`|`Observation.Context`");
     }

@@ -1,0 +1,48 @@
+{{!
+    This is a handlebars template file for metrics documentation.
+~}}
+[[observability-spans]]
+=== Observability - Spans
+
+Below you can find a list of all spans declared by this project.
+
+{{#each entries~}}
+
+[[observability-spans-{{slugify (lower (replace enumName "_" " "))}}]]
+==== {{capitalize (lower (replace spanTitle "_" " "))}}
+
+> {{{description}}}
+
+**Span name** {{{displayName}}}{{#if (isDynamic name)}} - since it contains `%s`, the name is dynamic and will be resolved at runtime{{/if}}.
+
+Fully qualified name of the enclosing class `{{enclosingClass}}`.
+
+{{#if prefix~}}
+IMPORTANT: All tags must be prefixed with `{{prefix}}` prefix!
+{{~/if}}
+
+{{#each tagKeys~}}
+{{~#if @first~}}
+.Tag Keys
+|===
+|Name | Description
+{{~/if}}
+|`{{this.name}}`|{{{this.displayDescription}}}
+{{~#if @last}}
+|===
+{{~/if}}
+{{~/each}}
+
+{{#each events~}}
+{{~#if @first~}}
+.Event Values
+|===
+|Name | Description
+{{~/if}}
+|`{{this.name}}`|{{{this.displayDescription}}}
+{{~#if @last}}
+|===
+{{~/if}}
+{{~/each}}
+
+{{/each}}

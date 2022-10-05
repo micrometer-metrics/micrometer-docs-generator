@@ -1,6 +1,7 @@
 def VERSIONS = [
 		'org.jboss.forge.roaster:roaster-api:2.22.3.Final', // last using jdk8
 		'org.jboss.forge.roaster:roaster-jdt:2.22.3.Final', // last using jdk8
+		'com.github.jknack:handlebars:latest.release',
 
 		// logging
 		'ch.qos.logback:logback-classic:1.2.+',

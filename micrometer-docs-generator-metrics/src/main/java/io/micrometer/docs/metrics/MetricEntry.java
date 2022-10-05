@@ -18,15 +18,14 @@ package io.micrometer.docs.metrics;
 
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
@@ -123,73 +122,6 @@ class MetricEntry implements Comparable<MetricEntry> {
         return enumName.compareTo(o.enumName);
     }
 
-    @Override
-    public String toString() {
-        String displayName = Arrays.stream(enumName.replace("_", " ").split(" "))
-                .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
-        String metricDisplayName = "observability-metrics-" + displayName.toLowerCase(Locale.ROOT).replace(" ", "-");
-        StringBuilder text = new StringBuilder()
-                .append("[[").append(metricDisplayName).append("]]\n")
-                .append("==== ")
-                .append(displayName)
-                //use the quote block style to correctly render asciidoc inside the quote
-                .append("\n\n____\n")
-                .append(description)
-                .append("\n____\n\n")
-                .append("**Metric name** ").append(name());
-        if (this.name.contains("%s")) {
-            text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
-        }
-        else {
-            text.append(".");
-        }
-        text.append(" **Type** `").append(type.toString().toLowerCase(Locale.ROOT).replace("_", " "));
-        if (StringUtils.hasText(baseUnit)) {
-            text.append("` and **base unit** `").append(baseUnit.toLowerCase(Locale.ROOT));
-        }
-        text.append("`.").append("\n\n").append("Fully qualified name of the enclosing class `").append(this.enclosingClass).append("`.");
-        if (StringUtils.hasText(prefix)) {
-            text.append("\n\nIMPORTANT: All tags must be prefixed with `").append(this.prefix).append("` prefix!");
-        }
-        if (!lowCardinalityKeyNames.isEmpty()) {
-            text.append("\n\n.Low cardinality Keys")
-                    //we use a,a column types to ensure nested asciidoc is rendered
-                    .append("\n[cols=\"a,a\"]")
-                    .append("\n|===\n|Name | Description\n")
-                    .append(this.lowCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
-                    .append("\n|===");
-        }
-        if (!highCardinalityKeyNames.isEmpty()) {
-            text.append("\n\n.High cardinality Keys")
-                    //we use a,a column types to ensure nested asciidoc is rendered
-                    .append("\n[cols=\"a,a\"]")
-                    .append("\n|===\n|Name | Description\n")
-                    .append(this.highCardinalityKeyNames.stream().map(KeyValueEntry::toString).collect(Collectors.joining("\n")))
-                    .append("\n|===");
-        }
-        if (!events.isEmpty()) {
-            text.append("\n\nSince, events were set on this documented entry, they will be converted to the following counters.\n\n");
-
-            events.forEach(metricEntry -> {
-                String counterName = metricEntry.name;
-                text.append("[[").append(metricDisplayName).append("-").append(counterName.replace(".", "-")).append("]]\n")
-                        .append("===== ")
-                        .append(displayName).append(" - ").append(counterName.replace(".", " "))
-                        .append("\n\n> ").append(metricEntry.description).append("\n\n")
-                        .append("**Metric name** `").append(counterName).append("`");
-                if (this.name.contains("%s")) {
-                    text.append(" - since it contains `%s`, the name is dynamic and will be resolved at runtime.");
-                }
-                else {
-                    text.append(".");
-                }
-                text.append(" **Type** `").append(metricEntry.type.toString().toLowerCase(Locale.ROOT).replace("_", " ")).append("`.\n\n");
-            });
-
-        }
-        return text.toString();
-    }
-
     private String name() {
         if (StringUtils.hasText(this.name)) {
             return "`" + this.name + "`";
@@ -200,4 +132,49 @@ class MetricEntry implements Comparable<MetricEntry> {
         return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
     }
 
+    public String getDescription() {
+        return this.description;
+    }
+
+    public String getMetricName() {
+        // TODO: convert to handlebar helper
+        return name();
+    }
+
+    public String getName() {
+        return this.name;
+    }
+
+    public String getEnumName() {
+        return this.enumName;
+    }
+
+    public Type getType() {
+        return this.type;
+    }
+
+    public String getBaseUnit() {
+        return this.baseUnit;
+    }
+
+    public String getEnclosingClass() {
+        return this.enclosingClass;
+    }
+
+    public String getPrefix() {
+        return this.prefix;
+    }
+
+
+    public Collection<KeyValueEntry> getLowCardinalityKeyNames() {
+        return this.lowCardinalityKeyNames;
+    }
+
+    public Collection<KeyValueEntry> getHighCardinalityKeyNames() {
+        return this.highCardinalityKeyNames;
+    }
+
+    public Collection<MetricEntry> getEvents() {
+        return this.events;
+    }
 }
