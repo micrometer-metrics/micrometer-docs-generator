@@ -27,4 +27,5 @@ include "micrometer-docs-generator-commons", "micrometer-docs-generator-bom"
 ['metrics', 'spans'].each { type ->
 	include "micrometer-docs-generator-${type}"
 }
+include "micrometer-docs-generator"
 
