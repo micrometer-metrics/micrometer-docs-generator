@@ -40,12 +40,15 @@ public class SpansDocGenerator {
 
     private final Pattern inclusionPattern;
 
-    private final File outputDir;
+    private final String templateLocation;
 
-    public SpansDocGenerator(File projectRoot, Pattern inclusionPattern, File outputDir) {
+    private final Path output;
+
+    public SpansDocGenerator(File projectRoot, Pattern inclusionPattern, String templateLocation, Path output) {
         this.projectRoot = projectRoot;
         this.inclusionPattern = inclusionPattern;
-        this.outputDir = outputDir;
+        this.templateLocation = templateLocation;
+        this.output = output;
     }
 
     public void generate() {
@@ -65,16 +68,14 @@ public class SpansDocGenerator {
     }
 
     private void printSpansAdoc(Collection<SpanEntry> spanEntries) throws IOException {
-        String location = "templates/spans.adoc.hbs";
         Handlebars handlebars = HandlebarsUtils.createHandlebars();
-        Template template = handlebars.compile(location);
+        Template template = handlebars.compile(this.templateLocation);
 
         Map<String, Object> map = new HashMap<>();
         map.put("entries", spanEntries);
         String result = template.apply(map);
 
-        Path output = new File(this.outputDir, "_spans.adoc").toPath();
-        Files.write(output, result.getBytes());
+        Files.write(this.output, result.getBytes());
     }
 
 }

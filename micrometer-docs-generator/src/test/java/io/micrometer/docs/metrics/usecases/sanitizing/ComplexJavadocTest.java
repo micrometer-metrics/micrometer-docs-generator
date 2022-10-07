@@ -17,23 +17,25 @@
 package io.micrometer.docs.metrics.usecases.sanitizing;
 
 
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.regex.Pattern;
+
 import io.micrometer.docs.metrics.MetricsDocGenerator;
 import org.assertj.core.api.BDDAssertions;
 import org.junit.jupiter.api.Test;
-
-import java.io.File;
-import java.util.regex.Pattern;
 
 class ComplexJavadocTest {
 
     @Test
     void should_sanitize_meter_and_tag_javadocs() {
         File sourceRoot = new File("src/test/java/io/micrometer/docs/metrics/usecases/sanitizing");
-        File output = new File( "./build");
+        Path output = Paths.get("./build", "_metrics.adoc");
 
-        new MetricsDocGenerator(sourceRoot, Pattern.compile(".*"), output).generate();
+        new MetricsDocGenerator(sourceRoot, Pattern.compile(".*"), "templates/metrics.adoc.hbs", output).generate();
 
-        BDDAssertions.then(new File(output, "_metrics.adoc"))
-                .hasSameTextualContentAs(new File(getClass().getResource("/expected-sanitizing.adoc").getFile()));
+        BDDAssertions.then(output)
+                .hasSameTextualContentAs(Paths.get(getClass().getResource("/expected-sanitizing.adoc").getFile()));
     }
 }

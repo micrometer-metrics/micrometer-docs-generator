@@ -19,6 +19,8 @@ package io.micrometer.docs.spans.test3;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import io.micrometer.docs.spans.SpansDocGenerator;
@@ -30,12 +32,12 @@ class TagsFromParentWithOverridingDocsFromSourcesTests {
     @Test
     void should_append_tag_keys_to_parent_ones() throws IOException {
         File root = new File("./src/test/java/io/micrometer/docs/spans/test3");
-        File output = new File(".", "build/test3");
-        output.mkdirs();
+        Path output = Paths.get(".", "build/test3", "_spans.adoc");
+        Files.createDirectories(output.getParent());
 
-        new SpansDocGenerator(root, Pattern.compile(".*"), output).generate();
+        new SpansDocGenerator(root, Pattern.compile(".*"), "templates/spans.adoc.hbs", output).generate();
 
-        BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
+        BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .doesNotContain("==== Parent Span") // this should be overridden
                 .contains("==== Should Append Additional Tag Keys To Parent Sample Span").contains("> Span.")
                 .contains("|`class`|Class name where a method got annotated with a annotation.")

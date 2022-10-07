@@ -19,6 +19,8 @@ package io.micrometer.docs.metrics;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import org.assertj.core.api.BDDAssertions;
@@ -28,15 +30,14 @@ class DocsFromSourcesTests {
 
     @Test
     void should_build_a_table_out_of_enum_tag_key() throws IOException {
-        File root = new File(".");
-        File output = new File(root, "build");
+        Path output = Paths.get(".", "build", "_metrics.adoc");
 
         //FIXME consider isolating classes relevant to this test into their own package and use that as source root
         //for now only consider the java classes at the root of package io.micrometer.docs.metrics
-        File sourceRoot = new File(root, "src/test");
-        new MetricsDocGenerator(sourceRoot, Pattern.compile(".*/docs/metrics/[a-zA-Z]+\\.java"), output).generate();
+        File sourceRoot = new File(".", "src/test");
+        new MetricsDocGenerator(sourceRoot, Pattern.compile(".*/docs/metrics/[a-zA-Z]+\\.java"), "templates/metrics.adoc.hbs", output).generate();
 
-        BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_metrics.adoc").toPath())))
+        BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .contains("==== Async Annotation")
                 .contains("____" + System.lineSeparator() + "Observation that wraps a")
                 .contains("**Metric name** `%s` - since").contains("Fully qualified name of")

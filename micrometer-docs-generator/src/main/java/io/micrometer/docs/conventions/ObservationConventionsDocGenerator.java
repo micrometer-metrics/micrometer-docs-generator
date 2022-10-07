@@ -41,13 +41,15 @@ public class ObservationConventionsDocGenerator {
     private final File projectRoot;
 
     private final Pattern inclusionPattern;
+    private final String templateLocation;
 
-    private final File outputDir;
+    private final Path output;
 
-    public ObservationConventionsDocGenerator(File projectRoot, Pattern inclusionPattern, File outputDir) {
+    public ObservationConventionsDocGenerator(File projectRoot, Pattern inclusionPattern, String templateLocation, Path output) {
         this.projectRoot = projectRoot;
         this.inclusionPattern = inclusionPattern;
-        this.outputDir = outputDir;
+        this.templateLocation = templateLocation;
+        this.output = output;
     }
 
     public void generate() {
@@ -68,17 +70,15 @@ public class ObservationConventionsDocGenerator {
         List<ObservationConventionEntry> globals = entries.stream().filter(e -> e.getType() == Type.GLOBAL).collect(Collectors.toList());
         List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL).collect(Collectors.toList());
 
-        String location = "templates/conventions.adoc.hbs";
         Handlebars handlebars = HandlebarsUtils.createHandlebars();
-        Template template = handlebars.compile(location);
+        Template template = handlebars.compile(this.templateLocation);
 
         Map<String, Object> map = new HashMap<>();
         map.put("globals", globals);
         map.put("locals", locals);
         String result = template.apply(map);
 
-        Path output = new File(this.outputDir, "_conventions.adoc").toPath();
-        Files.write(output, result.getBytes());
+        Files.write(this.output, result.getBytes());
     }
 
 }

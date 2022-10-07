@@ -19,6 +19,8 @@ package io.micrometer.docs.spans.test1;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.regex.Pattern;
 
 import io.micrometer.docs.spans.SpansDocGenerator;
@@ -30,12 +32,12 @@ class NoOverridingOfTagsDocsFromSourcesTests {
     @Test
     void should_build_a_table_out_of_enum_tag_key() throws IOException {
         File root = new File("./src/test/java/io/micrometer/docs/spans/test1");
-        File output = new File(".", "build/test1");
-        output.mkdirs();
+        Path output = Paths.get(".", "build/test1", "_spans.adoc");
+        Files.createDirectories(output.getParent());
 
-        new SpansDocGenerator(root, Pattern.compile(".*"), output).generate();
+        new SpansDocGenerator(root, Pattern.compile(".*"), "templates/spans.adoc.hbs", output).generate();
 
-        BDDAssertions.then(new String(Files.readAllBytes(new File(output, "_spans.adoc").toPath())))
+        BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .contains("==== Async Annotation Span").contains("> Span that wraps a")
                 .contains("**Span name** `%s` - since").contains("Fully qualified name of")
                 .contains("|`class`|Class name where a method got annotated with @Async.")

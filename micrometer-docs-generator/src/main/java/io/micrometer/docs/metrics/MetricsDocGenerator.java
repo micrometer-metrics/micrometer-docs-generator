@@ -42,12 +42,15 @@ public class MetricsDocGenerator {
 
     private final Pattern inclusionPattern;
 
-    private final File outputDir;
+    private final String templateLocation;
 
-    public MetricsDocGenerator(File projectRoot, Pattern inclusionPattern, File outputDir) {
+    private final Path output;
+
+    public MetricsDocGenerator(File projectRoot, Pattern inclusionPattern, String templateLocation, Path output) {
         this.projectRoot = projectRoot;
         this.inclusionPattern = inclusionPattern;
-        this.outputDir = outputDir;
+        this.templateLocation = templateLocation;
+        this.output = output;
     }
 
     public void generate() {
@@ -58,8 +61,6 @@ public class MetricsDocGenerator {
         try {
             Files.walkFileTree(path, fv);
             MetricEntry.assertThatProperlyPrefixed(entries);
-
-            this.outputDir.mkdirs();
             printMetricsAdoc(entries);
         }
         catch (IOException e) {
@@ -68,16 +69,14 @@ public class MetricsDocGenerator {
     }
 
     private void printMetricsAdoc(Collection<MetricEntry> entries) throws IOException {
-        String location = "templates/metrics.adoc.hbs";
         Handlebars handlebars = HandlebarsUtils.createHandlebars();
-        Template template = handlebars.compile(location);
+        Template template = handlebars.compile(this.templateLocation);
 
         Map<String, Object> map = new HashMap<>();
         map.put("entries", entries);
         String result = template.apply(map);
 
-        Path output = new File(this.outputDir, "_metrics.adoc").toPath();
-        Files.write(output, result.getBytes());
+        Files.write(this.output, result.getBytes());
     }
 
 }

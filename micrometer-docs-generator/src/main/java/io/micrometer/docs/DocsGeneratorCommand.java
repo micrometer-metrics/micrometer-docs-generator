@@ -17,6 +17,9 @@
 package io.micrometer.docs;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
@@ -24,6 +27,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.conventions.ObservationConventionsDocGenerator;
 import io.micrometer.docs.metrics.MetricsDocGenerator;
 import io.micrometer.docs.spans.SpansDocGenerator;
+import org.jboss.forge.roaster._shade.org.eclipse.core.runtime.Assert;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -50,7 +54,31 @@ public class DocsGeneratorCommand implements Runnable {
     private Pattern inclusionPattern;
 
     @Parameters(index = "2", description = "The output directory.")
-    private File outputDir;
+    private Path outputDir;
+
+    @Option(names = "--metrics-template", defaultValue = "templates/metrics.adoc.hbs",
+            description = "Metrics template location")
+    private String metricsTemplate;
+
+    @Option(names = "--spans-template", defaultValue = "templates/spans.adoc.hbs",
+            description = "Spans template location")
+    private String spansTemplate;
+
+    @Option(names = "--conventions-template", defaultValue = "templates/conventions.adoc.hbs",
+            description = "Observation Conventions template location")
+    private String conventionsTemplate;
+
+    @Option(names = "--metrics-output", defaultValue = "_metrics.adoc",
+            description = "Generated metrics filename. Absolute path or relative path to the output directory.")
+    private Path metricsOutput;
+
+    @Option(names = "--spans-output", defaultValue = "_spans.adoc",
+            description = "Generated metrics filename. Absolute path or relative path to the output directory.")
+    private Path spansOutput;
+
+    @Option(names = "--conventions-output", defaultValue = "_conventions.adoc",
+            description = "Generated observation conventions filename. Absolute path or relative path to the output directory.")
+    private Path conventionsOutput;
 
     public static void main(String... args) {
         new CommandLine(new DocsGeneratorCommand()).execute(args);
@@ -77,16 +105,41 @@ public class DocsGeneratorCommand implements Runnable {
     }
 
     void generateMetricsDoc() {
-        new MetricsDocGenerator(this.projectRoot, this.inclusionPattern, this.outputDir).generate();
+        Path output = resolveAndPrepareOutputPath(this.metricsOutput);
+        new MetricsDocGenerator(this.projectRoot, this.inclusionPattern, this.metricsTemplate, output).generate();
     }
 
     void generateSpansDoc() {
-        new SpansDocGenerator(this.projectRoot, this.inclusionPattern, this.outputDir).generate();
+        Path output = resolveAndPrepareOutputPath(this.spansOutput);
+        new SpansDocGenerator(this.projectRoot, this.inclusionPattern, this.spansTemplate, output).generate();
     }
 
     void generateConventionsDoc() {
-        new ObservationConventionsDocGenerator(this.projectRoot, this.inclusionPattern, this.outputDir).generate();
+        Path output = resolveAndPrepareOutputPath(this.conventionsOutput);
+        new ObservationConventionsDocGenerator(this.projectRoot, this.inclusionPattern, this.conventionsTemplate, output).generate();
     }
+
+    private Path resolveAndPrepareOutputPath(Path specified) {
+        Path resolved = resolveOutputPath(specified);
+        Assert.isTrue(!resolved.toFile().isDirectory(), resolved + " is not a file");
+
+        try {
+            Files.createDirectories(resolved.getParent());
+        }
+        catch (IOException ex) {
+            throw new RuntimeException("Failed to prepare output directory for " + resolved, ex);
+        }
+
+        return resolved;
+    }
+
+    private Path resolveOutputPath(Path specified) {
+        if (specified.isAbsolute()) {
+            return specified;
+        }
+        return this.outputDir.resolve(specified);
+    }
+
 
     static class Options {
         @Option(names = "--metrics", description = "Generate metrics documentation")
