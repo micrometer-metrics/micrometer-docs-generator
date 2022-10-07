@@ -202,9 +202,6 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             else if ("getType".equals(methodName)) {
                 type = ParsingUtils.enumFromReturnMethodDeclaration(methodDeclaration, Meter.Type.class);
             }
-            else if ("getDescription".equals(methodName)) {
-                description = ParsingUtils.readStringReturnValue(methodDeclaration);
-            }
             // MeterDocumentation
             else if ("overridesDefaultMetricFrom".equals(methodName)) {
                 overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
