@@ -185,28 +185,36 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
+            // SpanDocumentation, ObservationDocumentation
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // ObservationDocumentation
             else if ("getDefaultConvention".equals(methodName)) {
                 conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
+            // ObservationDocumentation
             else if ("getContextualName".equals(methodName)) {
                 contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // SpanDocumentation
             else if ("getKeyNames".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
                 tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // SpanDocumentation
             else if ("getAdditionalKeyNames".equals(methodName)) {
                 additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
                     events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
@@ -215,9 +223,11 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                     events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getContextualName"));
                 }
             }
+            // SpanDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // SpanDocumentation
             else if ("overridesDefaultSpanFrom".equals(methodName)) {
                 overridesDefaultSpanFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }

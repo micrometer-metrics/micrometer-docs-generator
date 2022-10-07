@@ -169,37 +169,47 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
+            // MeterDocumentation, ObservationDocumentation
             if ("getName".equals(methodName)) {
                 name = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // MeterDocumentation
             else if ("getKeyNames".equals(methodName)) {
                 lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
                 conventionClass = ParsingUtils.readClass(methodDeclaration);
                 nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
             }
+            // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
                 lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
                 highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
             }
+            // MeterDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {
                 prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // MeterDocumentation
             else if ("getBaseUnit".equals(methodName)) {
                 baseUnit = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // MeterDocumentation
             else if ("getType".equals(methodName)) {
                 type = ParsingUtils.enumFromReturnMethodDeclaration(methodDeclaration, Meter.Type.class);
             }
             else if ("getDescription".equals(methodName)) {
                 description = ParsingUtils.readStringReturnValue(methodDeclaration);
             }
+            // MeterDocumentation
             else if ("overridesDefaultMetricFrom".equals(methodName)) {
                 overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
+            // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
                 Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getName");
                 Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
