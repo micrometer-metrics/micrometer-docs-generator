@@ -27,7 +27,6 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.conventions.ObservationConventionsDocGenerator;
 import io.micrometer.docs.metrics.MetricsDocGenerator;
 import io.micrometer.docs.spans.SpansDocGenerator;
-import org.jboss.forge.roaster._shade.org.eclipse.core.runtime.Assert;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -121,7 +120,9 @@ public class DocsGeneratorCommand implements Runnable {
 
     private Path resolveAndPrepareOutputPath(Path specified) {
         Path resolved = resolveOutputPath(specified);
-        Assert.isTrue(!resolved.toFile().isDirectory(), resolved + " is not a file");
+        if (!resolved.toFile().isDirectory()) {
+            throw new IllegalArgumentException(resolved + " is not a file");
+        }
 
         try {
             Files.createDirectories(resolved.getParent());
