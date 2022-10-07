@@ -120,7 +120,7 @@ public class DocsGeneratorCommand implements Runnable {
 
     private Path resolveAndPrepareOutputPath(Path specified) {
         Path resolved = resolveOutputPath(specified);
-        if (!resolved.toFile().isDirectory()) {
+        if (resolved.toFile().isDirectory()) {
             throw new IllegalArgumentException(resolved + " is not a file");
         }
 
