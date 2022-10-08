@@ -64,7 +64,7 @@ public class ParsingUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
-            Collection<T> keyValues, EntryEnumReader<?> converter, boolean toKeyValue) {
+            Collection<T> keyValues, EntryEnumReader<?> converter) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -86,13 +86,7 @@ public class ParsingUtils {
             return;
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            if (toKeyValue) {
-                KeyValueEntry entry = converter.toKeyValueEntry(enumConstant);
-                keyValues.add((T) entry);
-            }
-            else {
-                keyValues.add((T) converter.apply(enumConstant));
-            }
+            keyValues.add((T) converter.apply(enumConstant));
         }
     }
 
@@ -184,7 +178,7 @@ public class ParsingUtils {
     }
 
     public static <T> Collection<T> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            EntryEnumReader<?> converter, boolean toKeyValue) {
+            EntryEnumReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         Collection<T> keyValues = new TreeSet<>();
         enumNames.forEach(enumName -> {
@@ -192,7 +186,7 @@ public class ParsingUtils {
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, keyValues, converter, toKeyValue);
+            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, keyValues, converter);
         });
         return keyValues;
     }
@@ -371,7 +365,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
         }
         return tags;

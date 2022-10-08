@@ -26,7 +26,7 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
  *
  * @author Tadaya Tsuyukubo
  */
-public interface EntryEnumReader<T> extends Function<EnumConstantSource, T>, KeyValueEntryConverter {
+public interface EntryEnumReader<T> extends Function<EnumConstantSource, T> {
 
     Class<?> getRequiredClass();
 }

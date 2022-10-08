@@ -45,9 +45,4 @@ public class EventEntryForSpanEnumReader implements EntryEnumReader<EventEntry> 
         return model;
     }
 
-    @Override
-    public KeyValueEntry toKeyValueEntry(EnumConstantSource enumConstantSource) {
-        EventEntry model = this.apply(enumConstantSource);
-        return new KeyValueEntry(model.getValue(), model.getDescription());
-    }
 }

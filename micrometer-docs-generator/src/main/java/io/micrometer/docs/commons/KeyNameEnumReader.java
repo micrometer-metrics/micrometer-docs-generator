@@ -46,10 +46,4 @@ public class KeyNameEnumReader implements EntryEnumReader<KeyNameEntry> {
         return model;
     }
 
-    @Override
-    public KeyValueEntry toKeyValueEntry(EnumConstantSource enumConstantSource) {
-        KeyNameEntry model = this.apply(enumConstantSource);
-        return new KeyValueEntry(model.getValue(), model.getDescription());
-    }
-
 }

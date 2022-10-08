@@ -176,7 +176,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
@@ -185,11 +185,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // MeterDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {
@@ -209,7 +209,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
-                Collection<EventEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE, false);
+                Collection<EventEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE);
                 Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
                 events.addAll(counters);
             }
