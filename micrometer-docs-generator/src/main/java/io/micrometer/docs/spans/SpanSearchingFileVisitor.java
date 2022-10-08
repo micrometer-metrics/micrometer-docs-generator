@@ -200,24 +200,24 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // SpanDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // SpanDocumentation
             else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValue.class, "getValue"));
                 }
                 else {
                     events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, Observation.Event.class, "getContextualName"));

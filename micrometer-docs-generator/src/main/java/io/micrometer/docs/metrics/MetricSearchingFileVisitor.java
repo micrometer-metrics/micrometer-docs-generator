@@ -175,7 +175,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
@@ -184,11 +184,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
             // MeterDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {

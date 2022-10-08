@@ -67,7 +67,7 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class<?> requiredClass,
-            Collection<KeyValueEntry> keyValues, @Nullable String methodName) {
+            Collection<KeyValueEntry> keyValues, String methodName) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -178,12 +178,7 @@ public class ParsingUtils {
     }
 
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass) {
-        return keyValueEntries(myEnum, methodDeclaration, requiredClass, null);
-    }
-
-    public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass, @Nullable String methodName) {
+            Class requiredClass, String methodName) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         Collection<KeyValueEntry> keyValues = new TreeSet<>();
         enumNames.forEach(enumName -> {
@@ -229,21 +224,16 @@ public class ParsingUtils {
         return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
-    private static String enumKeyValue(EnumConstantSource enumConstant, @Nullable String methodName) {
+    private static String enumKeyValue(EnumConstantSource enumConstant, String methodName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             logger.warn("No method declarations in the enum.");
             return "";
         }
-        Object internal;
-        if (methodName == null) {
-            internal = members.get(0).getInternal();
-        } else {
-            internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
-            if (internal == null) {
-                logger.warn("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
-                return "";
-            }
+        Object internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
+        if (internal == null) {
+            logger.warn("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
+            return "";
         }
         if (!(internal instanceof MethodDeclaration)) {
             logger.warn("Can't read the member [" + internal.getClass() + "] as a method declaration.");
@@ -375,7 +365,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
             }
         }
         return tags;
