@@ -300,7 +300,7 @@ subprojects {
 		}
 	}
 
-	description = 'Facade over tracing concepts'
+	description = 'Documentation generator for Micrometer'
 
 	repositories {
 		mavenCentral()
