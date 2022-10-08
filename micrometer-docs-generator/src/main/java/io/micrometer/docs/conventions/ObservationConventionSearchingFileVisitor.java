@@ -34,7 +34,7 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.impl.JavaClassImpl;
-import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
 
 class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
@@ -60,7 +60,7 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
         try (InputStream stream = Files.newInputStream(file)) {
             JavaUnit unit = Roaster.parseUnit(stream);
             JavaType myClass = unit.getGoverningType();
-            if (!(myClass instanceof JavaEnumImpl)) {
+            if (!(myClass instanceof JavaEnumSource)) {
                 if (myClass instanceof JavaClassImpl) {
                     Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
                     JavaClassImpl holder = (JavaClassImpl) myClass;

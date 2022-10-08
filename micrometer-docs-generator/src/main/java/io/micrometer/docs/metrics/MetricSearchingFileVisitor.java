@@ -46,8 +46,8 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
-import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 
 class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
@@ -74,10 +74,10 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         try (InputStream stream = Files.newInputStream(file)) {
             JavaUnit unit = Roaster.parseUnit(stream);
             JavaType myClass = unit.getGoverningType();
-            if (!(myClass instanceof JavaEnumImpl)) {
+            if (!(myClass instanceof JavaEnumSource)) {
                 return FileVisitResult.CONTINUE;
             }
-            JavaEnumImpl myEnum = (JavaEnumImpl) myClass;
+            JavaEnumSource myEnum = (JavaEnumSource) myClass;
             if (Stream.of(MeterDocumentation.class.getCanonicalName(), ObservationDocumentation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
                 return FileVisitResult.CONTINUE;
             }
@@ -123,10 +123,10 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
             JavaUnit parsedForOverride = Roaster.parseUnit(streamForOverride);
             JavaType overrideClass = parsedForOverride.getGoverningType();
-            if (!(overrideClass instanceof JavaEnumImpl)) {
+            if (!(overrideClass instanceof JavaEnumSource)) {
                 return;
             }
-            JavaEnumImpl myEnum = (JavaEnumImpl) overrideClass;
+            JavaEnumSource myEnum = (JavaEnumSource) overrideClass;
             if (!myEnum.getInterfaces().contains(ObservationDocumentation.class.getCanonicalName())) {
                 return;
             }
@@ -146,7 +146,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
-    private MetricEntry parseMetric(Path file, EnumConstantSource enumConstant, JavaEnumImpl myEnum) {
+    private MetricEntry parseMetric(Path file, EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return null;

@@ -49,11 +49,11 @@ import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.impl.AbstractJavaSource;
 import org.jboss.forge.roaster.model.impl.JavaClassImpl;
-import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.impl.JavaInterfaceImpl;
 import org.jboss.forge.roaster.model.impl.JavaUnitImpl;
 import org.jboss.forge.roaster.model.impl.MethodImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -63,12 +63,12 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
-    private static <T> void updateModelsFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
+    private static <T> void updateModelsFromEnum(JavaEnumSource parentEnum, JavaSource<?> source,
             Collection<T> models, EntryEnumReader<?> converter) {
-        if (!(source instanceof JavaEnumImpl)) {
+        if (!(source instanceof JavaEnumSource)) {
             return;
         }
-        JavaEnumImpl myEnum = (JavaEnumImpl) source;
+        JavaEnumSource myEnum = (JavaEnumSource) source;
 
         // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
         // For example, "MyEnum" implements "Observation.Event" interface as:
@@ -177,7 +177,7 @@ public class ParsingUtils {
         return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
-    public static <T> Collection<T> retrieveModels(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
+    public static <T> Collection<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
             EntryEnumReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         Collection<T> models = new TreeSet<>();
@@ -351,7 +351,7 @@ public class ParsingUtils {
         return matchingImportStatement;
     }
 
-    public static Collection<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumImpl myEnum, String getterName) {
+    public static Collection<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String getterName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return Collections.emptyList();
