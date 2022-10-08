@@ -11,9 +11,6 @@ def VERSIONS = [
 	// test
 	'org.assertj:assertj-core:latest.release',
 	'org.awaitility:awaitility:latest.release',
-	'org.junit.jupiter:junit-jupiter:5.8.+',
-	'org.junit.platform:junit-platform-launcher:1.8.+',
-	'org.junit.vintage:junit-vintage-engine:5.8.+',
 	'org.mockito:mockito-core:latest.release',
 	'org.mockito:mockito-inline:latest.release',
 	'org.testcontainers:testcontainers:latest.release',
@@ -21,12 +18,12 @@ def VERSIONS = [
 ]
 
 def MICROMETER_PLATFORM_VERSIONS = [
-		'io.micrometer:micrometer-bom:1.10.0-SNAPSHOT',
+	'io.micrometer:micrometer-bom:1.10.0-SNAPSHOT',
 	'io.micrometer:micrometer-tracing-bom:1.0.0-SNAPSHOT'
 ]
 
 def PLATFORM_VERSIONS = [
-	'org.junit:junit-bom:5.8.+'
+	'org.junit:junit-bom:5.9.+' // Not using latest.release to avoid using a milestone version.
 ]
 
 subprojects {
