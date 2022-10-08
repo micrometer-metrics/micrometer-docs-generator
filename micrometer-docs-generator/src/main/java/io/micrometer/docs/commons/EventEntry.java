@@ -23,12 +23,30 @@ import io.micrometer.observation.Observation;
  *
  * @author Tadaya Tsuyukubo
  */
-public class EventEntry {
+public class EventEntry implements Comparable<EventEntry> {
 
     private String value;
 
     private String description;
 
+    // TODO: naming
+    public String getName() {
+        return this.value;
+    }
+
+    public String getDisplayDescription() {
+        // TODO: use handlebar helper to compose the description
+        String suffix = "";
+        if (this.value.contains("%s")) {
+            suffix = " (since the name contains `%s` the final value will be resolved at runtime)";
+        }
+        return this.description + suffix;
+    }
+
+    @Override
+    public int compareTo(EventEntry other) {
+        return this.value.compareTo(other.value);
+    }
 
     public String getValue() {
         return this.value;

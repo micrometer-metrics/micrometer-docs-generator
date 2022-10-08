@@ -36,10 +36,10 @@ import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
+import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForMetricEnumReader;
 import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumReader;
-import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.docs.ObservationDocumentation;
@@ -209,7 +209,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
-                Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE, true);
+                Collection<EventEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE, false);
                 Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
                 events.addAll(counters);
             }
