@@ -17,9 +17,10 @@
 package io.micrometer.docs.commons;
 
 import io.micrometer.observation.Observation;
+import io.micrometer.tracing.docs.EventValue;
 
 /**
- * Model object for {@link Observation .Event}.
+ * Model object for {@link Observation.Event} and {@link EventValue}.
  *
  * @author Tadaya Tsuyukubo
  */

@@ -25,7 +25,7 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
  *
  * @author Tadaya Tsuyukubo
  */
-public class EventValueEntryEnumReader implements EntryEnumReader<EventValueEntry> {
+public class EventValueEntryEnumReader implements EntryEnumReader<EventEntry> {
 
     public static final EventValueEntryEnumReader INSTANCE = new EventValueEntryEnumReader();
 
@@ -35,11 +35,11 @@ public class EventValueEntryEnumReader implements EntryEnumReader<EventValueEntr
     }
 
     @Override
-    public EventValueEntry apply(EnumConstantSource enumConstantSource) {
+    public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
         String value = ParsingUtils.enumKeyValue(enumConstantSource, "getValue");
 
-        EventValueEntry model = new EventValueEntry();
+        EventEntry model = new EventEntry();
         model.setValue(value);
         model.setDescription(description);
         return model;
@@ -47,7 +47,7 @@ public class EventValueEntryEnumReader implements EntryEnumReader<EventValueEntr
 
     @Override
     public KeyValueEntry toKeyValueEntry(EnumConstantSource enumConstantSource) {
-        EventValueEntry model = this.apply(enumConstantSource);
+        EventEntry model = this.apply(enumConstantSource);
         return new KeyValueEntry(model.getValue(), model.getDescription());
     }
 
