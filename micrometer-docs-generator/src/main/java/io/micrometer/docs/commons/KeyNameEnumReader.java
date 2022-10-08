@@ -41,7 +41,7 @@ public class KeyNameEnumReader implements EntryEnumReader<KeyNameEntry> {
 
         // TODO: populate readonly info
         KeyNameEntry model = new KeyNameEntry();
-        model.setValue(value);
+        model.setName(value);
         model.setDescription(description);
         return model;
     }

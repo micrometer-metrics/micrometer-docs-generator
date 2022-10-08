@@ -40,7 +40,7 @@ public class EventValueEntryEnumReader implements EntryEnumReader<EventEntry> {
         String value = ParsingUtils.enumMethodValue(enumConstantSource, "getValue");
 
         EventEntry model = new EventEntry();
-        model.setValue(value);
+        model.setName(value);
         model.setDescription(description);
         return model;
     }

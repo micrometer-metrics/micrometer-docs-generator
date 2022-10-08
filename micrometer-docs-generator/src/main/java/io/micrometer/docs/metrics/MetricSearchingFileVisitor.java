@@ -213,7 +213,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
         }
         final String newName = name;
-        events.forEach(event -> event.setValue(newName + "." + event.getValue()));
+        events.forEach(event -> event.setName(newName + "." + event.getName()));
 
         return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
                 highCardinalityTags, overridesDefaultMetricFrom, events);

@@ -40,7 +40,7 @@ public class EventEntryForSpanEnumReader implements EntryEnumReader<EventEntry> 
         String value = ParsingUtils.enumMethodValue(enumConstantSource, "getContextualName");
 
         EventEntry model = new EventEntry();
-        model.setValue(value);
+        model.setName(value);
         model.setDescription(description);
         return model;
     }

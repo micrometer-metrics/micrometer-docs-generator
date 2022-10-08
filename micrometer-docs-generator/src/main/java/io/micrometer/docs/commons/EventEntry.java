@@ -26,19 +26,14 @@ import io.micrometer.tracing.docs.EventValue;
  */
 public class EventEntry implements Comparable<EventEntry> {
 
-    private String value;
+    private String name;
 
     private String description;
-
-    // TODO: naming
-    public String getName() {
-        return this.value;
-    }
 
     public String getDisplayDescription() {
         // TODO: use handlebar helper to compose the description
         String suffix = "";
-        if (this.value.contains("%s")) {
+        if (this.name.contains("%s")) {
             suffix = " (since the name contains `%s` the final value will be resolved at runtime)";
         }
         return this.description + suffix;
@@ -46,15 +41,15 @@ public class EventEntry implements Comparable<EventEntry> {
 
     @Override
     public int compareTo(EventEntry other) {
-        return this.value.compareTo(other.value);
+        return this.name.compareTo(other.name);
     }
 
-    public String getValue() {
-        return this.value;
+    public String getName() {
+        return this.name;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getDescription() {

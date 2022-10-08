@@ -40,7 +40,7 @@ public class EventEntryForMetricEnumReader implements EntryEnumReader<EventEntry
         String value = ParsingUtils.enumMethodValue(enumConstantSource, "getName");
 
         EventEntry model = new EventEntry();
-        model.setValue(value);
+        model.setName(value);
         model.setDescription(description);
         return model;
     }
