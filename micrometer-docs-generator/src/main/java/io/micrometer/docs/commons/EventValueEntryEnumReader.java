@@ -37,7 +37,7 @@ public class EventValueEntryEnumReader implements EntryEnumReader<EventEntry> {
     @Override
     public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
-        String value = ParsingUtils.enumKeyValue(enumConstantSource, "getValue");
+        String value = ParsingUtils.enumMethodValue(enumConstantSource, "getValue");
 
         EventEntry model = new EventEntry();
         model.setValue(value);

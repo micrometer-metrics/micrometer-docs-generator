@@ -37,7 +37,7 @@ public class KeyNameEnumReader implements EntryEnumReader<KeyNameEntry> {
     @Override
     public KeyNameEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
-        String value = ParsingUtils.enumKeyValue(enumConstantSource, "asString");
+        String value = ParsingUtils.enumMethodValue(enumConstantSource, "asString");
 
         // TODO: populate readonly info
         KeyNameEntry model = new KeyNameEntry();

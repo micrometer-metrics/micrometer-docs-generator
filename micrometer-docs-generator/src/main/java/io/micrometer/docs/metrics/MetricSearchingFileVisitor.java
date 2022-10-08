@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
@@ -176,7 +175,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
@@ -185,11 +184,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // MeterDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {
@@ -209,7 +208,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
-                Collection<EventEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE);
+                Collection<EventEntry> entries = ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE);
                 events.addAll(entries);
             }
         }

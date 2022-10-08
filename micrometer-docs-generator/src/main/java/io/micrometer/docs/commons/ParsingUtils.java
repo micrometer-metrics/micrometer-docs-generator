@@ -63,8 +63,8 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
-    public static <T> void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
-            Collection<T> keyValues, EntryEnumReader<?> converter) {
+    private static <T> void updateModelsFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
+            Collection<T> models, EntryEnumReader<?> converter) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -86,7 +86,7 @@ public class ParsingUtils {
             return;
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            keyValues.add((T) converter.apply(enumConstant));
+            models.add((T) converter.apply(enumConstant));
         }
     }
 
@@ -177,18 +177,18 @@ public class ParsingUtils {
         return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
-    public static <T> Collection<T> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
+    public static <T> Collection<T> retrieveModels(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
             EntryEnumReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
-        Collection<T> keyValues = new TreeSet<>();
+        Collection<T> models = new TreeSet<>();
         enumNames.forEach(enumName -> {
             List<JavaSource<?>> nestedTypes = myEnum.getNestedTypes();
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, keyValues, converter);
+            ParsingUtils.updateModelsFromEnum(myEnum, nestedSource, models, converter);
         });
-        return keyValues;
+        return models;
     }
 
     public static Collection<String> readClassValue(MethodDeclaration methodDeclaration) {
@@ -224,7 +224,7 @@ public class ParsingUtils {
         return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
-    static String enumKeyValue(EnumConstantSource enumConstant, String methodName) {
+    static String enumMethodValue(EnumConstantSource enumConstant, String methodName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             logger.warn("No method declarations in the enum.");
@@ -365,7 +365,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
         }
         return tags;

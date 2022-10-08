@@ -201,27 +201,27 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // SpanDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // SpanDocumentation
             else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                additionalKeyNames.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
             // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE));
+                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE));
                 }
                 else {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE));
+                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE));
                 }
             }
             // SpanDocumentation, ObservationDocumentation
