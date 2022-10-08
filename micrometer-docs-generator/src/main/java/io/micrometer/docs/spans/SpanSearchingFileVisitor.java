@@ -34,11 +34,11 @@ import java.util.stream.Stream;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForSpanEnumReader;
 import io.micrometer.docs.commons.EventValueEntryEnumReader;
 import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumReader;
-import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.docs.ObservationDocumentation;
@@ -175,7 +175,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String prefix = "";
         Collection<KeyNameEntry> tags = new TreeSet<>();
         Collection<KeyNameEntry> additionalKeyNames = new TreeSet<>();
-        Collection<KeyValueEntry> events = new TreeSet<>();
+        Collection<EventEntry> events = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultSpanFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
@@ -218,10 +218,10 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE, true));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE, false));
                 }
                 else {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE, true));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE, false));
                 }
             }
             // SpanDocumentation, ObservationDocumentation

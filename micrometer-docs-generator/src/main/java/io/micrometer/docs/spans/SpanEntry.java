@@ -25,8 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.KeyNameEntry;
-import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
 
@@ -50,12 +50,12 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final Collection<KeyNameEntry> additionalKeyNames;
 
-    final Collection<KeyValueEntry> events;
+    final Collection<EventEntry> events;
 
     final Map.Entry<String, String> overridesDefaultSpanFrom;
 
     SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
-            Collection<KeyNameEntry> tagKeys, Collection<KeyNameEntry> additionalKeyNames, Collection<KeyValueEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
+            Collection<KeyNameEntry> tagKeys, Collection<KeyNameEntry> additionalKeyNames, Collection<EventEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
         Assert.hasText(description, "Span javadoc description must not be empty");
         this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;
@@ -163,7 +163,7 @@ class SpanEntry implements Comparable<SpanEntry> {
         return this.tagKeys;
     }
 
-    public Collection<KeyValueEntry> getEvents() {
+    public Collection<EventEntry> getEvents() {
         return this.events;
     }
 }
