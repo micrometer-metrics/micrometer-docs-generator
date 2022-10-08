@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,15 +47,15 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Meter.Type type;
 
-    final Collection<KeyNameEntry> lowCardinalityKeyNames;
+    final List<KeyNameEntry> lowCardinalityKeyNames;
 
-    final Collection<KeyNameEntry> highCardinalityKeyNames;
+    final List<KeyNameEntry> highCardinalityKeyNames;
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    final Collection<EventEntry> events;
+    final List<EventEntry> events;
 
-    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyNameEntry> lowCardinalityKeyNames, Collection<KeyNameEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<EventEntry> events) {
+    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, List<EventEntry> events) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
@@ -166,15 +163,15 @@ class MetricEntry implements Comparable<MetricEntry> {
     }
 
 
-    public Collection<KeyNameEntry> getLowCardinalityKeyNames() {
+    public List<KeyNameEntry> getLowCardinalityKeyNames() {
         return this.lowCardinalityKeyNames;
     }
 
-    public Collection<KeyNameEntry> getHighCardinalityKeyNames() {
+    public List<KeyNameEntry> getHighCardinalityKeyNames() {
         return this.highCardinalityKeyNames;
     }
 
-    public Collection<EventEntry> getEvents() {
+    public List<EventEntry> getEvents() {
         return this.events;
     }
 }

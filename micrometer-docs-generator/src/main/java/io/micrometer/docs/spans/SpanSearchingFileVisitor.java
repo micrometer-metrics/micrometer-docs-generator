@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,11 +20,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -173,9 +171,9 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String contextualName = null;
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
-        Collection<KeyNameEntry> tags = new TreeSet<>();
-        Collection<KeyNameEntry> additionalKeyNames = new TreeSet<>();
-        Collection<EventEntry> events = new TreeSet<>();
+        List<KeyNameEntry> tags = new ArrayList<>();
+        List<KeyNameEntry> additionalKeyNames = new ArrayList<>();
+        List<EventEntry> events = new ArrayList<>();
         Map.Entry<String, String> overridesDefaultSpanFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
@@ -233,6 +231,11 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 overridesDefaultSpanFrom = ParsingUtils.readClassToEnum(methodDeclaration);
             }
         }
+
+        Collections.sort(tags);
+        Collections.sort(additionalKeyNames);
+        Collections.sort(events);
+
         return new SpanEntry(contextualName != null ? contextualName : name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 additionalKeyNames, events, overridesDefaultSpanFrom);
     }

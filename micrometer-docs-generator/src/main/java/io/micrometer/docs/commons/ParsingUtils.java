@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -177,10 +178,10 @@ public class ParsingUtils {
         return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
-    public static <T> Collection<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
+    public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
             EntryEnumReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
-        Collection<T> models = new TreeSet<>();
+        List<T> models = new ArrayList<>();
         enumNames.forEach(enumName -> {
             List<JavaSource<?>> nestedTypes = myEnum.getNestedTypes();
             JavaSource<?> nestedSource = nestedTypes.stream()
@@ -351,12 +352,12 @@ public class ParsingUtils {
         return matchingImportStatement;
     }
 
-    public static Collection<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String getterName) {
+    public static List<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String getterName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return Collections.emptyList();
         }
-        Collection<KeyNameEntry> tags = new TreeSet<>();
+        List<KeyNameEntry> tags = new ArrayList<>();
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {

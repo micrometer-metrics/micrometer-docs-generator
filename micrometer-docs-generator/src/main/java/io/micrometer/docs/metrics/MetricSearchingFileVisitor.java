@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -25,9 +22,9 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -156,12 +153,12 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String prefix = "";
         String baseUnit = "";
         Meter.Type type = Meter.Type.TIMER;
-        Collection<KeyNameEntry> lowCardinalityTags = new TreeSet<>();
-        Collection<KeyNameEntry> highCardinalityTags = new TreeSet<>();
+        List<KeyNameEntry> lowCardinalityTags = new ArrayList<>();
+        List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
-        Collection<EventEntry> events = new ArrayList<>();
+        List<EventEntry> events = new ArrayList<>();
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -214,6 +211,9 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
         final String newName = name;
         events.forEach(event -> event.setName(newName + "." + event.getName()));
+        Collections.sort(lowCardinalityTags);
+        Collections.sort(highCardinalityTags);
+        Collections.sort(events);
 
         return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
                 highCardinalityTags, overridesDefaultMetricFrom, events);

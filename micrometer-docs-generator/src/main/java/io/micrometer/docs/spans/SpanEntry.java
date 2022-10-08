@@ -46,16 +46,16 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final String prefix;
 
-    final Collection<KeyNameEntry> tagKeys;
+    final List<KeyNameEntry> tagKeys;
 
-    final Collection<KeyNameEntry> additionalKeyNames;
+    final List<KeyNameEntry> additionalKeyNames;
 
-    final Collection<EventEntry> events;
+    final List<EventEntry> events;
 
     final Map.Entry<String, String> overridesDefaultSpanFrom;
 
     SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
-            Collection<KeyNameEntry> tagKeys, Collection<KeyNameEntry> additionalKeyNames, Collection<EventEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
+            List<KeyNameEntry> tagKeys, List<KeyNameEntry> additionalKeyNames, List<EventEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
         Assert.hasText(description, "Span javadoc description must not be empty");
         this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;
@@ -159,11 +159,11 @@ class SpanEntry implements Comparable<SpanEntry> {
         return this.prefix;
     }
 
-    public Collection<KeyNameEntry> getTagKeys() {
+    public List<KeyNameEntry> getTagKeys() {
         return this.tagKeys;
     }
 
-    public Collection<EventEntry> getEvents() {
+    public List<EventEntry> getEvents() {
         return this.events;
     }
 }
