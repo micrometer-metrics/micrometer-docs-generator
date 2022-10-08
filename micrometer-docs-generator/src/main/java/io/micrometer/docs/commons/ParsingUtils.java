@@ -34,7 +34,6 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
-import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
@@ -66,8 +65,8 @@ public class ParsingUtils {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
-    public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class<?> requiredClass,
-            Collection<KeyValueEntry> keyValues, String methodName) {
+    public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
+            Collection<KeyValueEntry> keyValues, EntryEnumReader<?> converter) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -81,7 +80,7 @@ public class ParsingUtils {
         //      "getInterfaces()" returns ["io.micrometer.observation.Observation.Event"]
         //
         // To make both cases work, use the simple name("Event" in the above example) for comparison.
-        if (!myEnum.hasInterface(requiredClass.getSimpleName())) {
+        if (!myEnum.hasInterface(converter.getRequiredClass().getSimpleName())) {
             return;
         }
         logger.debug("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
@@ -89,8 +88,8 @@ public class ParsingUtils {
             return;
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            String keyValue = enumKeyValue(enumConstant, methodName);
-            keyValues.add(new KeyValueEntry(keyValue, AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc())));
+            KeyValueEntry entry = converter.toKeyValueEntry(enumConstant);
+            keyValues.add(entry);
         }
     }
 
@@ -178,7 +177,7 @@ public class ParsingUtils {
     }
 
     public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass, String methodName) {
+            EntryEnumReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         Collection<KeyValueEntry> keyValues = new TreeSet<>();
         enumNames.forEach(enumName -> {
@@ -186,7 +185,7 @@ public class ParsingUtils {
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues, methodName);
+            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, keyValues, converter);
         });
         return keyValues;
     }
@@ -224,7 +223,7 @@ public class ParsingUtils {
         return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
-    private static String enumKeyValue(EnumConstantSource enumConstant, String methodName) {
+    static String enumKeyValue(EnumConstantSource enumConstant, String methodName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             logger.warn("No method declarations in the enum.");
@@ -365,7 +364,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class, "asString"));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
             }
         }
         return tags;
