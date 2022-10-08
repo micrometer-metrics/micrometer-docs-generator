@@ -37,6 +37,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.commons.EventEntryForMetricEnumReader;
+import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumReader;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
@@ -138,7 +139,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 if (!enumConstant.getName().equals(overrideDefaults.getValue())) {
                     continue;
                 }
-                Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
+                Collection<KeyNameEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
                 if (low != null) {
                     entry.lowCardinalityKeyNames.addAll(low);
                 }
@@ -156,8 +157,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String prefix = "";
         String baseUnit = "";
         Meter.Type type = Meter.Type.TIMER;
-        Collection<KeyValueEntry> lowCardinalityTags = new TreeSet<>();
-        Collection<KeyValueEntry> highCardinalityTags = new TreeSet<>();
+        Collection<KeyNameEntry> lowCardinalityTags = new TreeSet<>();
+        Collection<KeyNameEntry> highCardinalityTags = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
@@ -175,7 +176,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
@@ -184,11 +185,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                lowCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                highCardinalityTags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // MeterDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {
@@ -208,7 +209,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
-                Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE);
+                Collection<KeyValueEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE, true);
                 Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
                 events.addAll(counters);
             }

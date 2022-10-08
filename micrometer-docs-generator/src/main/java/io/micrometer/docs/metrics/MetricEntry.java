@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
-import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
 
@@ -49,15 +49,15 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Meter.Type type;
 
-    final Collection<KeyValueEntry> lowCardinalityKeyNames;
+    final Collection<KeyNameEntry> lowCardinalityKeyNames;
 
-    final Collection<KeyValueEntry> highCardinalityKeyNames;
+    final Collection<KeyNameEntry> highCardinalityKeyNames;
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
     final Collection<MetricEntry> events;
 
-    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<MetricEntry> events) {
+    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyNameEntry> lowCardinalityKeyNames, Collection<KeyNameEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<MetricEntry> events) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
@@ -94,9 +94,9 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (!StringUtils.hasText(this.prefix)) {
             return null;
         }
-        List<KeyValueEntry> allTags = new ArrayList<>(this.lowCardinalityKeyNames);
+        List<KeyNameEntry> allTags = new ArrayList<>(this.lowCardinalityKeyNames);
         allTags.addAll(this.highCardinalityKeyNames);
-        List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
+        List<String> collect = allTags.stream().map(KeyNameEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
         if (collect.isEmpty()) {
             return null;
         }
@@ -165,11 +165,11 @@ class MetricEntry implements Comparable<MetricEntry> {
     }
 
 
-    public Collection<KeyValueEntry> getLowCardinalityKeyNames() {
+    public Collection<KeyNameEntry> getLowCardinalityKeyNames() {
         return this.lowCardinalityKeyNames;
     }
 
-    public Collection<KeyValueEntry> getHighCardinalityKeyNames() {
+    public Collection<KeyNameEntry> getHighCardinalityKeyNames() {
         return this.highCardinalityKeyNames;
     }
 

@@ -23,13 +23,32 @@ import io.micrometer.common.docs.KeyName;
  *
  * @author Tadaya Tsuyukubo
  */
-public class KeyNameEntry {
+public class KeyNameEntry implements Comparable<KeyNameEntry> {
 
     private String value;
 
     private String description;
 
     private boolean isRequired;
+
+    // TODO: naming
+    public String getName() {
+        return this.value;
+    }
+
+    public String getDisplayDescription() {
+        // TODO: use handlebar helper to compose the description
+        String suffix = "";
+        if (this.value.contains("%s")) {
+            suffix = " (since the name contains `%s` the final value will be resolved at runtime)";
+        }
+        return this.description + suffix;
+    }
+
+    @Override
+    public int compareTo(KeyNameEntry entry) {
+        return this.value.compareTo(entry.value);
+    }
 
     public String getValue() {
         return this.value;

@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -65,8 +62,9 @@ public class ParsingUtils {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
-    public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
-            Collection<KeyValueEntry> keyValues, EntryEnumReader<?> converter) {
+    @SuppressWarnings("unchecked")
+    public static <T> void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source,
+            Collection<T> keyValues, EntryEnumReader<?> converter, boolean toKeyValue) {
         if (!(source instanceof JavaEnumImpl)) {
             return;
         }
@@ -88,8 +86,13 @@ public class ParsingUtils {
             return;
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            KeyValueEntry entry = converter.toKeyValueEntry(enumConstant);
-            keyValues.add(entry);
+            if (toKeyValue) {
+                KeyValueEntry entry = converter.toKeyValueEntry(enumConstant);
+                keyValues.add((T) entry);
+            }
+            else {
+                keyValues.add((T) converter.apply(enumConstant));
+            }
         }
     }
 
@@ -101,7 +104,8 @@ public class ParsingUtils {
     public static String tryToReadStringReturnValue(Path file, String clazz) {
         try {
             return tryToReadNameFromConventionClass(file, clazz);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             return null;
         }
     }
@@ -120,9 +124,11 @@ public class ParsingUtils {
                 List<AbstractJavaSource> nestedTypes = ((AbstractJavaSource) parsedClass.getGoverningType()).getNestedTypes();
                 Object foundType = nestedTypes.stream().filter(o -> (o).getName().equals(actualName)).findFirst().orElseThrow(() -> new IllegalStateException("Can't find a class with fqb [" + className + "]"));
                 actualConventionImplementation = (JavaType) foundType;
-            } else if (parsedClass instanceof JavaUnitImpl) {
+            }
+            else if (parsedClass instanceof JavaUnitImpl) {
                 actualConventionImplementation = parsedClass.getGoverningType();
-            } else {
+            }
+            else {
                 return null;
             }
             if (actualConventionImplementation instanceof JavaClassImpl) {
@@ -157,7 +163,8 @@ public class ParsingUtils {
                         }
                     }).get();
                     return ParsingUtils.readStringReturnValue(methodDeclaration);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex) {
                     return name.toString().replace("return ", "").replace("\"", "");
                 }
             }
@@ -176,16 +183,16 @@ public class ParsingUtils {
         return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
-    public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            EntryEnumReader<?> converter) {
+    public static <T> Collection<T> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
+            EntryEnumReader<?> converter, boolean toKeyValue) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
-        Collection<KeyValueEntry> keyValues = new TreeSet<>();
+        Collection<T> keyValues = new TreeSet<>();
         enumNames.forEach(enumName -> {
             List<JavaSource<?>> nestedTypes = myEnum.getNestedTypes();
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, keyValues, converter);
+            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, keyValues, converter, toKeyValue);
         });
         return keyValues;
     }
@@ -350,12 +357,12 @@ public class ParsingUtils {
         return matchingImportStatement;
     }
 
-    public static Collection<KeyValueEntry> getTags(EnumConstantSource enumConstant, JavaEnumImpl myEnum, String getterName) {
+    public static Collection<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumImpl myEnum, String getterName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             return Collections.emptyList();
         }
-        Collection<KeyValueEntry> tags = new TreeSet<>();
+        Collection<KeyNameEntry> tags = new TreeSet<>();
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -364,7 +371,7 @@ public class ParsingUtils {
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
             if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
         }
         return tags;

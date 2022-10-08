@@ -36,6 +36,7 @@ import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.EventEntryForSpanEnumReader;
 import io.micrometer.docs.commons.EventValueEntryEnumReader;
+import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumReader;
 import io.micrometer.docs.commons.KeyValueEntry;
 import io.micrometer.docs.commons.ParsingUtils;
@@ -151,8 +152,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 if (!enumConstant.getName().equals(overridesDefaultSpanFrom.getValue())) {
                     continue;
                 }
-                Collection<KeyValueEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
-                Collection<KeyValueEntry> high = ParsingUtils.getTags(enumConstant, myEnum, "getHighCardinalityKeyNames");
+                Collection<KeyNameEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
+                Collection<KeyNameEntry> high = ParsingUtils.getTags(enumConstant, myEnum, "getHighCardinalityKeyNames");
                 if (low != null) {
                     entry.tagKeys.addAll(low);
                 }
@@ -172,8 +173,8 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String contextualName = null;
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
-        Collection<KeyValueEntry> tags = new TreeSet<>();
-        Collection<KeyValueEntry> additionalKeyNames = new TreeSet<>();
+        Collection<KeyNameEntry> tags = new TreeSet<>();
+        Collection<KeyNameEntry> additionalKeyNames = new TreeSet<>();
         Collection<KeyValueEntry> events = new TreeSet<>();
         Map.Entry<String, String> overridesDefaultSpanFrom = null;
         String conventionClass = null;
@@ -200,27 +201,27 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // SpanDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // SpanDocumentation
             else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                additionalKeyNames.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE, false));
             }
             // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE, true));
                 }
                 else {
-                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE));
+                    events.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE, true));
                 }
             }
             // SpanDocumentation, ObservationDocumentation
