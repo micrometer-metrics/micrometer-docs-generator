@@ -53,8 +53,8 @@ IMPORTANT: All tags must be prefixed with `{{prefix}}` prefix!
 {{~#if @first~}}
 Since, events were set on this documented entry, they will be converted to the following counters.
 {{/if}}
-[[observability-metrics-{{slugify (lower (replace this.enumName "_" " "))}}-{{replace this.name "." "-"}}]]
-===== {{capitalize (lower (replace this.enumName "_" " "))}} - {{replace this.name "." " "}}
+[[observability-metrics-{{slugify (lower (replace @../enumName "_" " "))}}-{{replace this.name "." "-"}}]]
+===== {{capitalize (lower (replace @../enumName "_" " "))}} - {{replace this.name "." " "}}
 
 > {{{this.description}}}
 
@@ -62,7 +62,7 @@ Since, events were set on this documented entry, they will be converted to the f
     - since it contains `%s`, the name is dynamic and will be resolved at runtime.
     {{~else~}}
     .
-{{~/if}} **Type** `{{replace (lower this.type) "_" " "}}`.
+{{~/if}} **Type** `counter`.
 {{/each}}
 
 {{~/each}}

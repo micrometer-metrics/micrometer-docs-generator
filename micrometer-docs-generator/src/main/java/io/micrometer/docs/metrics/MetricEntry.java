@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
+import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
@@ -55,9 +56,9 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    final Collection<MetricEntry> events;
+    final Collection<EventEntry> events;
 
-    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyNameEntry> lowCardinalityKeyNames, Collection<KeyNameEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<MetricEntry> events) {
+    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyNameEntry> lowCardinalityKeyNames, Collection<KeyNameEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<EventEntry> events) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
@@ -173,7 +174,7 @@ class MetricEntry implements Comparable<MetricEntry> {
         return this.highCardinalityKeyNames;
     }
 
-    public Collection<MetricEntry> getEvents() {
+    public Collection<EventEntry> getEvents() {
         return this.events;
     }
 }

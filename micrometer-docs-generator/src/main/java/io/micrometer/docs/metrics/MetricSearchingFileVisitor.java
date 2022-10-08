@@ -162,7 +162,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
-        Collection<MetricEntry> events = new ArrayList<>();
+        Collection<EventEntry> events = new ArrayList<>();
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
@@ -210,12 +210,12 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
                 Collection<EventEntry> entries = ParsingUtils.keyValueEntries(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE);
-                Collection<MetricEntry> counters = entries.stream().map(k -> new MetricEntry(k.getName(), null, null, myEnum.getCanonicalName(), enumConstant.getName(), k.getDescription(), null, null, Meter.Type.COUNTER, new TreeSet<>(), new TreeSet<>(), null, new TreeSet<>())).collect(Collectors.toList());
-                events.addAll(counters);
+                events.addAll(entries);
             }
         }
         final String newName = name;
-        events = events.stream().map(m -> new MetricEntry(newName + "." + m.name, m.conventionClass, m.nameFromConventionClass, m.enclosingClass, m.enumName, m.description, m.prefix, m.baseUnit, m.type, m.lowCardinalityKeyNames, m.highCardinalityKeyNames, m.overridesDefaultMetricFrom, m.events)).collect(Collectors.toList());
+        events.forEach(event -> event.setValue(newName + "." + event.getValue()));
+
         return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
                 highCardinalityTags, overridesDefaultMetricFrom, events);
     }
