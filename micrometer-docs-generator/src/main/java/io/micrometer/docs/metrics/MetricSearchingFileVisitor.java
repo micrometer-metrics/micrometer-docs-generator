@@ -14,9 +14,7 @@ package io.micrometer.docs.metrics;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -40,8 +38,6 @@ import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.docs.ObservationDocumentation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.jboss.forge.roaster.model.JavaType;
-import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
@@ -112,30 +108,25 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
             parent = parent.getParentFile();
         }
-        String filePath = new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
-        try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
-            JavaUnit parsedForOverride = Roaster.parseUnit(streamForOverride);
-            JavaType overrideClass = parsedForOverride.getGoverningType();
-            if (!(overrideClass instanceof JavaEnumSource)) {
-                return;
+        Path filePath = parent.toPath().resolve(className.replace(".", File.separator) + ".java");
+        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, filePath.toFile());
+        if (!javaSource.isEnum()) {
+            return;
+        }
+        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
+        if (!enumSource.hasInterface(ObservationDocumentation.class)) {
+            return;
+        }
+        logger.debug("Checking [" + enumSource.getName() + "]");
+        if (enumSource.getEnumConstants().size() == 0) {
+            return;
+        }
+        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
+            if (!enumConstant.getName().equals(overrideDefaults.getValue())) {
+                continue;
             }
-            JavaEnumSource myEnum = (JavaEnumSource) overrideClass;
-            if (!myEnum.getInterfaces().contains(ObservationDocumentation.class.getCanonicalName())) {
-                return;
-            }
-            logger.debug("Checking [" + myEnum.getName() + "]");
-            if (myEnum.getEnumConstants().size() == 0) {
-                return;
-            }
-            for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                if (!enumConstant.getName().equals(overrideDefaults.getValue())) {
-                    continue;
-                }
-                Collection<KeyNameEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
-                if (low != null) {
-                    entry.lowCardinalityKeyNames.addAll(low);
-                }
-            }
+            List<KeyNameEntry> lows = ParsingUtils.getTags(enumConstant, enumSource, "getLowCardinalityKeyNames");
+            entry.lowCardinalityKeyNames.addAll(lows);
         }
     }
 

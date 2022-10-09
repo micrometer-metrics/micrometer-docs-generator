@@ -14,9 +14,7 @@ package io.micrometer.docs.spans;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -42,8 +40,6 @@ import io.micrometer.observation.docs.ObservationDocumentation;
 import io.micrometer.tracing.docs.SpanDocumentation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.jboss.forge.roaster.model.JavaType;
-import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
@@ -127,34 +123,27 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
             parent = parent.getParentFile();
         }
-        String filePath = new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
-        try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
-            JavaUnit parsedForOverride = Roaster.parseUnit(streamForOverride);
-            JavaType overrideClass = parsedForOverride.getGoverningType();
-            if (!(overrideClass instanceof JavaEnumSource)) {
-                return;
+        Path filePath = parent.toPath().resolve(className.replace(".", File.separator) + ".java");
+        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, filePath.toFile());
+        if (!javaSource.isEnum()) {
+            return;
+        }
+        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
+        if (!enumSource.hasInterface(ObservationDocumentation.class)) {
+            return;
+        }
+        logger.debug("Checking [" + enumSource.getName() + "]");
+        if (enumSource.getEnumConstants().size() == 0) {
+            return;
+        }
+        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
+            if (!enumConstant.getName().equals(overridesDefaultSpanFrom.getValue())) {
+                continue;
             }
-            JavaEnumSource myEnum = (JavaEnumSource) overrideClass;
-            if (!myEnum.getInterfaces().contains(ObservationDocumentation.class.getCanonicalName())) {
-                return;
-            }
-            logger.debug("Checking [" + myEnum.getName() + "]");
-            if (myEnum.getEnumConstants().size() == 0) {
-                return;
-            }
-            for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                if (!enumConstant.getName().equals(overridesDefaultSpanFrom.getValue())) {
-                    continue;
-                }
-                Collection<KeyNameEntry> low = ParsingUtils.getTags(enumConstant, myEnum, "getLowCardinalityKeyNames");
-                Collection<KeyNameEntry> high = ParsingUtils.getTags(enumConstant, myEnum, "getHighCardinalityKeyNames");
-                if (low != null) {
-                    entry.tagKeys.addAll(low);
-                }
-                if (high != null) {
-                    entry.tagKeys.addAll(high);
-                }
-            }
+            Collection<KeyNameEntry> low = ParsingUtils.getTags(enumConstant, enumSource, "getLowCardinalityKeyNames");
+            Collection<KeyNameEntry> high = ParsingUtils.getTags(enumConstant, enumSource, "getHighCardinalityKeyNames");
+            entry.tagKeys.addAll(low);
+            entry.tagKeys.addAll(high);
         }
     }
 
