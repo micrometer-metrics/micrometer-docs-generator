@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
@@ -49,11 +50,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     private final Pattern pattern;
 
-    private final Collection<MetricEntry> sampleEntries;
+    private final Collection<MetricEntry> entries;
 
-    MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> sampleEntries) {
+    MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> entries) {
         this.pattern = pattern;
-        this.sampleEntries = sampleEntries;
+        this.entries = entries;
     }
 
     @Override
@@ -81,17 +82,13 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
             MetricEntry entry = parseMetric(path, enumConstant, enumSource);
             if (entry != null) {
-                sampleEntries.add(entry);
                 logger.debug(
                         "Found [" + entry.lowCardinalityKeyNames.size() + "] low cardinality tags and [" + entry.highCardinalityKeyNames.size() + "] high cardinality tags");
-            }
-            if (entry != null) {
                 if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityKeyNames.isEmpty()) {
                     addTagsFromOverride(path, entry);
                 }
-                sampleEntries.add(entry);
-                logger.debug(
-                        "Found [" + entry.lowCardinalityKeyNames.size() + "]");
+                entries.add(entry);
+                logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
             }
         }
         return FileVisitResult.CONTINUE;
@@ -130,6 +127,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
     }
 
+    @Nullable
     private MetricEntry parseMetric(Path file, EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
@@ -149,7 +147,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
             Object internal = member.getInternal();
             if (!(internal instanceof MethodDeclaration)) {
-                return null;
+                continue;
             }
             MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
             String methodName = methodDeclaration.getName().getIdentifier();
