@@ -352,23 +352,17 @@ public class ParsingUtils {
         return matchingImportStatement;
     }
 
-    public static List<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String getterName) {
-        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
-        if (members.isEmpty()) {
+    public static List<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String methodName) {
+        MethodSource<?> methodSource = enumConstant.getBody().getMethod(methodName);
+        if (methodSource == null) {
             return Collections.emptyList();
         }
-        List<KeyNameEntry> tags = new ArrayList<>();
-        for (MemberSource<EnumConstantSource.Body, ?> member : members) {
-            Object internal = member.getInternal();
-            if (!(internal instanceof MethodDeclaration)) {
-                return Collections.emptyList();
-            }
-            MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-            String methodName = methodDeclaration.getName().getIdentifier();
-            if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
-            }
+        // TODO: try to avoid the usage of internal
+        Object internal = methodSource.getInternal();
+        if (!(internal instanceof MethodDeclaration)) {
+            return Collections.emptyList();
         }
-        return tags;
+        MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
+        return ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE);
     }
 }
