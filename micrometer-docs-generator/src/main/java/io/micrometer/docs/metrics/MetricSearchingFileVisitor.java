@@ -26,7 +26,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
@@ -45,6 +44,7 @@ import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
+import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 
 class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
@@ -61,48 +61,44 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (!pattern.matcher(file.toString()).matches()) {
+    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+        if (!pattern.matcher(path.toString()).matches()) {
             return FileVisitResult.CONTINUE;
         }
-        else if (!file.toString().endsWith(".java")) {
+        else if (!path.toString().endsWith(".java")) {
             return FileVisitResult.CONTINUE;
         }
-        try (InputStream stream = Files.newInputStream(file)) {
-            JavaUnit unit = Roaster.parseUnit(stream);
-            JavaType myClass = unit.getGoverningType();
-            if (!(myClass instanceof JavaEnumSource)) {
-                return FileVisitResult.CONTINUE;
+
+        logger.debug("Parsing [" + path + "]");
+        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
+        if (!javaSource.isEnum()) {
+            return FileVisitResult.CONTINUE;
+        }
+        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
+        if (!enumSource.hasInterface(MeterDocumentation.class) && !enumSource.hasInterface(ObservationDocumentation.class)) {
+            return FileVisitResult.CONTINUE;
+        }
+        logger.debug("Checking [" + javaSource.getName() + "]");
+        if (enumSource.getEnumConstants().size() == 0) {
+            return FileVisitResult.CONTINUE;
+        }
+        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
+            MetricEntry entry = parseMetric(path, enumConstant, enumSource);
+            if (entry != null) {
+                sampleEntries.add(entry);
+                logger.debug(
+                        "Found [" + entry.lowCardinalityKeyNames.size() + "] low cardinality tags and [" + entry.highCardinalityKeyNames.size() + "] high cardinality tags");
             }
-            JavaEnumSource myEnum = (JavaEnumSource) myClass;
-            if (Stream.of(MeterDocumentation.class.getCanonicalName(), ObservationDocumentation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
-                return FileVisitResult.CONTINUE;
-            }
-            logger.debug("Checking [" + myEnum.getName() + "]");
-            if (myEnum.getEnumConstants().size() == 0) {
-                return FileVisitResult.CONTINUE;
-            }
-            for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                MetricEntry entry = parseMetric(file, enumConstant, myEnum);
-                if (entry != null) {
-                    sampleEntries.add(entry);
-                    logger.debug(
-                            "Found [" + entry.lowCardinalityKeyNames.size() + "] low cardinality tags and [" + entry.highCardinalityKeyNames.size() + "] high cardinality tags");
+            if (entry != null) {
+                if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityKeyNames.isEmpty()) {
+                    addTagsFromOverride(path, entry);
                 }
-                if (entry != null) {
-                    if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityKeyNames.isEmpty()) {
-                        addTagsFromOverride(file, entry);
-                    }
-                    sampleEntries.add(entry);
-                    logger.debug(
-                            "Found [" + entry.lowCardinalityKeyNames.size() + "]");
-                }
+                sampleEntries.add(entry);
+                logger.debug(
+                        "Found [" + entry.lowCardinalityKeyNames.size() + "]");
             }
-            return FileVisitResult.CONTINUE;
         }
-        catch (Exception e) {
-            throw new IOException("Failed to parse file [" + file + "] due to an error", e);
-        }
+        return FileVisitResult.CONTINUE;
     }
 
     // if entry has overridesDefaultSpanFrom - read tags from that thing

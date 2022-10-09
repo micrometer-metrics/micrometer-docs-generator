@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -16,9 +13,7 @@
 package io.micrometer.docs.conventions;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.FileVisitResult;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
@@ -31,10 +26,8 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Roaster;
-import org.jboss.forge.roaster.model.JavaType;
-import org.jboss.forge.roaster.model.JavaUnit;
-import org.jboss.forge.roaster.model.impl.JavaClassImpl;
-import org.jboss.forge.roaster.model.source.JavaEnumSource;
+import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.JavaSource;
 
 class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
@@ -50,37 +43,31 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (!pattern.matcher(file.toString()).matches()) {
+    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+        if (!pattern.matcher(path.toString()).matches()) {
             return FileVisitResult.CONTINUE;
         }
-        else if (!file.toString().endsWith(".java")) {
+        else if (!path.toString().endsWith(".java")) {
             return FileVisitResult.CONTINUE;
         }
-        try (InputStream stream = Files.newInputStream(file)) {
-            JavaUnit unit = Roaster.parseUnit(stream);
-            JavaType myClass = unit.getGoverningType();
-            if (!(myClass instanceof JavaEnumSource)) {
-                if (myClass instanceof JavaClassImpl) {
-                    Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
-                    JavaClassImpl holder = (JavaClassImpl) myClass;
-                    for (String anInterface : holder.getInterfaces()) {
-                        if (isGlobalObservationConvention(anInterface)) {
-                            this.observationConventionEntries.add(new ObservationConventionEntry(unit.getGoverningType().getCanonicalName(), ObservationConventionEntry.Type.GLOBAL, contextClassName(classPattern, anInterface)));
-                        }
-                        else if (isLocalObservationConvention(anInterface)) {
-                            this.observationConventionEntries.add(new ObservationConventionEntry(unit.getGoverningType().getCanonicalName(), ObservationConventionEntry.Type.LOCAL, contextClassName(classPattern, anInterface)));
-                        }
-                    }
-                    return FileVisitResult.CONTINUE;
-                }
-                return FileVisitResult.CONTINUE;
+
+        logger.debug("Parsing [" + path + "]");
+        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
+        if (!javaSource.isClass()) {
+            return FileVisitResult.CONTINUE;
+        }
+        JavaClassSource classSource = (JavaClassSource) javaSource;
+        String classCanonicalName = classSource.getCanonicalName();
+        Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
+        for (String anInterface : classSource.getInterfaces()) {
+            if (isGlobalObservationConvention(anInterface)) {
+                this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.GLOBAL, contextClassName(classPattern, anInterface)));
             }
-            return FileVisitResult.CONTINUE;
+            else if (isLocalObservationConvention(anInterface)) {
+                this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.LOCAL, contextClassName(classPattern, anInterface)));
+            }
         }
-        catch (Exception e) {
-            throw new IOException("Failed to parse file [" + file + "] due to an error", e);
-        }
+        return FileVisitResult.CONTINUE;
     }
 
     private String contextClassName(Pattern classPattern, String anInterface) {

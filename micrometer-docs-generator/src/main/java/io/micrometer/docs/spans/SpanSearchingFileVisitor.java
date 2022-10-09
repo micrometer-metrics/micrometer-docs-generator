@@ -28,7 +28,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
@@ -47,6 +46,7 @@ import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
+import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 
 class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
@@ -63,46 +63,42 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     @Override
-    public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException {
-        if (!pattern.matcher(file.toString()).matches()) {
+    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
+        if (!pattern.matcher(path.toString()).matches()) {
             return FileVisitResult.CONTINUE;
         }
-        else if (!file.toString().endsWith(".java")) {
+        else if (!path.toString().endsWith(".java")) {
             return FileVisitResult.CONTINUE;
         }
-        try (InputStream stream = Files.newInputStream(file)) {
-            JavaUnit unit = Roaster.parseUnit(stream);
-            JavaType myClass = unit.getGoverningType();
-            if (!(myClass instanceof JavaEnumSource)) {
-                return FileVisitResult.CONTINUE;
-            }
-            JavaEnumSource myEnum = (JavaEnumSource) myClass;
-            if (Stream.of(SpanDocumentation.class.getName(), ObservationDocumentation.class.getCanonicalName()).noneMatch(ds -> myEnum.getInterfaces().contains(ds))) {
-                return FileVisitResult.CONTINUE;
-            }
-            logger.debug("Checking [" + myEnum.getName() + "]");
-            if (myEnum.getEnumConstants().size() == 0) {
-                return FileVisitResult.CONTINUE;
-            }
-            for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-                SpanEntry entry = parseSpan(file, enumConstant, myEnum);
-                if (entry != null) {
-                    if (entry.overridesDefaultSpanFrom != null && entry.tagKeys.isEmpty()) {
-                        addTagsFromOverride(file, entry);
-                    }
-                    if (!entry.additionalKeyNames.isEmpty()) {
-                        entry.tagKeys.addAll(entry.additionalKeyNames);
-                    }
-                    spanEntries.add(entry);
-                    logger.debug(
-                            "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
+
+        logger.debug("Parsing [" + path + "]");
+        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
+        if (!javaSource.isEnum()) {
+            return FileVisitResult.CONTINUE;
+        }
+        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
+        if (!enumSource.hasInterface(SpanDocumentation.class) && !enumSource.hasInterface(ObservationDocumentation.class)) {
+            return FileVisitResult.CONTINUE;
+        }
+        logger.debug("Checking [" + javaSource.getName() + "]");
+        if (enumSource.getEnumConstants().size() == 0) {
+            return FileVisitResult.CONTINUE;
+        }
+        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
+            SpanEntry entry = parseSpan(path, enumConstant, enumSource);
+            if (entry != null) {
+                if (entry.overridesDefaultSpanFrom != null && entry.tagKeys.isEmpty()) {
+                    addTagsFromOverride(path, entry);
                 }
+                if (!entry.additionalKeyNames.isEmpty()) {
+                    entry.tagKeys.addAll(entry.additionalKeyNames);
+                }
+                spanEntries.add(entry);
+                logger.debug(
+                        "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
             }
-            return FileVisitResult.CONTINUE;
         }
-        catch (Exception e) {
-            throw new IOException("Failed to parse file [" + file + "] due to an error", e);
-        }
+        return FileVisitResult.CONTINUE;
     }
 
     @Override
