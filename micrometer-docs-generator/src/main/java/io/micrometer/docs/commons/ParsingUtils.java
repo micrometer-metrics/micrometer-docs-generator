@@ -302,6 +302,7 @@ public class ParsingUtils {
         return (T) Enum.valueOf(enumClass, enumName);
     }
 
+    @Nullable
     public static String readClass(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
@@ -320,6 +321,7 @@ public class ParsingUtils {
         return matchingImportStatement(expression, className);
     }
 
+    @Nullable
     public static Map.Entry<String, String> readClassToEnum(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
@@ -341,7 +343,7 @@ public class ParsingUtils {
 
     private static String matchingImportStatement(Expression expression, String className) {
         CompilationUnit compilationUnit = (CompilationUnit) expression.getRoot();
-        List imports = compilationUnit.imports();
+        List<?> imports = compilationUnit.imports();
         // Class is in the same package
         String matchingImportStatement = compilationUnit.getPackage().getName().toString() + "." + className;
         for (Object anImport : imports) {
@@ -361,8 +363,11 @@ public class ParsingUtils {
                 continue;
             }
             AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) type;
-            List declarations = typeDeclaration.bodyDeclarations();
+            List<?> declarations = typeDeclaration.bodyDeclarations();
             for (Object declaration : declarations) {
+                if (!(declaration instanceof AbstractTypeDeclaration)) {
+                    continue;
+                }
                 AbstractTypeDeclaration childDeclaration = (AbstractTypeDeclaration) declaration;
                 if (className.equals(childDeclaration.getName().toString())) {
                     // Class is an inner class (we support 1 level of such nesting for now - we can do recursion in the future

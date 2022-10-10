@@ -20,11 +20,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 
+import io.micrometer.common.docs.KeyName;
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.Observation.Context;
+import io.micrometer.observation.ObservationConvention;
+import io.micrometer.observation.docs.ObservationDocumentation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 
@@ -42,6 +50,21 @@ class ParsingUtilsTests {
     void readStringReturnValue(MethodDeclaration methodDeclaration, String expected) {
         String result = ParsingUtils.readStringReturnValue(methodDeclaration);
         assertThat(result).isEqualTo(expected);
+    }
+
+    // for  https://github.com/micrometer-metrics/micrometer-docs-generator/issues/60
+    @Test
+    void readClass() throws Exception {
+        String filename = ParsingUtilsTests.class.getCanonicalName().replace(".", "/") + ".java";
+        Path path = Paths.get("src/test/java", filename);
+        JavaClassSource classSource = Roaster.parse(JavaClassSource.class, path.toFile());
+        JavaEnumSource enumSource = (JavaEnumSource) classSource.getNestedType(ReadingClassObservationDocumentation.class.getSimpleName());
+        EnumConstantSource enumConstantSource = enumSource.getEnumConstant("FOO");
+        MethodSource<?> methodSource = enumConstantSource.getBody().getMethod("getDefaultConvention");
+        MethodDeclaration methodDeclaration = (MethodDeclaration) methodSource.getInternal();
+
+        String result = ParsingUtils.readClass(methodDeclaration);
+        assertThat(result).isEqualTo("io.micrometer.docs.commons.ParsingUtilsTests$ReadingClassObservationConvention");
     }
 
     static Stream<Arguments> readStringReturnValue() throws Exception {
@@ -68,6 +91,32 @@ class ParsingUtilsTests {
         // note: object Boolean is not supported
 
         boolean booleanLiteral() {
+            return true;
+        }
+    }
+
+    enum ReadingClassObservationDocumentation implements ObservationDocumentation {
+
+        FOO {
+            @Override
+            public Class<? extends ObservationConvention<? extends Context>> getDefaultConvention() {
+                return ReadingClassObservationConvention.class;
+            }
+        };
+
+
+        // This method should be implemented in enum constant (e.g. FOO)
+        // Having this method here caused failure in docs gen.
+        // https://github.com/micrometer-metrics/micrometer-docs-generator/issues/60
+        @Override
+        public KeyName[] getLowCardinalityKeyNames() {
+            return new KeyName[]{};
+        }
+    }
+
+    static class ReadingClassObservationConvention implements ObservationConvention<Observation.Context> {
+        @Override
+        public boolean supportsContext(Context context) {
             return true;
         }
     }
