@@ -36,6 +36,7 @@ import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -91,6 +92,23 @@ public class ParsingUtils {
         }
     }
 
+    /**
+     * Read the return statement value as string.
+     * Currently, the string literal and boolean literal are supported.
+     * For example:
+     * <code>
+     * String returnStringLiteral() {
+     * return "my-string";
+     * }
+     * boolean returnBooleanPrimitive() {
+     * return true;
+     * }
+     * </code>
+     * It resolves as "my-string" and "true" respectively.
+     *
+     * @param methodDeclaration a method declaration which has the first line return statement with literal string or boolean.
+     * @return literal value as string
+     */
     public static String readStringReturnValue(MethodDeclaration methodDeclaration) {
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
@@ -256,11 +274,14 @@ public class ParsingUtils {
         }
         ReturnStatement returnStatement = (ReturnStatement) statement;
         Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof StringLiteral)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
-            return "";
+        if (expression instanceof StringLiteral) {
+            return ((StringLiteral) expression).getLiteralValue();
         }
-        return ((StringLiteral) expression).getLiteralValue();
+        else if (expression instanceof BooleanLiteral) {
+            return Boolean.toString(((BooleanLiteral) expression).booleanValue());
+        }
+        logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
+        return "";
     }
 
     @SuppressWarnings("unchecked")
