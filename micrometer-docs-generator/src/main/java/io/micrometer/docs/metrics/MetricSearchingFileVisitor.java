@@ -31,9 +31,9 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.commons.EventEntry;
-import io.micrometer.docs.commons.EventEntryForMetricEnumReader;
+import io.micrometer.docs.commons.EventEntryForMetricEnumConstantReader;
 import io.micrometer.docs.commons.KeyNameEntry;
-import io.micrometer.docs.commons.KeyNameEnumReader;
+import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.docs.ObservationDocumentation;
@@ -157,7 +157,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
@@ -166,11 +166,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // MeterDocumentation, ObservationDocumentation
             else if ("getPrefix".equals(methodName)) {
@@ -190,7 +190,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
-                Collection<EventEntry> entries = ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForMetricEnumReader.INSTANCE);
+                Collection<EventEntry> entries = ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForMetricEnumConstantReader.INSTANCE);
                 events.addAll(entries);
             }
         }

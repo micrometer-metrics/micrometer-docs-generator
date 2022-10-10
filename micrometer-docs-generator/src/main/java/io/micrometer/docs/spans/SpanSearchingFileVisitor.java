@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.EventEntry;
-import io.micrometer.docs.commons.EventEntryForSpanEnumReader;
-import io.micrometer.docs.commons.EventValueEntryEnumReader;
+import io.micrometer.docs.commons.EventEntryForSpanEnumConstantReader;
+import io.micrometer.docs.commons.EventValueEntryEnumConstantReader;
 import io.micrometer.docs.commons.KeyNameEntry;
-import io.micrometer.docs.commons.KeyNameEnumReader;
+import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.docs.ObservationDocumentation;
@@ -184,27 +184,27 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // SpanDocumentation
             else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // ObservationDocumentation
             else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // SpanDocumentation
             else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE));
+                additionalKeyNames.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
             }
             // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
             else if ("getEvents".equals(methodName)) {
                 if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventValueEntryEnumReader.INSTANCE));
+                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventValueEntryEnumConstantReader.INSTANCE));
                 }
                 else {
-                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForSpanEnumReader.INSTANCE));
+                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForSpanEnumConstantReader.INSTANCE));
                 }
             }
             // SpanDocumentation, ObservationDocumentation

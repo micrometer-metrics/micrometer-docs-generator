@@ -65,7 +65,7 @@ public class ParsingUtils {
 
     @SuppressWarnings("unchecked")
     private static <T> void updateModelsFromEnum(JavaEnumSource parentEnum, JavaSource<?> source,
-            Collection<T> models, EntryEnumReader<?> converter) {
+            Collection<T> models, EntryEnumConstantReader<?> converter) {
         if (!(source instanceof JavaEnumSource)) {
             return;
         }
@@ -179,7 +179,7 @@ public class ParsingUtils {
     }
 
     public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
-            EntryEnumReader<?> converter) {
+            EntryEnumConstantReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
         List<T> models = new ArrayList<>();
         enumNames.forEach(enumName -> {
@@ -363,6 +363,6 @@ public class ParsingUtils {
             return Collections.emptyList();
         }
         MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-        return ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumReader.INSTANCE);
+        return ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
     }
 }

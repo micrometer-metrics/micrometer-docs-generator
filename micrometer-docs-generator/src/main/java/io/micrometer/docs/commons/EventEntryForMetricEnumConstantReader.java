@@ -17,27 +17,27 @@
 package io.micrometer.docs.commons;
 
 import io.micrometer.docs.commons.utils.AsciidocUtils;
-import io.micrometer.tracing.docs.EventValue;
+import io.micrometer.observation.Observation;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 
 /**
- * Responsible for reading {@link EventValue} enum source.
+ * Responsible for reading {@link Observation.Event} enum source for metric.
  *
  * @author Tadaya Tsuyukubo
  */
-public class EventValueEntryEnumReader implements EntryEnumReader<EventEntry> {
+public class EventEntryForMetricEnumConstantReader implements EntryEnumConstantReader<EventEntry> {
 
-    public static final EventValueEntryEnumReader INSTANCE = new EventValueEntryEnumReader();
+    public static final EventEntryForMetricEnumConstantReader INSTANCE = new EventEntryForMetricEnumConstantReader();
 
     @Override
     public Class<?> getRequiredClass() {
-        return EventValue.class;
+        return Observation.Event.class;
     }
 
     @Override
     public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
-        String value = ParsingUtils.enumMethodValue(enumConstantSource, "getValue");
+        String value = ParsingUtils.enumMethodValue(enumConstantSource, "getName");
 
         EventEntry model = new EventEntry();
         model.setName(value);

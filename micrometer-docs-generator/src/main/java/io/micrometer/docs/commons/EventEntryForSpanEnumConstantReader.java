@@ -25,9 +25,9 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
  *
  * @author Tadaya Tsuyukubo
  */
-public class EventEntryForSpanEnumReader implements EntryEnumReader<EventEntry> {
+public class EventEntryForSpanEnumConstantReader implements EntryEnumConstantReader<EventEntry> {
 
-    public static final EventEntryForSpanEnumReader INSTANCE = new EventEntryForSpanEnumReader();
+    public static final EventEntryForSpanEnumConstantReader INSTANCE = new EventEntryForSpanEnumConstantReader();
 
     @Override
     public Class<?> getRequiredClass() {

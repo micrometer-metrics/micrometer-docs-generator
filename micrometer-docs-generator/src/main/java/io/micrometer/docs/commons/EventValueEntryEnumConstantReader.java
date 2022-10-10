@@ -16,31 +16,30 @@
 
 package io.micrometer.docs.commons;
 
-import io.micrometer.common.docs.KeyName;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.tracing.docs.EventValue;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 
 /**
- * Responsible for reading {@link KeyName} enum source.
+ * Responsible for reading {@link EventValue} enum source.
  *
  * @author Tadaya Tsuyukubo
  */
-public class KeyNameEnumReader implements EntryEnumReader<KeyNameEntry> {
+public class EventValueEntryEnumConstantReader implements EntryEnumConstantReader<EventEntry> {
 
-    public static final KeyNameEnumReader INSTANCE = new KeyNameEnumReader();
+    public static final EventValueEntryEnumConstantReader INSTANCE = new EventValueEntryEnumConstantReader();
 
     @Override
     public Class<?> getRequiredClass() {
-        return KeyName.class;
+        return EventValue.class;
     }
 
     @Override
-    public KeyNameEntry apply(EnumConstantSource enumConstantSource) {
+    public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
-        String value = ParsingUtils.enumMethodValue(enumConstantSource, "asString");
+        String value = ParsingUtils.enumMethodValue(enumConstantSource, "getValue");
 
-        // TODO: populate readonly info
-        KeyNameEntry model = new KeyNameEntry();
+        EventEntry model = new EventEntry();
         model.setName(value);
         model.setDescription(description);
         return model;

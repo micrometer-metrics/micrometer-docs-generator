@@ -33,7 +33,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link KeyNameEnumReader}.
+ * Tests for {@link KeyNameEnumConstantReader}.
  *
  * @author Tadaya Tsuyukubo
  */
@@ -42,7 +42,7 @@ class KeyNameEnumReaderTests {
     @ParameterizedTest
     @MethodSource
     void convert(EnumConstantSource enumConstantSource, String expectedName, String expectedDesc) {
-        KeyNameEnumReader reader = new KeyNameEnumReader();
+        KeyNameEnumConstantReader reader = new KeyNameEnumConstantReader();
         KeyNameEntry result = reader.apply(enumConstantSource);
         assertThat(result.getName()).isEqualTo(expectedName);
         assertThat(result.getDescription()).isEqualTo(expectedDesc);
