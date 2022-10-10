@@ -123,6 +123,8 @@ public class ParsingUtils {
         }
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Nullable
     private static String tryToReadNameFromConventionClass(Path file, String className) {
         File parent = file.getParent().toFile();
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) { // TODO: Works only for Java
@@ -131,7 +133,7 @@ public class ParsingUtils {
         String filePath = filePath(className, parent);
         try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
             JavaUnit parsedClass = Roaster.parseUnit(streamForOverride);
-            JavaType actualConventionImplementation;
+            JavaType<?> actualConventionImplementation;
             if (className.contains("$")) {
                 String actualName = className.substring(className.indexOf("$") + 1);
                 List<AbstractJavaSource> nestedTypes = ((AbstractJavaSource) parsedClass.getGoverningType()).getNestedTypes();
@@ -285,6 +287,7 @@ public class ParsingUtils {
     }
 
     @SuppressWarnings("unchecked")
+    @Nullable
     public static <T extends Enum> T enumFromReturnMethodDeclaration(MethodDeclaration methodDeclaration, Class<T> enumClass) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
