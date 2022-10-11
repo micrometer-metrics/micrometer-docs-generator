@@ -245,25 +245,26 @@ public class ParsingUtils {
         return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
+    @Nullable
     static String enumMethodValue(EnumConstantSource enumConstant, String methodName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
-            logger.warn("No method declarations in the enum.");
-            return "";
+            logger.debug("No method declarations in the enum.");
+            return null;
         }
         Object internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
         if (internal == null) {
-            logger.warn("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
-            return "";
+            logger.debug("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
+            return null;
         }
         if (!(internal instanceof MethodDeclaration)) {
-            logger.warn("Can't read the member [" + internal.getClass() + "] as a method declaration.");
-            return "";
+            logger.debug("Can't read the member [" + internal.getClass() + "] as a method declaration.");
+            return null;
         }
         MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
         if (methodDeclaration.getBody().statements().isEmpty()) {
-            logger.warn("Body was empty. Continuing...");
-            return "";
+            logger.debug("Body was empty. Continuing...");
+            return null;
         }
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
