@@ -16,12 +16,10 @@
 
 package io.micrometer.docs.commons;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import io.micrometer.common.docs.KeyName;
-import org.jboss.forge.roaster.Roaster;
+import io.micrometer.docs.RoasterTestUtils;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -48,10 +46,8 @@ class KeyNameEnumReaderTests {
         assertThat(result.getDescription()).isEqualTo(expectedDesc);
     }
 
-    static Stream<Arguments> convert() throws Exception {
-        String filename = KeyNameEnumReaderTests.class.getCanonicalName().replace(".", "/") + ".java";
-        Path path = Paths.get("src/test/java", filename);
-        JavaClassSource classSource = Roaster.parse(JavaClassSource.class, path.toFile());
+    static Stream<Arguments> convert() {
+        JavaClassSource classSource = RoasterTestUtils.readJavaClass(KeyNameEnumReaderTests.class);
         JavaEnumSource enumSource = (JavaEnumSource) classSource.getNestedType(MyKeyNameEnum.class.getSimpleName());
         EnumConstantSource foo = enumSource.getEnumConstant("FOO");
         EnumConstantSource bar = enumSource.getEnumConstant("BAR");

@@ -16,16 +16,14 @@
 
 package io.micrometer.docs.commons;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.stream.Stream;
 
 import io.micrometer.common.docs.KeyName;
+import io.micrometer.docs.RoasterTestUtils;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.Observation.Context;
 import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.docs.ObservationDocumentation;
-import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
@@ -54,10 +52,8 @@ class ParsingUtilsTests {
 
     // for  https://github.com/micrometer-metrics/micrometer-docs-generator/issues/60
     @Test
-    void readClass() throws Exception {
-        String filename = ParsingUtilsTests.class.getCanonicalName().replace(".", "/") + ".java";
-        Path path = Paths.get("src/test/java", filename);
-        JavaClassSource classSource = Roaster.parse(JavaClassSource.class, path.toFile());
+    void readClass() {
+        JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsTests.class);
         JavaEnumSource enumSource = (JavaEnumSource) classSource.getNestedType(ReadingClassObservationDocumentation.class.getSimpleName());
         EnumConstantSource enumConstantSource = enumSource.getEnumConstant("FOO");
         MethodSource<?> methodSource = enumConstantSource.getBody().getMethod("getDefaultConvention");
@@ -67,10 +63,8 @@ class ParsingUtilsTests {
         assertThat(result).isEqualTo("io.micrometer.docs.commons.ParsingUtilsTests$ReadingClassObservationConvention");
     }
 
-    static Stream<Arguments> readStringReturnValue() throws Exception {
-        String filename = ParsingUtilsTests.class.getCanonicalName().replace(".", "/") + ".java";
-        Path path = Paths.get("src/test/java", filename);
-        JavaClassSource classSource = Roaster.parse(JavaClassSource.class, path.toFile());
+    static Stream<Arguments> readStringReturnValue() {
+        JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsTests.class);
         JavaClassSource returnValueClass = (JavaClassSource) classSource.getNestedType(ReturnValueClass.class.getSimpleName());
         MethodSource<?> stringLiteralSource = returnValueClass.getMethod("stringLiteral");
         MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
@@ -110,7 +104,7 @@ class ParsingUtilsTests {
         // https://github.com/micrometer-metrics/micrometer-docs-generator/issues/60
         @Override
         public KeyName[] getLowCardinalityKeyNames() {
-            return new KeyName[]{};
+            return new KeyName[] {};
         }
     }
 
