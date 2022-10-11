@@ -39,11 +39,12 @@ class KeyNameEnumReaderTests {
 
     @ParameterizedTest
     @MethodSource
-    void convert(EnumConstantSource enumConstantSource, String expectedName, String expectedDesc) {
+    void convert(EnumConstantSource enumConstantSource, String expectedName, String expectedDesc, boolean isRequired) {
         KeyNameEnumConstantReader reader = new KeyNameEnumConstantReader();
         KeyNameEntry result = reader.apply(enumConstantSource);
         assertThat(result.getName()).isEqualTo(expectedName);
         assertThat(result.getDescription()).isEqualTo(expectedDesc);
+        assertThat(result.isRequired()).isEqualTo(isRequired);
     }
 
     static Stream<Arguments> convert() {
@@ -54,9 +55,9 @@ class KeyNameEnumReaderTests {
         EnumConstantSource baz = enumSource.getEnumConstant("BAZ");
         return Stream.of(
                 // enum source, name, description
-                Arguments.of(Named.of("FOO", foo), "foo", "Foo title"),
-                Arguments.of(Named.of("BAR", bar), "bar", "Bar title"),
-                Arguments.of(Named.of("BAZ", baz), "baz", "Baz title")
+                Arguments.of(Named.of("FOO", foo), "foo", "Foo title", true),
+                Arguments.of(Named.of("BAR", bar), "bar", "Bar title", false),
+                Arguments.of(Named.of("BAZ", baz), "baz", "Baz title", true)
         );
     }
 

@@ -18,6 +18,7 @@ package io.micrometer.docs.commons;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.docs.commons.utils.Assert;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 
 /**
@@ -38,11 +39,20 @@ public class KeyNameEnumConstantReader implements EntryEnumConstantReader<KeyNam
     public KeyNameEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
         String value = ParsingUtils.enumMethodValue(enumConstantSource, "asString");
+        String required = ParsingUtils.enumMethodValue(enumConstantSource, "isRequired");
 
-        // TODO: populate readonly info
+        Assert.notNull(value, "KeyName enum constants require readable asString().");
+
+        // isRequired is "true" by default in KeyName.
+        // When the enum does not override the method, the returned value is empty, which
+        // means "isRequired=true".
+        // Set false, only when the value read is "false"
+        boolean isRequired = !"false".equals(required);
+
         KeyNameEntry model = new KeyNameEntry();
         model.setName(value);
         model.setDescription(description);
+        model.setRequired(isRequired);
         return model;
     }
 
