@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,9 +20,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import io.micrometer.common.lang.Nullable;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
-import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.EventEntry;
+import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
 
@@ -49,15 +48,16 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final Meter.Type type;
 
-    final Collection<KeyValueEntry> lowCardinalityKeyNames;
+    final List<KeyNameEntry> lowCardinalityKeyNames;
 
-    final Collection<KeyValueEntry> highCardinalityKeyNames;
+    final List<KeyNameEntry> highCardinalityKeyNames;
 
+    @Nullable
     final Map.Entry<String, String> overridesDefaultMetricFrom;
 
-    final Collection<MetricEntry> events;
+    final List<EventEntry> events;
 
-    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, Collection<KeyValueEntry> lowCardinalityKeyNames, Collection<KeyValueEntry> highCardinalityKeyNames, Map.Entry<String, String> overridesDefaultMetricFrom, Collection<MetricEntry> events) {
+    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, @Nullable Map.Entry<String, String> overridesDefaultMetricFrom, List<EventEntry> events) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.name = name;
         this.conventionClass = conventionClass;
@@ -94,9 +94,9 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (!StringUtils.hasText(this.prefix)) {
             return null;
         }
-        List<KeyValueEntry> allTags = new ArrayList<>(this.lowCardinalityKeyNames);
+        List<KeyNameEntry> allTags = new ArrayList<>(this.lowCardinalityKeyNames);
         allTags.addAll(this.highCardinalityKeyNames);
-        List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
+        List<String> collect = allTags.stream().map(KeyNameEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
         if (collect.isEmpty()) {
             return null;
         }
@@ -165,15 +165,15 @@ class MetricEntry implements Comparable<MetricEntry> {
     }
 
 
-    public Collection<KeyValueEntry> getLowCardinalityKeyNames() {
+    public List<KeyNameEntry> getLowCardinalityKeyNames() {
         return this.lowCardinalityKeyNames;
     }
 
-    public Collection<KeyValueEntry> getHighCardinalityKeyNames() {
+    public List<KeyNameEntry> getHighCardinalityKeyNames() {
         return this.highCardinalityKeyNames;
     }
 
-    public Collection<MetricEntry> getEvents() {
+    public List<EventEntry> getEvents() {
         return this.events;
     }
 }

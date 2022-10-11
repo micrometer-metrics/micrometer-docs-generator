@@ -25,7 +25,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import io.micrometer.docs.commons.KeyValueEntry;
+import io.micrometer.docs.commons.EventEntry;
+import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
 
@@ -45,16 +46,16 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final String prefix;
 
-    final Collection<KeyValueEntry> tagKeys;
+    final List<KeyNameEntry> tagKeys;
 
-    final Collection<KeyValueEntry> additionalKeyNames;
+    final List<KeyNameEntry> additionalKeyNames;
 
-    final Collection<KeyValueEntry> events;
+    final List<EventEntry> events;
 
     final Map.Entry<String, String> overridesDefaultSpanFrom;
 
     SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
-            Collection<KeyValueEntry> tagKeys, Collection<KeyValueEntry> additionalKeyNames, Collection<KeyValueEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
+            List<KeyNameEntry> tagKeys, List<KeyNameEntry> additionalKeyNames, List<EventEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
         Assert.hasText(description, "Span javadoc description must not be empty");
         this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;
@@ -86,9 +87,9 @@ class SpanEntry implements Comparable<SpanEntry> {
         if (!StringUtils.hasText(this.prefix)) {
             return null;
         }
-        List<KeyValueEntry> allTags = new ArrayList<>(this.tagKeys);
+        List<KeyNameEntry> allTags = new ArrayList<>(this.tagKeys);
         allTags.addAll(this.additionalKeyNames);
-        List<String> collect = allTags.stream().map(KeyValueEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
+        List<String> collect = allTags.stream().map(KeyNameEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
         if (collect.isEmpty()) {
             return null;
         }
@@ -158,11 +159,11 @@ class SpanEntry implements Comparable<SpanEntry> {
         return this.prefix;
     }
 
-    public Collection<KeyValueEntry> getTagKeys() {
+    public List<KeyNameEntry> getTagKeys() {
         return this.tagKeys;
     }
 
-    public Collection<KeyValueEntry> getEvents() {
+    public List<EventEntry> getEvents() {
         return this.events;
     }
 }

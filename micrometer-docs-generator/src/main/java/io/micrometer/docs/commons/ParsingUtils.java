@@ -1,12 +1,9 @@
 /**
  * Copyright 2022 the original author or authors.
- *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  * https://www.apache.org/licenses/LICENSE-2.0
- *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -21,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.AbstractMap;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -34,11 +32,11 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
-import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
@@ -53,11 +51,11 @@ import org.jboss.forge.roaster.model.JavaType;
 import org.jboss.forge.roaster.model.JavaUnit;
 import org.jboss.forge.roaster.model.impl.AbstractJavaSource;
 import org.jboss.forge.roaster.model.impl.JavaClassImpl;
-import org.jboss.forge.roaster.model.impl.JavaEnumImpl;
 import org.jboss.forge.roaster.model.impl.JavaInterfaceImpl;
 import org.jboss.forge.roaster.model.impl.JavaUnitImpl;
 import org.jboss.forge.roaster.model.impl.MethodImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -66,12 +64,13 @@ public class ParsingUtils {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
-    public static void updateKeyValuesFromEnum(JavaEnumImpl parentEnum, JavaSource<?> source, Class<?> requiredClass,
-            Collection<KeyValueEntry> keyValues, @Nullable String methodName) {
-        if (!(source instanceof JavaEnumImpl)) {
+    @SuppressWarnings("unchecked")
+    private static <T> void updateModelsFromEnum(JavaEnumSource parentEnum, JavaSource<?> source,
+            Collection<T> models, EntryEnumConstantReader<?> converter) {
+        if (!(source instanceof JavaEnumSource)) {
             return;
         }
-        JavaEnumImpl myEnum = (JavaEnumImpl) source;
+        JavaEnumSource myEnum = (JavaEnumSource) source;
 
         // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
         // For example, "MyEnum" implements "Observation.Event" interface as:
@@ -81,7 +80,7 @@ public class ParsingUtils {
         //      "getInterfaces()" returns ["io.micrometer.observation.Observation.Event"]
         //
         // To make both cases work, use the simple name("Event" in the above example) for comparison.
-        if (!myEnum.hasInterface(requiredClass.getSimpleName())) {
+        if (!myEnum.hasInterface(converter.getRequiredClass().getSimpleName())) {
             return;
         }
         logger.debug("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
@@ -89,11 +88,27 @@ public class ParsingUtils {
             return;
         }
         for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
-            String keyValue = enumKeyValue(enumConstant, methodName);
-            keyValues.add(new KeyValueEntry(keyValue, AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc())));
+            models.add((T) converter.apply(enumConstant));
         }
     }
 
+    /**
+     * Read the return statement value as string.
+     * Currently, the string literal and boolean literal are supported.
+     * For example:
+     * <code>
+     * String returnStringLiteral() {
+     * return "my-string";
+     * }
+     * boolean returnBooleanPrimitive() {
+     * return true;
+     * }
+     * </code>
+     * It resolves as "my-string" and "true" respectively.
+     *
+     * @param methodDeclaration a method declaration which has the first line return statement with literal string or boolean.
+     * @return literal value as string
+     */
     public static String readStringReturnValue(MethodDeclaration methodDeclaration) {
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
@@ -102,11 +117,14 @@ public class ParsingUtils {
     public static String tryToReadStringReturnValue(Path file, String clazz) {
         try {
             return tryToReadNameFromConventionClass(file, clazz);
-        } catch (Exception ex) {
+        }
+        catch (Exception ex) {
             return null;
         }
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    @Nullable
     private static String tryToReadNameFromConventionClass(Path file, String className) {
         File parent = file.getParent().toFile();
         while (!parent.getAbsolutePath().endsWith(File.separator + "java")) { // TODO: Works only for Java
@@ -115,15 +133,17 @@ public class ParsingUtils {
         String filePath = filePath(className, parent);
         try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
             JavaUnit parsedClass = Roaster.parseUnit(streamForOverride);
-            JavaType actualConventionImplementation;
+            JavaType<?> actualConventionImplementation;
             if (className.contains("$")) {
                 String actualName = className.substring(className.indexOf("$") + 1);
                 List<AbstractJavaSource> nestedTypes = ((AbstractJavaSource) parsedClass.getGoverningType()).getNestedTypes();
                 Object foundType = nestedTypes.stream().filter(o -> (o).getName().equals(actualName)).findFirst().orElseThrow(() -> new IllegalStateException("Can't find a class with fqb [" + className + "]"));
                 actualConventionImplementation = (JavaType) foundType;
-            } else if (parsedClass instanceof JavaUnitImpl) {
+            }
+            else if (parsedClass instanceof JavaUnitImpl) {
                 actualConventionImplementation = parsedClass.getGoverningType();
-            } else {
+            }
+            else {
                 return null;
             }
             if (actualConventionImplementation instanceof JavaClassImpl) {
@@ -158,7 +178,8 @@ public class ParsingUtils {
                         }
                     }).get();
                     return ParsingUtils.readStringReturnValue(methodDeclaration);
-                } catch (Exception ex) {
+                }
+                catch (Exception ex) {
                     return name.toString().replace("return ", "").replace("\"", "");
                 }
             }
@@ -177,23 +198,18 @@ public class ParsingUtils {
         return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
-    public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass) {
-        return keyValueEntries(myEnum, methodDeclaration, requiredClass, null);
-    }
-
-    public static Collection<KeyValueEntry> keyValueEntries(JavaEnumImpl myEnum, MethodDeclaration methodDeclaration,
-            Class requiredClass, @Nullable String methodName) {
+    public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
+            EntryEnumConstantReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
-        Collection<KeyValueEntry> keyValues = new TreeSet<>();
+        List<T> models = new ArrayList<>();
         enumNames.forEach(enumName -> {
             List<JavaSource<?>> nestedTypes = myEnum.getNestedTypes();
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateKeyValuesFromEnum(myEnum, nestedSource, requiredClass, keyValues, methodName);
+            ParsingUtils.updateModelsFromEnum(myEnum, nestedSource, models, converter);
         });
-        return keyValues;
+        return models;
     }
 
     public static Collection<String> readClassValue(MethodDeclaration methodDeclaration) {
@@ -229,21 +245,16 @@ public class ParsingUtils {
         return Collections.singletonList(methodInvocation.getExpression().toString());
     }
 
-    private static String enumKeyValue(EnumConstantSource enumConstant, @Nullable String methodName) {
+    static String enumMethodValue(EnumConstantSource enumConstant, String methodName) {
         List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
         if (members.isEmpty()) {
             logger.warn("No method declarations in the enum.");
             return "";
         }
-        Object internal;
-        if (methodName == null) {
-            internal = members.get(0).getInternal();
-        } else {
-            internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
-            if (internal == null) {
-                logger.warn("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
-                return "";
-            }
+        Object internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
+        if (internal == null) {
+            logger.warn("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
+            return "";
         }
         if (!(internal instanceof MethodDeclaration)) {
             logger.warn("Can't read the member [" + internal.getClass() + "] as a method declaration.");
@@ -265,14 +276,18 @@ public class ParsingUtils {
         }
         ReturnStatement returnStatement = (ReturnStatement) statement;
         Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof StringLiteral)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
-            return "";
+        if (expression instanceof StringLiteral) {
+            return ((StringLiteral) expression).getLiteralValue();
         }
-        return ((StringLiteral) expression).getLiteralValue();
+        else if (expression instanceof BooleanLiteral) {
+            return Boolean.toString(((BooleanLiteral) expression).booleanValue());
+        }
+        logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
+        return "";
     }
 
     @SuppressWarnings("unchecked")
+    @Nullable
     public static <T extends Enum> T enumFromReturnMethodDeclaration(MethodDeclaration methodDeclaration, Class<T> enumClass) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
@@ -290,6 +305,7 @@ public class ParsingUtils {
         return (T) Enum.valueOf(enumClass, enumName);
     }
 
+    @Nullable
     public static String readClass(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
@@ -308,6 +324,7 @@ public class ParsingUtils {
         return matchingImportStatement(expression, className);
     }
 
+    @Nullable
     public static Map.Entry<String, String> readClassToEnum(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
@@ -329,7 +346,7 @@ public class ParsingUtils {
 
     private static String matchingImportStatement(Expression expression, String className) {
         CompilationUnit compilationUnit = (CompilationUnit) expression.getRoot();
-        List imports = compilationUnit.imports();
+        List<?> imports = compilationUnit.imports();
         // Class is in the same package
         String matchingImportStatement = compilationUnit.getPackage().getName().toString() + "." + className;
         for (Object anImport : imports) {
@@ -349,8 +366,11 @@ public class ParsingUtils {
                 continue;
             }
             AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) type;
-            List declarations = typeDeclaration.bodyDeclarations();
+            List<?> declarations = typeDeclaration.bodyDeclarations();
             for (Object declaration : declarations) {
+                if (!(declaration instanceof AbstractTypeDeclaration)) {
+                    continue;
+                }
                 AbstractTypeDeclaration childDeclaration = (AbstractTypeDeclaration) declaration;
                 if (className.equals(childDeclaration.getName().toString())) {
                     // Class is an inner class (we support 1 level of such nesting for now - we can do recursion in the future
@@ -361,23 +381,17 @@ public class ParsingUtils {
         return matchingImportStatement;
     }
 
-    public static Collection<KeyValueEntry> getTags(EnumConstantSource enumConstant, JavaEnumImpl myEnum, String getterName) {
-        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
-        if (members.isEmpty()) {
+    public static List<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String methodName) {
+        MethodSource<?> methodSource = enumConstant.getBody().getMethod(methodName);
+        if (methodSource == null) {
             return Collections.emptyList();
         }
-        Collection<KeyValueEntry> tags = new TreeSet<>();
-        for (MemberSource<EnumConstantSource.Body, ?> member : members) {
-            Object internal = member.getInternal();
-            if (!(internal instanceof MethodDeclaration)) {
-                return null;
-            }
-            MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-            String methodName = methodDeclaration.getName().getIdentifier();
-            if (getterName.equals(methodName)) {
-                tags.addAll(ParsingUtils.keyValueEntries(myEnum, methodDeclaration, KeyName.class));
-            }
+        // TODO: try to avoid the usage of internal
+        Object internal = methodSource.getInternal();
+        if (!(internal instanceof MethodDeclaration)) {
+            return Collections.emptyList();
         }
-        return tags;
+        MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
+        return ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
     }
 }
