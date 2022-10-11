@@ -17,6 +17,7 @@
 package io.micrometer.docs.commons;
 
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.tracing.docs.EventValue;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 
@@ -38,6 +39,7 @@ public class EventValueEntryEnumConstantReader implements EntryEnumConstantReade
     public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
         String value = ParsingUtils.enumMethodValue(enumConstantSource, "getValue");
+        Assert.notNull(value, "EventValue enum constants require readable getValue().");
 
         EventEntry model = new EventEntry();
         model.setName(value);

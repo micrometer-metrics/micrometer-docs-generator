@@ -17,6 +17,7 @@
 package io.micrometer.docs.commons;
 
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.observation.Observation;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 
@@ -37,10 +38,11 @@ public class EventEntryForMetricEnumConstantReader implements EntryEnumConstantR
     @Override
     public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
-        String value = ParsingUtils.enumMethodValue(enumConstantSource, "getName");
+        String name = ParsingUtils.enumMethodValue(enumConstantSource, "getName");
+        Assert.notNull(name, "Event enum constants require readable getName() for metrics documentation.");
 
         EventEntry model = new EventEntry();
-        model.setName(value);
+        model.setName(name);
         model.setDescription(description);
         return model;
     }

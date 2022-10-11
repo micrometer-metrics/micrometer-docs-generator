@@ -15,10 +15,19 @@
  */
 package io.micrometer.docs.commons.utils;
 
+import io.micrometer.common.lang.Nullable;
+
 public final class Assert {
     public static void hasText(String text, String description) {
         if (!StringUtils.hasText(text)) {
             throw new IllegalArgumentException(description);
         }
     }
+
+    public static void notNull(@Nullable Object object, String message) {
+        if (object == null) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
 }

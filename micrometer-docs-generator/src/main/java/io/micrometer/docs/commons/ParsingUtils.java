@@ -263,7 +263,7 @@ public class ParsingUtils {
         }
         MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
         if (methodDeclaration.getBody().statements().isEmpty()) {
-            logger.debug("Body was empty. Continuing...");
+            logger.debug("Body was empty.");
             return null;
         }
         return stringFromReturnMethodDeclaration(methodDeclaration);
