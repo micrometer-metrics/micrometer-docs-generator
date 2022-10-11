@@ -76,6 +76,10 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return FileVisitResult.CONTINUE;
         }
         logger.debug("Checking [" + javaSource.getName() + "]");
+        if (enumSource.getMethods().size() > 0) {
+            String message = String.format("The enum constants can define methods but the container enum class(%s) cannot define methods.", enumSource.getName());
+            throw new RuntimeException(message);
+        }
         if (enumSource.getEnumConstants().size() == 0) {
             return FileVisitResult.CONTINUE;
         }
