@@ -29,6 +29,7 @@ import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForMetricEnumConstantReader;
@@ -36,6 +37,8 @@ import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.docs.commons.utils.StringUtils;
+import io.micrometer.docs.metrics.MetricEntry.MetricInfo;
 import io.micrometer.observation.docs.ObservationDocumentation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -204,8 +207,22 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collections.sort(highCardinalityTags);
         Collections.sort(events);
 
-        return new MetricEntry(name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, baseUnit, type, lowCardinalityTags,
-                highCardinalityTags, overridesDefaultMetricFrom, events);
+        // existing logic to determine baseunit
+        baseUnit = StringUtils.hasText(baseUnit) ? baseUnit : (type == Meter.Type.TIMER ? "seconds" : "");
+
+        List<MetricInfo> metricInfos = new ArrayList<>();
+        // create a metric info based on the above parsing result
+        metricInfos.add(new MetricInfo(name, nameFromConventionClass, conventionClass, type, baseUnit));
+
+        // DefaultMeterObservationHandler creates LongTaskTimer. Add the information.
+        if (myEnum.hasInterface(ObservationDocumentation.class)) {
+            String ltkMetricName = StringUtils.hasText(name) ? name + ".active" : name;
+            String ltkMetricNameFromConvention = StringUtils.hasText(nameFromConventionClass) ? nameFromConventionClass + ".active" : nameFromConventionClass;
+            metricInfos.add(new MetricInfo(ltkMetricName, ltkMetricNameFromConvention, conventionClass, Type.LONG_TASK_TIMER, "seconds"));
+        }
+
+        return new MetricEntry(nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
+                highCardinalityTags, overridesDefaultMetricFrom, events, metricInfos);
     }
 
 }

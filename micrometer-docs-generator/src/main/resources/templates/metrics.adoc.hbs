@@ -14,8 +14,12 @@ ____
 {{{description}}}
 ____
 
-**Metric name** {{{metricName}}}{{#if (isDynamic name)}} - since it contains `%s`, the name is dynamic and will be resolved at runtime.
-{{~else}}.{{/if}} **Type** `{{replace (lower type) "_" " "}}`{{#if baseUnit}} and **base unit** `{{lower baseUnit}}`{{/if~}}.
+{{#each this.metricInfos}}
+**Metric name** {{{this.metricName}}}{{#if (isDynamic this.name)}} - since it contains `%s`, the name is dynamic and will be resolved at runtime.
+{{~else}}.{{/if}} **Type** `{{replace (lower this.type) "_" " "}}`{{#if this.baseUnit}} and **base unit** `{{lower this.baseUnit}}`{{/if~}}.
+{{/each}}
+
+IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
 
 Fully qualified name of the enclosing class `{{enclosingClass}}`.
 

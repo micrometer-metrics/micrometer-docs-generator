@@ -22,7 +22,11 @@ A closed in single tag BR.
 IMPORTANT: This is a sentence with *bold* and _italics_ inside a strong tag.
 ____
 
+
 **Metric name** `html`. **Type** `timer` and **base unit** `seconds`.
+
+
+IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
@@ -44,7 +48,11 @@ IMPORTANT: This is an admonition with *bold* and _italics_.
 This text is not part of the admonition.
 ____
 
+
 **Metric name** `inline_html_tags`. **Type** `timer` and **base unit** `seconds`.
+
+
+IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
@@ -61,7 +69,11 @@ ____
 This javadoc includes sanitized taglets elements which should all result in a single line: This is code: `someCode`. This is a simple link: `#HTML`. This is a complex link with alias text: some custom alias.
 ____
 
+
 **Metric name** `taglets`. **Type** `timer` and **base unit** `seconds`.
+
+
+IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
@@ -78,7 +90,11 @@ ____
 This one demonstrates javadoc extraction and sanitization in tags.
 ____
 
+
 **Metric name** `tags`. **Type** `timer` and **base unit** `seconds`.
+
+
+IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 

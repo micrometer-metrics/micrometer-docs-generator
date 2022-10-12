@@ -30,10 +30,6 @@ import io.micrometer.docs.commons.utils.StringUtils;
 
 class MetricEntry implements Comparable<MetricEntry> {
 
-    final String name;
-
-    final String conventionClass;
-
     final String nameFromConventionClass;
 
     final String enclosingClass;
@@ -44,10 +40,6 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final String prefix;
 
-    final String baseUnit;
-
-    final Meter.Type type;
-
     final List<KeyNameEntry> lowCardinalityKeyNames;
 
     final List<KeyNameEntry> highCardinalityKeyNames;
@@ -57,27 +49,30 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final List<EventEntry> events;
 
-    MetricEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, String baseUnit, Meter.Type meterType, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, @Nullable Map.Entry<String, String> overridesDefaultMetricFrom, List<EventEntry> events) {
+    final List<MetricInfo> metricInfos;
+
+    MetricEntry(String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, @Nullable Map.Entry<String, String> overridesDefaultMetricFrom, List<EventEntry> events, List<MetricInfo> metricInfos) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
-        this.name = name;
-        this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;
         this.enclosingClass = enclosingClass;
         this.enumName = enumName;
         this.description = description;
         this.prefix = prefix;
-        this.baseUnit = StringUtils.hasText(baseUnit) ? baseUnit : meterType == Meter.Type.TIMER ? "seconds" : "";
-        this.type = meterType;
         this.lowCardinalityKeyNames = lowCardinalityKeyNames;
         this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.overridesDefaultMetricFrom = overridesDefaultMetricFrom;
-        if (StringUtils.hasText(this.name) && this.conventionClass != null) {
-            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
-        }
-        else if (this.name == null && this.conventionClass == null) {
-            throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
-        }
         this.events = events;
+        this.metricInfos = metricInfos;
+
+        // TODO: move out this check from this class
+        for (MetricInfo metricInfo : metricInfos) {
+            if (StringUtils.hasText(metricInfo.name) && metricInfo.conventionClass != null) {
+                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
+            }
+            else if (metricInfo.name == null && metricInfo.conventionClass == null) {
+                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
+            }
+        }
     }
 
     static void assertThatProperlyPrefixed(Collection<MetricEntry> entries) {
@@ -108,12 +103,12 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MetricEntry that = (MetricEntry) o;
-        return Objects.equals(name, that.name) && Objects.equals(conventionClass, that.conventionClass) && Objects.equals(nameFromConventionClass, that.nameFromConventionClass) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(baseUnit, that.baseUnit) && type == that.type && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
+        return Objects.equals(nameFromConventionClass, that.nameFromConventionClass) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, conventionClass, nameFromConventionClass, enclosingClass, enumName, description, prefix, baseUnit, type, lowCardinalityKeyNames, highCardinalityKeyNames, overridesDefaultMetricFrom);
+        return Objects.hash(nameFromConventionClass, enclosingClass, enumName, description, prefix, lowCardinalityKeyNames, highCardinalityKeyNames, overridesDefaultMetricFrom);
     }
 
     @Override
@@ -121,39 +116,12 @@ class MetricEntry implements Comparable<MetricEntry> {
         return enumName.compareTo(o.enumName);
     }
 
-    private String name() {
-        if (StringUtils.hasText(this.name)) {
-            return "`" + this.name + "`";
-        }
-        else if (StringUtils.hasText(this.nameFromConventionClass)) {
-            return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
-        }
-        return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
-    }
-
     public String getDescription() {
         return this.description;
     }
 
-    public String getMetricName() {
-        // TODO: convert to handlebar helper
-        return name();
-    }
-
-    public String getName() {
-        return this.name;
-    }
-
     public String getEnumName() {
         return this.enumName;
-    }
-
-    public Type getType() {
-        return this.type;
-    }
-
-    public String getBaseUnit() {
-        return this.baseUnit;
     }
 
     public String getEnclosingClass() {
@@ -175,5 +143,61 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     public List<EventEntry> getEvents() {
         return this.events;
+    }
+
+    public List<MetricInfo> getMetricInfos() {
+        return this.metricInfos;
+    }
+
+    public static class MetricInfo {
+        final String name;
+
+        final String nameFromConventionClass;
+
+        final String conventionClass;
+
+        final Meter.Type type;
+
+        final String baseUnit;
+
+        public MetricInfo(String name, String nameFromConventionClass, String conventionClass, Type type, String baseUnit) {
+            this.name = name;
+            this.nameFromConventionClass = nameFromConventionClass;
+            this.conventionClass = conventionClass;
+            this.type = type;
+            this.baseUnit = baseUnit;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public String getNameFromConventionClass() {
+            return this.nameFromConventionClass;
+        }
+
+        public String getConventionClass() {
+            return this.conventionClass;
+        }
+
+        public Type getType() {
+            return this.type;
+        }
+
+        public String getBaseUnit() {
+            return this.baseUnit;
+        }
+
+        public String getMetricName() {
+            // TODO: convert to handlebar helper
+            if (StringUtils.hasText(this.name)) {
+                return "`" + this.name + "`";
+            }
+            else if (StringUtils.hasText(this.nameFromConventionClass)) {
+                return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
+            }
+            return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
+        }
+
     }
 }
