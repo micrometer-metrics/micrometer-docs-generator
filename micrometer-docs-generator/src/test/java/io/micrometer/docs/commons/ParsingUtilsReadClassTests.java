@@ -16,11 +16,8 @@
 
 package io.micrometer.docs.commons;
 
-import java.util.stream.Stream;
-
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.docs.RoasterTestUtils;
-import io.micrometer.observation.Observation;
 import io.micrometer.observation.Observation.Context;
 import io.micrometer.observation.ObservationConvention;
 import io.micrometer.observation.docs.ObservationDocumentation;
@@ -29,64 +26,28 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
-import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ParsingUtils}.
+ * Tests for {@link ParsingUtils#readClass(MethodDeclaration)}.
  *
  * @author Tadaya Tsuyukubo
  */
-class ParsingUtilsTests {
-
-    @ParameterizedTest
-    @org.junit.jupiter.params.provider.MethodSource
-    void readStringReturnValue(MethodDeclaration methodDeclaration, String expected) {
-        String result = ParsingUtils.readStringReturnValue(methodDeclaration);
-        assertThat(result).isEqualTo(expected);
-    }
+class ParsingUtilsReadClassTests {
 
     // for  https://github.com/micrometer-metrics/micrometer-docs-generator/issues/60
     @Test
     void readClass() {
-        JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsTests.class);
+        JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsReadClassTests.class);
         JavaEnumSource enumSource = (JavaEnumSource) classSource.getNestedType(ReadingClassObservationDocumentation.class.getSimpleName());
         EnumConstantSource enumConstantSource = enumSource.getEnumConstant("FOO");
         MethodSource<?> methodSource = enumConstantSource.getBody().getMethod("getDefaultConvention");
         MethodDeclaration methodDeclaration = (MethodDeclaration) methodSource.getInternal();
 
         String result = ParsingUtils.readClass(methodDeclaration);
-        assertThat(result).isEqualTo("io.micrometer.docs.commons.ParsingUtilsTests$ReadingClassObservationConvention");
-    }
-
-    static Stream<Arguments> readStringReturnValue() {
-        JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsTests.class);
-        JavaClassSource returnValueClass = (JavaClassSource) classSource.getNestedType(ReturnValueClass.class.getSimpleName());
-        MethodSource<?> stringLiteralSource = returnValueClass.getMethod("stringLiteral");
-        MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
-        MethodDeclaration stringLiteralDeclaration = (MethodDeclaration) stringLiteralSource.getInternal();
-        MethodDeclaration booleanPrimitiveDeclaration = (MethodDeclaration) booleanLiteralSource.getInternal();
-
-        return Stream.of(
-                Arguments.of(Named.of("stringLiteral", stringLiteralDeclaration), "my-string"),
-                Arguments.of(Named.of("booleanLiteral", booleanPrimitiveDeclaration), "true")
-        );
-    }
-
-    static class ReturnValueClass {
-        String stringLiteral() {
-            return "my-string";
-        }
-
-        // note: object Boolean is not supported
-
-        boolean booleanLiteral() {
-            return true;
-        }
+        assertThat(result).isEqualTo("io.micrometer.docs.commons.ParsingUtilsReadClassTests$ReadingClassObservationConvention");
     }
 
     enum ReadingClassObservationDocumentation implements ObservationDocumentation {
@@ -108,7 +69,7 @@ class ParsingUtilsTests {
         }
     }
 
-    static class ReadingClassObservationConvention implements ObservationConvention<Observation.Context> {
+    static class ReadingClassObservationConvention implements ObservationConvention<Context> {
         @Override
         public boolean supportsContext(Context context) {
             return true;
