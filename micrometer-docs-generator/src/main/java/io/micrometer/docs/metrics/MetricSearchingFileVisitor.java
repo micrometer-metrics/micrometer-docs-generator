@@ -207,9 +207,6 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collections.sort(highCardinalityTags);
         Collections.sort(events);
 
-        // existing logic to determine baseunit
-        baseUnit = StringUtils.hasText(baseUnit) ? baseUnit : (type == Meter.Type.TIMER ? "seconds" : "");
-
         List<MetricInfo> metricInfos = new ArrayList<>();
         // create a metric info based on the above parsing result
         metricInfos.add(new MetricInfo(name, nameFromConventionClass, conventionClass, type, baseUnit));
@@ -218,7 +215,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         if (myEnum.hasInterface(ObservationDocumentation.class)) {
             String ltkMetricName = StringUtils.hasText(name) ? name + ".active" : name;
             String ltkMetricNameFromConvention = StringUtils.hasText(nameFromConventionClass) ? nameFromConventionClass + ".active" : nameFromConventionClass;
-            metricInfos.add(new MetricInfo(ltkMetricName, ltkMetricNameFromConvention, conventionClass, Type.LONG_TASK_TIMER, "seconds"));
+            metricInfos.add(new MetricInfo(ltkMetricName, ltkMetricNameFromConvention, conventionClass, Type.LONG_TASK_TIMER, ""));
         }
 
         return new MetricEntry(nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,

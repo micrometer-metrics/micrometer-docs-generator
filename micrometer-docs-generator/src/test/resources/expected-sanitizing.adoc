@@ -23,10 +23,14 @@ IMPORTANT: This is a sentence with *bold* and _italics_ inside a strong tag.
 ____
 
 
-**Metric name** `html`. **Type** `timer` and **base unit** `seconds`.
+**Metric name** `html`. **Type** `timer`.
 
 
 IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
+
+
+IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, each backend determines the actual baseunit. (i.e. Prometheus uses seconds)
+
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
@@ -49,10 +53,14 @@ This text is not part of the admonition.
 ____
 
 
-**Metric name** `inline_html_tags`. **Type** `timer` and **base unit** `seconds`.
+**Metric name** `inline_html_tags`. **Type** `timer`.
 
 
 IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
+
+
+IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, each backend determines the actual baseunit. (i.e. Prometheus uses seconds)
+
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
@@ -70,10 +78,14 @@ This javadoc includes sanitized taglets elements which should all result in a si
 ____
 
 
-**Metric name** `taglets`. **Type** `timer` and **base unit** `seconds`.
+**Metric name** `taglets`. **Type** `timer`.
 
 
 IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
+
+
+IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, each backend determines the actual baseunit. (i.e. Prometheus uses seconds)
+
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 
@@ -91,10 +103,14 @@ This one demonstrates javadoc extraction and sanitization in tags.
 ____
 
 
-**Metric name** `tags`. **Type** `timer` and **base unit** `seconds`.
+**Metric name** `tags`. **Type** `timer`.
 
 
 IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
+
+
+IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, each backend determines the actual baseunit. (i.e. Prometheus uses seconds)
+
 
 Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases.sanitizing.WithComplexJavadocMeterDocumentation`.
 

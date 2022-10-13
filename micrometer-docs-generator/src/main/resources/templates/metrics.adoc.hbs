@@ -21,6 +21,10 @@ ____
 
 IMPORTANT: KeyValues that are added after starting the Observation might be missing from the *.active metrics.
 
+{{#if this.timerMetric}}
+IMPORTANT: Micrometer internally uses `nanoseconds` for the baseunit. However, each backend determines the actual baseunit. (i.e. Prometheus uses seconds)
+{{/if}}
+
 Fully qualified name of the enclosing class `{{enclosingClass}}`.
 
 {{#if prefix~}}

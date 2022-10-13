@@ -149,6 +149,13 @@ class MetricEntry implements Comparable<MetricEntry> {
         return this.metricInfos;
     }
 
+    // Handlebars require the method name to be "isX" or "getX". see JavaBeanValueResolver
+    // TODO: this should be handled by template by checking nested types satisfies the condition.
+    // If there is no native way to do it, may need to have a helper function.
+    public boolean isTimerMetric() {
+        return this.metricInfos.stream().anyMatch(info -> Type.TIMER.equals(info.getType()) || Type.LONG_TASK_TIMER.equals(info.getType()));
+    }
+
     public static class MetricInfo {
         final String name;
 
