@@ -120,7 +120,7 @@ Fully qualified name of the enclosing class `io.micrometer.docs.metrics.usecases
 [cols="a,a"]
 |===
 |Name | Description
-|`class`|This tag javadoc includes sanitized HTML elements and should result in multi-line output:
+|`class` _(required)_|This tag javadoc includes sanitized HTML elements and should result in multi-line output:
 
 A paragraph.
 
@@ -130,7 +130,7 @@ A closed in single tag BR.
 
  - it also contains
  - an unordered list
-|`method`|This tag javadoc includes sanitized taglets elements which should all result in a single line: This is code: `someCode`. This is a simple link: `#HTML`. This is a link with alias text: alias.
+|`method` _(required)_|This tag javadoc includes sanitized taglets elements which should all result in a single line: This is code: `someCode`. This is a simple link: `#HTML`. This is a link with alias text: alias.
 |===
 
 

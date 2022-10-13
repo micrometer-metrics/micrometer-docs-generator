@@ -38,7 +38,7 @@ IMPORTANT: All tags must be prefixed with `{{prefix}}` prefix!
 |===
 |Name | Description
 {{~/if}}
-|`{{this.name}}`|{{{this.displayDescription}}}
+|`{{this.name}}`{{#if this.required}} _(required)_{{/if}}|{{{this.displayDescription}}}
 {{~#if @last}}
 |===
 {{~/if}}
@@ -51,7 +51,7 @@ IMPORTANT: All tags must be prefixed with `{{prefix}}` prefix!
 |===
 |Name | Description
 {{~/if}}
-|`{{this.name}}`|{{{this.displayDescription}}}
+|`{{this.name}}`{{#if this.required}} _(required)_{{/if}}|{{{this.displayDescription}}}
 {{~#if @last}}
 |===
 {{~/if}}

@@ -29,7 +29,7 @@ public class KeyNameEntry implements Comparable<KeyNameEntry> {
 
     private String description;
 
-    private boolean isRequired;
+    private boolean required;
 
     public String getDisplayDescription() {
         // TODO: use handlebar helper to compose the description
@@ -62,10 +62,10 @@ public class KeyNameEntry implements Comparable<KeyNameEntry> {
     }
 
     public boolean isRequired() {
-        return this.isRequired;
+        return this.required;
     }
 
     public void setRequired(boolean required) {
-        isRequired = required;
+        this.required = required;
     }
 }

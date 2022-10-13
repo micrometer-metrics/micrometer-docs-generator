@@ -39,7 +39,7 @@ public class KeyNameEnumConstantReader implements EntryEnumConstantReader<KeyNam
     public KeyNameEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
         String value = ParsingUtils.enumMethodValue(enumConstantSource, "asString");
-        String required = ParsingUtils.enumMethodValue(enumConstantSource, "isRequired");
+        String isRequired = ParsingUtils.enumMethodValue(enumConstantSource, "isRequired");
 
         Assert.notNull(value, "KeyName enum constants require readable asString().");
 
@@ -47,12 +47,12 @@ public class KeyNameEnumConstantReader implements EntryEnumConstantReader<KeyNam
         // When the enum does not override the method, the returned value is empty, which
         // means "isRequired=true".
         // Set false, only when the value read is "false"
-        boolean isRequired = !"false".equals(required);
+        boolean required = !"false".equals(isRequired);
 
         KeyNameEntry model = new KeyNameEntry();
         model.setName(value);
         model.setDescription(description);
-        model.setRequired(isRequired);
+        model.setRequired(required);
         return model;
     }
 

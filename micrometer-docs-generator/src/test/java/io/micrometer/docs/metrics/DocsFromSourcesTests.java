@@ -40,7 +40,7 @@ class DocsFromSourcesTests {
                 .contains("==== Async Annotation")
                 .contains("____" + System.lineSeparator() + "Observation that wraps a")
                 .contains("**Metric name** `%s` - since").contains("Fully qualified name of")
-                .contains("|`class`|Class name where a method got annotated with @Async.")
+                .contains("|`class` _(required)_|Class name where a method got annotated with @Async.")
                 .contains("|`class2`|Class name where a method got annotated.")
                 .contains("==== Annotation New Or Continue")
                 .contains("**Metric name** `my distribution`. **Type** `distribution summary` and **base unit** `bytes`")
