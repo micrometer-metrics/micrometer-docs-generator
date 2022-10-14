@@ -47,12 +47,15 @@ class ParsingUtilsReadStringReturnValueTests {
         JavaClassSource returnValueClass = (JavaClassSource) classSource.getNestedType(ReturnValueClass.class.getSimpleName());
         MethodSource<?> stringLiteralSource = returnValueClass.getMethod("stringLiteral");
         MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
+        MethodSource<?> typeLiteralSource = returnValueClass.getMethod("typeLiteralString");
         MethodDeclaration stringLiteralDeclaration = (MethodDeclaration) stringLiteralSource.getInternal();
         MethodDeclaration booleanPrimitiveDeclaration = (MethodDeclaration) booleanLiteralSource.getInternal();
+        MethodDeclaration typeLiteralDeclaration = (MethodDeclaration) typeLiteralSource.getInternal();
 
         return Stream.of(
                 Arguments.of(Named.of("stringLiteral", stringLiteralDeclaration), "my-string"),
-                Arguments.of(Named.of("booleanLiteral", booleanPrimitiveDeclaration), "true")
+                Arguments.of(Named.of("booleanLiteral", booleanPrimitiveDeclaration), "true"),
+                Arguments.of(Named.of("booleanLiteral", typeLiteralDeclaration), "String")
         );
     }
 
@@ -65,6 +68,10 @@ class ParsingUtilsReadStringReturnValueTests {
 
         boolean booleanLiteral() {
             return true;
+        }
+
+        Class<?> typeLiteralString() {
+            return String.class;
         }
     }
 

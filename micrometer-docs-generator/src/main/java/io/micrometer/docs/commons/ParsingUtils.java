@@ -123,7 +123,7 @@ public class ParsingUtils {
         }
     }
 
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     @Nullable
     private static String tryToReadNameFromConventionClass(Path file, String className) {
         File parent = file.getParent().toFile();
@@ -282,6 +282,10 @@ public class ParsingUtils {
         }
         else if (expression instanceof BooleanLiteral) {
             return Boolean.toString(((BooleanLiteral) expression).booleanValue());
+        }
+        else if (expression instanceof TypeLiteral) {
+            // e.g. return String.class;
+            return ((TypeLiteral) expression).getType().toString();
         }
         logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
         return "";
