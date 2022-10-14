@@ -37,6 +37,7 @@ import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
 import io.micrometer.docs.metrics.MetricEntry.MetricInfo;
 import io.micrometer.observation.docs.ObservationDocumentation;
@@ -189,7 +190,9 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("getType".equals(methodName)) {
-                type = ParsingUtils.enumFromReturnMethodDeclaration(methodDeclaration, Meter.Type.class);
+                String value = ParsingUtils.readStringReturnValue(methodDeclaration);
+                Assert.hasText(value, "Failed to read getType() method on " + myEnum.getName());
+                type = Meter.Type.valueOf(value);
             }
             // MeterDocumentation
             else if ("overridesDefaultMetricFrom".equals(methodName)) {

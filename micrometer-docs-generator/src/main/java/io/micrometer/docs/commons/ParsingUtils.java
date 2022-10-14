@@ -295,25 +295,6 @@ public class ParsingUtils {
         return "";
     }
 
-    @SuppressWarnings("unchecked")
-    @Nullable
-    public static <T extends Enum> T enumFromReturnMethodDeclaration(MethodDeclaration methodDeclaration, Class<T> enumClass) {
-        Object statement = methodDeclaration.getBody().statements().get(0);
-        if (!(statement instanceof ReturnStatement)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
-            return null;
-        }
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof QualifiedName)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a qualified statement.");
-            return null;
-        }
-        QualifiedName qualifiedName = (QualifiedName) expression;
-        String enumName = qualifiedName.getName().toString();
-        return (T) Enum.valueOf(enumClass, enumName);
-    }
-
     @Nullable
     public static String readClass(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
