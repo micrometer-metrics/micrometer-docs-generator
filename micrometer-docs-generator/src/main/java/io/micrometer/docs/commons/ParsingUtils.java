@@ -287,6 +287,10 @@ public class ParsingUtils {
             // e.g. return String.class;
             return ((TypeLiteral) expression).getType().toString();
         }
+        else if (expression instanceof QualifiedName) {
+            // enum value
+            return ((QualifiedName) expression).getName().toString();
+        }
         logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
         return "";
     }

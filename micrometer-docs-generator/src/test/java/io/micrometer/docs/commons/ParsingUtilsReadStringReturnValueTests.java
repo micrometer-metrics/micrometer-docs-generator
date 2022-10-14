@@ -48,14 +48,17 @@ class ParsingUtilsReadStringReturnValueTests {
         MethodSource<?> stringLiteralSource = returnValueClass.getMethod("stringLiteral");
         MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
         MethodSource<?> typeLiteralSource = returnValueClass.getMethod("typeLiteralString");
+        MethodSource<?> qualifiedNameSource = returnValueClass.getMethod("qualifiedNameLiteralEnum");
         MethodDeclaration stringLiteralDeclaration = (MethodDeclaration) stringLiteralSource.getInternal();
         MethodDeclaration booleanPrimitiveDeclaration = (MethodDeclaration) booleanLiteralSource.getInternal();
         MethodDeclaration typeLiteralDeclaration = (MethodDeclaration) typeLiteralSource.getInternal();
+        MethodDeclaration qualifiedNameDeclaration = (MethodDeclaration) qualifiedNameSource.getInternal();
 
         return Stream.of(
                 Arguments.of(Named.of("stringLiteral", stringLiteralDeclaration), "my-string"),
                 Arguments.of(Named.of("booleanLiteral", booleanPrimitiveDeclaration), "true"),
-                Arguments.of(Named.of("booleanLiteral", typeLiteralDeclaration), "String")
+                Arguments.of(Named.of("typeLiteral", typeLiteralDeclaration), "String"),
+                Arguments.of(Named.of("qualifedNameLiteral", qualifiedNameDeclaration), "BAR")
         );
     }
 
@@ -73,6 +76,14 @@ class ParsingUtilsReadStringReturnValueTests {
         Class<?> typeLiteralString() {
             return String.class;
         }
+
+        MyEnum qualifiedNameLiteralEnum() {
+            return MyEnum.BAR;
+        }
+    }
+
+    enum MyEnum {
+        FOO, BAR
     }
 
 }
