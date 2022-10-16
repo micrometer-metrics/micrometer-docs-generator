@@ -30,6 +30,7 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.templates.HandlebarsUtils;
 
 public class SpansDocGenerator {
@@ -53,8 +54,11 @@ public class SpansDocGenerator {
     public void generate() {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+
+        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(path, this.inclusionPattern);
+
         Collection<SpanEntry> spanEntries = new TreeSet<>();
-        FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries);
+        FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries, searchHelper);
         try {
             Files.walkFileTree(path, fv);
             SpanEntry.assertThatProperlyPrefixed(spanEntries);

@@ -33,6 +33,7 @@ import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForMetricEnumConstantReader;
+import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
@@ -47,6 +48,7 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
+import org.jboss.forge.roaster.model.source.MethodSource;
 
 class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
@@ -56,9 +58,12 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     private final Collection<MetricEntry> entries;
 
-    MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> entries) {
+    private final JavaSourceSearchHelper searchHelper;
+
+    MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> entries, JavaSourceSearchHelper searchHelper) {
         this.pattern = pattern;
         this.entries = entries;
+        this.searchHelper = searchHelper;
     }
 
     @Override
@@ -149,7 +154,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         List<KeyNameEntry> lowCardinalityTags = new ArrayList<>();
         List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
         Map.Entry<String, String> overridesDefaultMetricFrom = null;
-        String conventionClass = null;
+        String conventionClass = null; // convention class's qualified name
         String nameFromConventionClass = null;
         List<EventEntry> events = new ArrayList<>();
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
@@ -169,8 +174,21 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation(@Nullable)
             else if ("getDefaultConvention".equals(methodName)) {
-                conventionClass = ParsingUtils.readClass(methodDeclaration);
-                nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
+                // TODO: may share the logic with the span side
+                // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
+                String conventionClassName = ParsingUtils.readStringReturnValue(methodDeclaration);
+                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+                if (conventionClassSource == null) {
+                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+                }
+                MethodSource<?> methodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+                if (methodSource == null) {
+                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+                }
+
+                MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
+                nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
+                conventionClass = conventionClassSource.getQualifiedName();
             }
             // ObservationDocumentation
             else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {

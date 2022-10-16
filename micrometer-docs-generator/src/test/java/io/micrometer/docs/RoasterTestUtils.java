@@ -22,6 +22,8 @@ import java.nio.file.Paths;
 
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
+import org.jboss.forge.roaster.model.source.JavaSource;
 
 /**
  * Test Utility for roaster related operations.
@@ -31,10 +33,22 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 public class RoasterTestUtils {
 
     public static JavaClassSource readJavaClass(Class<?> clazz) {
+        return read(clazz, JavaClassSource.class);
+    }
+
+    public static JavaEnumSource readJavaEnum(Class<?> clazz) {
+        return read(clazz, JavaEnumSource.class);
+    }
+
+    public static JavaSource<?> readJava(Class<?> clazz) {
+        return read(clazz, JavaSource.class);
+    }
+
+    private static <T extends JavaSource<?>> T read(Class<?> clazz, Class<T> type) {
         String filename = clazz.getCanonicalName().replace(".", "/") + ".java";
         Path path = Paths.get("src/test/java", filename);
         try {
-            return Roaster.parse(JavaClassSource.class, path.toFile());
+            return Roaster.parse(type, path.toFile());
         }
         catch (IOException ex) {
             throw new RuntimeException("Failed to read class file on " + path, ex);

@@ -12,14 +12,8 @@
  */
 package io.micrometer.docs.commons;
 
-import java.io.File;
-import java.io.InputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.AbstractMap;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -32,9 +26,8 @@ import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
-import io.micrometer.observation.ObservationConvention;
+import io.micrometer.docs.commons.utils.Assert;
 import org.jboss.forge.roaster.Internal;
-import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
@@ -47,13 +40,6 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ReturnStatement;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.StringLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Type;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TypeLiteral;
-import org.jboss.forge.roaster.model.JavaType;
-import org.jboss.forge.roaster.model.JavaUnit;
-import org.jboss.forge.roaster.model.impl.AbstractJavaSource;
-import org.jboss.forge.roaster.model.impl.JavaClassImpl;
-import org.jboss.forge.roaster.model.impl.JavaInterfaceImpl;
-import org.jboss.forge.roaster.model.impl.JavaUnitImpl;
-import org.jboss.forge.roaster.model.impl.MethodImpl;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
@@ -111,91 +97,6 @@ public class ParsingUtils {
      */
     public static String readStringReturnValue(MethodDeclaration methodDeclaration) {
         return stringFromReturnMethodDeclaration(methodDeclaration);
-    }
-
-    @Nullable
-    public static String tryToReadStringReturnValue(Path file, String clazz) {
-        try {
-            return tryToReadNameFromConventionClass(file, clazz);
-        }
-        catch (Exception ex) {
-            return null;
-        }
-    }
-
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    @Nullable
-    private static String tryToReadNameFromConventionClass(Path file, String className) {
-        File parent = file.getParent().toFile();
-        while (!parent.getAbsolutePath().endsWith(File.separator + "java")) { // TODO: Works only for Java
-            parent = parent.getParentFile();
-        }
-        String filePath = filePath(className, parent);
-        try (InputStream streamForOverride = Files.newInputStream(new File(filePath).toPath())) {
-            JavaUnit parsedClass = Roaster.parseUnit(streamForOverride);
-            JavaType<?> actualConventionImplementation;
-            if (className.contains("$")) {
-                String actualName = className.substring(className.indexOf("$") + 1);
-                List<AbstractJavaSource> nestedTypes = ((AbstractJavaSource) parsedClass.getGoverningType()).getNestedTypes();
-                Object foundType = nestedTypes.stream().filter(o -> (o).getName().equals(actualName)).findFirst().orElseThrow(() -> new IllegalStateException("Can't find a class with fqb [" + className + "]"));
-                actualConventionImplementation = (JavaType) foundType;
-            }
-            else if (parsedClass instanceof JavaUnitImpl) {
-                actualConventionImplementation = parsedClass.getGoverningType();
-            }
-            else {
-                return null;
-            }
-            if (actualConventionImplementation instanceof JavaClassImpl) {
-                List<String> interfaces = ((JavaClassImpl) actualConventionImplementation).getInterfaces();
-                if (interfaces.stream().noneMatch(s -> s.contains(ObservationConvention.class.getSimpleName()))) {
-                    return null;
-                }
-                MethodSource<?> name = ((JavaClassImpl) actualConventionImplementation).getMethod("getName");
-                if (name == null) {
-                    // look for the implementing interfaces
-                    for (String iface : interfaces) {
-                        String interfaceFilePath = filePath(iface, parent);
-                        try (InputStream stream = Files.newInputStream(Paths.get(interfaceFilePath))) {
-                            JavaUnit parsed = Roaster.parseUnit(stream);
-                            name = ((JavaInterfaceImpl) parsed.getGoverningType()).getMethod("getName");
-                        }
-                        if (name != null) {
-                            break;
-                        }
-                    }
-                }
-
-                MethodSource<?> nameToUse = name;
-                try {
-                    MethodDeclaration methodDeclaration = (MethodDeclaration) Arrays.stream(MethodImpl.class.getDeclaredFields()).filter(f -> f.getName().equals("method")).findFirst().map(f -> {
-                        try {
-                            f.setAccessible(true);
-                            return f.get(nameToUse);
-                        }
-                        catch (IllegalAccessException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }).get();
-                    return ParsingUtils.readStringReturnValue(methodDeclaration);
-                }
-                catch (Exception ex) {
-                    return name.toString().replace("return ", "").replace("\"", "");
-                }
-            }
-
-        }
-        catch (Throwable e) {
-            throw new RuntimeException(e);
-        }
-        return "";
-    }
-
-    private static String filePath(String className, File parent) {
-        if (className.contains("$")) {
-            return new File(parent, className.replace(".", File.separator).substring(0, className.indexOf("$")) + ".java").getAbsolutePath();
-        }
-        return new File(parent, className.replace(".", File.separator) + ".java").getAbsolutePath();
     }
 
     public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
@@ -383,5 +284,17 @@ public class ParsingUtils {
         }
         MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
         return ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
+    }
+
+    /**
+     * Retrieve {@link MethodDeclaration} from {@link MethodSource}.
+     *
+     * @param methodSource a method source
+     * @return retrieved method declaration
+     */
+    public static MethodDeclaration getMethodDeclaration(MethodSource<?> methodSource) {
+        Object methodInternal = methodSource.getInternal();
+        Assert.isInstanceOf(MethodDeclaration.class, methodInternal);
+        return (MethodDeclaration) methodInternal;
     }
 }

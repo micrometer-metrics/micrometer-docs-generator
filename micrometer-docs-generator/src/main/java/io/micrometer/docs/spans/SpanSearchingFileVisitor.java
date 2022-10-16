@@ -32,6 +32,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForSpanEnumConstantReader;
 import io.micrometer.docs.commons.EventValueEntryEnumConstantReader;
+import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
@@ -44,6 +45,7 @@ import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MemberSource;
+import org.jboss.forge.roaster.model.source.MethodSource;
 
 class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
@@ -53,9 +55,12 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     private final Collection<SpanEntry> spanEntries;
 
-    SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries) {
+    private final JavaSourceSearchHelper searchHelper;
+
+    SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries, JavaSourceSearchHelper searchHelper) {
         this.pattern = pattern;
         this.spanEntries = spanEntries;
+        this.searchHelper = searchHelper;
     }
 
     @Override
@@ -179,8 +184,21 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // ObservationDocumentation
             else if ("getDefaultConvention".equals(methodName)) {
-                conventionClass = ParsingUtils.readClass(methodDeclaration);
-                nameFromConventionClass = ParsingUtils.tryToReadStringReturnValue(file, conventionClass);
+                // TODO: may share the logic with the metrics side
+                // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
+                String conventionClassName = ParsingUtils.readStringReturnValue(methodDeclaration);
+                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+                if (conventionClassSource == null) {
+                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+                }
+                MethodSource<?> methodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+                if (methodSource == null) {
+                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+                }
+                MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
+
+                nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
+                conventionClass = conventionClassSource.getQualifiedName();
             }
             // ObservationDocumentation
             else if ("getContextualName".equals(methodName)) {

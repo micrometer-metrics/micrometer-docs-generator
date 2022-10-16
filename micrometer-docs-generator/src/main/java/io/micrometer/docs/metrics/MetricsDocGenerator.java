@@ -30,6 +30,7 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.templates.HandlebarsUtils;
 
 // TODO: Assert on prefixes
@@ -55,8 +56,11 @@ public class MetricsDocGenerator {
     public void generate() {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+
+        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(this.projectRoot.toPath(), this.inclusionPattern);
+
         Collection<MetricEntry> entries = new TreeSet<>();
-        FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries);
+        FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries, searchHelper);
         try {
             Files.walkFileTree(path, fv);
             MetricEntry.assertThatProperlyPrefixed(entries);

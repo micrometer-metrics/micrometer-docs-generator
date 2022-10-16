@@ -30,4 +30,15 @@ public final class Assert {
         }
     }
 
+    public static void isInstanceOf(Class<?> type, @Nullable Object obj) {
+        isInstanceOf(type, obj, obj + " must be an instance of " + type);
+    }
+
+    public static void isInstanceOf(Class<?> type, @Nullable Object obj, String message) {
+        notNull(type, "Type to check against must not be null");
+        if (!type.isInstance(obj)) {
+            throw new IllegalArgumentException(message);
+        }
+    }
+
 }
