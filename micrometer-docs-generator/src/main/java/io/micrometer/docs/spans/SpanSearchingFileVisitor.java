@@ -215,20 +215,10 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
         // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
         if (overridesDefaultSpanFrom != null && tags.isEmpty()) {
-            JavaEnumSource enclosingEnumSource = overridesDefaultSpanFrom.getOrigin();
-            MethodSource<?> lowKeysMethodSource = overridesDefaultSpanFrom.getBody().getMethod("getLowCardinalityKeyNames");
-            if (lowKeysMethodSource != null) {
-                MethodDeclaration lowKeysMethodDeclaration = ParsingUtils.getMethodDeclaration(lowKeysMethodSource);
-                List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, lowKeysMethodDeclaration, KeyNameEnumConstantReader.INSTANCE);
-                tags.addAll(lows);
-            }
-
-            MethodSource<?> highKeysMethodSource = overridesDefaultSpanFrom.getBody().getMethod("getHighCardinalityKeyNames");
-            if (highKeysMethodSource != null) {
-                MethodDeclaration highKeysMethodDeclaration = ParsingUtils.getMethodDeclaration(highKeysMethodSource);
-                List<KeyNameEntry> highs = ParsingUtils.retrieveModels(enclosingEnumSource, highKeysMethodDeclaration, KeyNameEnumConstantReader.INSTANCE);
-                tags.addAll(highs);
-            }
+            List<KeyNameEntry> lows = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom, "getLowCardinalityKeyNames");
+            List<KeyNameEntry> highs = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom, "getHighCardinalityKeyNames");
+            tags.addAll(lows);
+            tags.addAll(highs);
         }
 
         Collections.sort(tags);
@@ -237,6 +227,19 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
         return new SpanEntry(contextualName != null ? contextualName : name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 additionalKeyNames, events);
+    }
+
+
+    private List<KeyNameEntry> getKeyNameEntriesFromEnumConstant(EnumConstantSource enumConstantSource, String methodName) {
+        List<KeyNameEntry> tags = new ArrayList<>();
+        MethodSource<?> methodSource = enumConstantSource.getBody().getMethod(methodName);
+        if (methodSource != null) {
+            JavaEnumSource enclosingEnumSource = enumConstantSource.getOrigin();
+            MethodDeclaration methodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
+            List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
+            tags.addAll(lows);
+        }
+        return tags;
     }
 
 }

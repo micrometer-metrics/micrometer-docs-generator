@@ -195,7 +195,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
         // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
         if (overridesDefaultMetricFrom != null && lowCardinalityTags.isEmpty()) {
-            MethodSource<?> methodSource = overridesDefaultMetricFrom.getBody().getMethod("getLowCardinalityKeyNames");
+            MethodSource<?> methodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(), "getLowCardinalityKeyNames");
             if (methodSource != null) {
                 JavaEnumSource enclosingEnumSource = overridesDefaultMetricFrom.getOrigin();
                 MethodDeclaration methodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
