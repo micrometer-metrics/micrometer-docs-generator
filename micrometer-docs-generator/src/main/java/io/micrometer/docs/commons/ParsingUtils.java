@@ -25,7 +25,6 @@ import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.utils.Assert;
-import org.jboss.forge.roaster.Internal;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.BooleanLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -37,7 +36,6 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TypeLiteral;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
-import org.jboss.forge.roaster.model.source.MemberSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
 public class ParsingUtils {
@@ -93,6 +91,11 @@ public class ParsingUtils {
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
 
+    public static String readStringReturnValue(MethodSource<?> methodSource) {
+        MethodDeclaration methodDeclaration = getMethodDeclaration(methodSource);
+        return stringFromReturnMethodDeclaration(methodDeclaration);
+    }
+
     public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
             EntryEnumConstantReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
@@ -137,26 +140,12 @@ public class ParsingUtils {
 
     @Nullable
     static String enumMethodValue(EnumConstantSource enumConstant, String methodName) {
-        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
-        if (members.isEmpty()) {
-            logger.debug("No method declarations in the enum.");
-            return null;
-        }
-        Object internal = members.stream().filter(bodyMemberSource -> bodyMemberSource.getName().equals(methodName)).findFirst().map(Internal::getInternal).orElse(null);
-        if (internal == null) {
+        MethodSource<?> methodSource = enumConstant.getBody().getMethod(methodName);
+        if (methodSource == null) {
             logger.debug("Can't find the member with method name [" + methodName + "] on " + enumConstant.getName());
             return null;
         }
-        if (!(internal instanceof MethodDeclaration)) {
-            logger.debug("Can't read the member [" + internal.getClass() + "] as a method declaration.");
-            return null;
-        }
-        MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-        if (methodDeclaration.getBody().statements().isEmpty()) {
-            logger.debug("Body was empty.");
-            return null;
-        }
-        return stringFromReturnMethodDeclaration(methodDeclaration);
+        return readStringReturnValue(methodSource);
     }
 
     private static String stringFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
