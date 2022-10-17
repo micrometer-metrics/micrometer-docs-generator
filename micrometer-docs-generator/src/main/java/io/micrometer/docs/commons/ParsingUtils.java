@@ -185,7 +185,7 @@ public class ParsingUtils {
     }
 
     @Nullable
-    private static Expression expressionFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
+    public static Expression expressionFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
             logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");

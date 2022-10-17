@@ -23,9 +23,13 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.lang.Nullable;
@@ -33,9 +37,14 @@ import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.utils.Assert;
 import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.SimpleName;
 import org.jboss.forge.roaster.model.Extendable;
 import org.jboss.forge.roaster.model.InterfaceCapable;
+import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.Import;
+import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodHolderSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -55,6 +64,9 @@ public class JavaSourceSearchHelper {
     //   Canonical Name: "io.micrometer.Foo", "io.micrometer.Foo.Bar.Baz"
     //   Simple Name: "Foo", "Bar", "Baz"
     //
+    // Note: Qualified name is unique in a class loader. In rare case, same canonical name
+    // can be created from different qualified names.
+    //
     // @formatter:on
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(JavaSourceSearchHelper.class);
@@ -69,6 +81,14 @@ public class JavaSourceSearchHelper {
      * </pre>
      */
     private final Map<String, JavaSourcePathInfo> pathInfoMap;
+
+    /**
+     * Canonical class name to qualified class names. (note: in rare case, different qualified
+     * name can be same canonical name. (ref <a href="https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.7">Java Spec</a>)
+     * This map is useful for resolving import statement referenced classes since they use
+     * canonical names.
+     */
+    private final Map<String, Set<String>> qualifiedClassNames = new HashMap<>();
 
 
     public static JavaSourceSearchHelper create(Path projectRoot, Pattern inclusionPattern) {
@@ -91,6 +111,22 @@ public class JavaSourceSearchHelper {
 
     private JavaSourceSearchHelper(Map<String, JavaSourcePathInfo> pathInfoMap) {
         this.pathInfoMap = pathInfoMap;
+
+        // compose canonical name to qualified name map
+        for (Entry<String, JavaSourcePathInfo> entry : pathInfoMap.entrySet()) {
+            String qualifiedName = entry.getKey();
+            String canonicalName = entry.getValue().canonicalName;
+
+            this.qualifiedClassNames.compute(canonicalName, (key, set) -> {
+                if (set == null) {
+                    return Collections.singleton(qualifiedName);
+                }
+                // rare case, one canonical name has multiple qualified names
+                Set<String> newSet = new HashSet<>(set);
+                newSet.add(qualifiedName);
+                return newSet;
+            });
+        }
     }
 
 
@@ -221,6 +257,83 @@ public class JavaSourceSearchHelper {
         return null;
     }
 
+    /**
+     * Search an enum constant referenced by the enclosing class.
+     *
+     * @param enclosingJavaSource enclosing class {@link JavaSource}.
+     * @param expression target enum constant. This can be {@link QualifiedName}, such as {@code MyEnum.FOO} or {@link SimpleName}, such as {@code FOO} for static imported one.
+     * @return an enum constant source or {@code null} if not found.
+     */
+    @Nullable
+    public EnumConstantSource searchReferencingEnumConstant(JavaSource<?> enclosingJavaSource, Expression expression) {
+        if (expression instanceof QualifiedName) {
+            // e.g.  MyEnum.FOO
+            QualifiedName qualifiedName = (QualifiedName) expression;
+            String qualifier = qualifiedName.getQualifier().getFullyQualifiedName(); // e.g. MyEnum
+            String enumValue = qualifiedName.getName().getIdentifier();
+            JavaSource<?> javaSource = searchReferencingClass(enclosingJavaSource, qualifier);
+            if (javaSource == null) {
+                return null;
+            }
+            if (!javaSource.isEnum()) {
+                return null;
+            }
+            return ((JavaEnumSource) javaSource).getEnumConstant(enumValue);
+        }
+        else if (expression instanceof SimpleName) {
+            // The enum doesn't have qualifier, which means it is static imported. e.g. FOO
+            String enumConstantName = ((SimpleName) expression).getIdentifier();
+
+            // search from import
+            for (Import anImport : enclosingJavaSource.getImports()) {
+                if (!anImport.isStatic()) {
+                    continue;  // enum must be static imported
+                }
+                if (anImport.isWildcard()) {
+                    // getPackage() returns "package name" + "enum class name" in this case
+                    String enumClassCanonicalName = anImport.getPackage();
+                    JavaSource<?> javaSource = searchByCanonicalName(enumClassCanonicalName);
+                    if (javaSource == null || !javaSource.isEnum()) {
+                        // possibly other static import
+                        continue;
+                    }
+                    EnumConstantSource enumConstant = ((JavaEnumSource) javaSource).getEnumConstant(enumConstantName);
+                    if (enumConstant != null) {
+                        return enumConstant;
+                    }
+                }
+                else if (anImport.getSimpleName().equals(enumConstantName)) {
+                    JavaSource<?> javaSource = searchByCanonicalName(anImport.getPackage());
+                    // TODO: continue or fail here
+                    if (javaSource == null || !javaSource.isEnum()) {
+                        continue;
+                    }
+                    EnumConstantSource enumConstant = ((JavaEnumSource) javaSource).getEnumConstant(enumConstantName);
+                    if (enumConstant != null) {
+                        return enumConstant;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    @Nullable
+    private JavaSource<?> searchByCanonicalName(String canonicalName) {
+        Set<String> qualifiedNames = this.qualifiedClassNames.get(canonicalName);
+        if (qualifiedNames == null) {
+            return null;
+        }
+        // TODO: add warning when multiple qualified names found
+        for (String qualifiedName : qualifiedNames) {
+            JavaSource<?> javaSource = search(qualifiedName);
+            if (javaSource == null) {
+                continue;
+            }
+            return javaSource;
+        }
+        return null;
+    }
 
     /**
      * Search the method source in the hierarchy(parents/interfaces) of the given {@link JavaSource}.

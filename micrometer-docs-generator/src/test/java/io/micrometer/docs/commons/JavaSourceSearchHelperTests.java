@@ -26,6 +26,10 @@ import io.micrometer.docs.commons.search.search_test.Container;
 import io.micrometer.docs.commons.search.test1.ReferenceSample;
 import io.micrometer.docs.commons.search.test2.MethodSearchSample;
 import io.micrometer.docs.commons.search.test3.MethodSearchEnumSample;
+import io.micrometer.docs.commons.search.test4.MyService;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
@@ -80,7 +84,7 @@ class JavaSourceSearchHelperTests {
 
     @ParameterizedTest
     @org.junit.jupiter.params.provider.MethodSource
-    void searchMethodSourceOnEnum(String methodName, String expectedEnclosingClassName) throws Exception {
+    void searchMethodSourceOnEnum(String methodName, String expectedEnclosingClassName) {
         Path path = Paths.get("src/test/java/io/micrometer/docs/commons/search/test3");
         JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
         JavaEnumSource enclosingSource = RoasterTestUtils.readJavaEnum(MethodSearchEnumSample.class);
@@ -88,6 +92,23 @@ class JavaSourceSearchHelperTests {
         MethodSource<?> result = helper.searchMethodSource(enclosingSource, methodName);
         assertThat(result).isNotNull();
         assertThat(result.getOrigin().getName()).isEqualTo(expectedEnclosingClassName);
+    }
+
+    @ParameterizedTest
+    @org.junit.jupiter.params.provider.MethodSource
+    void searchReferencingEnumConstant(String methodName, String expectedEnumConstantName) {
+        Path path = Paths.get("src/test/java/io/micrometer/docs/commons/search/test4");
+        JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
+        JavaClassSource enclosingSource = RoasterTestUtils.readJavaClass(MyService.class);
+
+        MethodSource<?> ms = enclosingSource.getMethod(methodName);
+        MethodDeclaration md = ParsingUtils.getMethodDeclaration(ms);
+        Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(md);
+
+        EnumConstantSource result = helper.searchReferencingEnumConstant(enclosingSource, expression);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo(expectedEnumConstantName);
     }
 
     static Stream<Arguments> searchReferencingClass() {
@@ -139,6 +160,17 @@ class JavaSourceSearchHelperTests {
                 Arguments.of("greet", "MethodSearchEnumSample"),
                 Arguments.of("custom", "MethodSearchEnumSample"),
                 Arguments.of("hello", "GreetingInterface")
+        );
+        // @formatter:on
+    }
+    static Stream<Arguments> searchReferencingEnumConstant() {
+        // uses test4
+        // @formatter:off
+        return Stream.of(
+                Arguments.of("foo", "FOO"),
+                Arguments.of("same", "SAME"),
+                Arguments.of("different", "DIFFERENT"),
+                Arguments.of("hello", "HELLO")
         );
         // @formatter:on
     }
