@@ -38,7 +38,6 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodInvocation;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ReturnStatement;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.StringLiteral;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Type;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TypeLiteral;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -114,18 +113,13 @@ public class ParsingUtils {
     }
 
     public static Collection<String> readClassValue(MethodDeclaration methodDeclaration) {
-        Object statement = methodDeclaration.getBody().statements().get(0);
-        if (!(statement instanceof ReturnStatement)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
-            return Collections.emptyList();
-        }
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
+        Expression expression = expressionFromReturnMethodDeclaration(methodDeclaration);
         if (!(expression instanceof MethodInvocation)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a method invocation.");
+            logger.warn("Statement [" + expression + "] is not a method invocation.");
             return Collections.emptyList();
         }
         MethodInvocation methodInvocation = (MethodInvocation) expression;
+
         if ("merge".equals(methodInvocation.getName().getIdentifier())) {
             // TODO: There must be a better way to do this...
             // KeyName.merge(TestSpanTags.values(),AsyncSpanTags.values())
@@ -171,13 +165,7 @@ public class ParsingUtils {
     }
 
     private static String stringFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
-        Object statement = methodDeclaration.getBody().statements().get(0);
-        if (!(statement instanceof ReturnStatement)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
-            return "";
-        }
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
+        Expression expression = expressionFromReturnMethodDeclaration(methodDeclaration);
         if (expression instanceof StringLiteral) {
             return ((StringLiteral) expression).getLiteralValue();
         }
@@ -192,27 +180,19 @@ public class ParsingUtils {
             // enum value
             return ((QualifiedName) expression).getName().toString();
         }
-        logger.warn("Statement [" + statement.getClass() + "] is not a string literal statement.");
+        logger.warn("Failed to retrieve string return value from [" + methodDeclaration.getName() + "].");
         return "";
     }
 
     @Nullable
-    public static String readClass(MethodDeclaration methodDeclaration) {
+    private static Expression expressionFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
             logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
             return null;
         }
         ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof TypeLiteral)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a qualified name.");
-            return null;
-        }
-        TypeLiteral typeLiteral = (TypeLiteral) expression;
-        Type type = typeLiteral.getType();
-        String className = type.toString();
-        return matchingImportStatement(expression, className);
+        return returnStatement.getExpression();
     }
 
     @Nullable
