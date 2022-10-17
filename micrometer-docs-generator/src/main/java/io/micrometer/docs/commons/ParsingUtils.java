@@ -12,12 +12,10 @@
  */
 package io.micrometer.docs.commons;
 
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -28,11 +26,8 @@ import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.utils.Assert;
 import org.jboss.forge.roaster.Internal;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.AbstractTypeDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.BooleanLiteral;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.CompilationUnit;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodInvocation;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
@@ -193,77 +188,6 @@ public class ParsingUtils {
         }
         ReturnStatement returnStatement = (ReturnStatement) statement;
         return returnStatement.getExpression();
-    }
-
-    @Nullable
-    public static Map.Entry<String, String> readClassToEnum(MethodDeclaration methodDeclaration) {
-        Object statement = methodDeclaration.getBody().statements().get(0);
-        if (!(statement instanceof ReturnStatement)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");
-            return null;
-        }
-        ReturnStatement returnStatement = (ReturnStatement) statement;
-        Expression expression = returnStatement.getExpression();
-        if (!(expression instanceof QualifiedName)) {
-            logger.warn("Statement [" + statement.getClass() + "] is not a qualified name.");
-            return null;
-        }
-        QualifiedName qualifiedName = (QualifiedName) expression;
-        String className = qualifiedName.getQualifier().toString();
-        String enumName = qualifiedName.getName().toString();
-        String matchingImportStatement = matchingImportStatement(expression, className);
-        return new AbstractMap.SimpleEntry<>(matchingImportStatement, enumName);
-    }
-
-    private static String matchingImportStatement(Expression expression, String className) {
-        CompilationUnit compilationUnit = (CompilationUnit) expression.getRoot();
-        List<?> imports = compilationUnit.imports();
-        // Class is in the same package
-        String matchingImportStatement = compilationUnit.getPackage().getName().toString() + "." + className;
-        for (Object anImport : imports) {
-            ImportDeclaration importDeclaration = (ImportDeclaration) anImport;
-            String importStatement = importDeclaration.getName().toString();
-            if (importStatement.endsWith(className)) {
-                // Class got imported from a different package
-                matchingImportStatement = importStatement;
-            }
-        }
-        return matchingStatementFromInnerClasses(className, compilationUnit, matchingImportStatement);
-    }
-
-    private static String matchingStatementFromInnerClasses(String className, CompilationUnit compilationUnit, String matchingImportStatement) {
-        for (Object type : compilationUnit.types()) {
-            if (!(type instanceof AbstractTypeDeclaration)) {
-                continue;
-            }
-            AbstractTypeDeclaration typeDeclaration = (AbstractTypeDeclaration) type;
-            List<?> declarations = typeDeclaration.bodyDeclarations();
-            for (Object declaration : declarations) {
-                if (!(declaration instanceof AbstractTypeDeclaration)) {
-                    continue;
-                }
-                AbstractTypeDeclaration childDeclaration = (AbstractTypeDeclaration) declaration;
-                if (className.equals(childDeclaration.getName().toString())) {
-                    // Class is an inner class (we support 1 level of such nesting for now - we can do recursion in the future
-                    return compilationUnit.getPackage().getName().toString() + "." + typeDeclaration.getName() + "$" + childDeclaration.getName();
-                }
-            }
-        }
-        return matchingImportStatement;
-    }
-
-    public static List<KeyNameEntry> getTags(EnumConstantSource enumConstant, JavaEnumSource myEnum, String methodName) {
-        MethodSource<?> methodSource = enumConstant.getBody().getMethod(methodName);
-        if (methodSource == null) {
-            return Collections.emptyList();
-        }
-        // TODO: try to avoid the usage of internal
-        Object internal = methodSource.getInternal();
-        if (!(internal instanceof MethodDeclaration)) {
-            return Collections.emptyList();
-        }
-        MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-        return ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
     }
 
     /**
