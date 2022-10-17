@@ -12,7 +12,6 @@
  */
 package io.micrometer.docs.spans;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -21,9 +20,9 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -37,9 +36,11 @@ import io.micrometer.docs.commons.KeyNameEntry;
 import io.micrometer.docs.commons.KeyNameEnumConstantReader;
 import io.micrometer.docs.commons.ParsingUtils;
 import io.micrometer.docs.commons.utils.AsciidocUtils;
+import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.observation.docs.ObservationDocumentation;
 import io.micrometer.tracing.docs.SpanDocumentation;
 import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -56,6 +57,11 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
     private final Collection<SpanEntry> spanEntries;
 
     private final JavaSourceSearchHelper searchHelper;
+
+    /**
+     * The enclosing enum classes for overriding will be excluded from documentation
+     */
+    private final Set<String> overrideEnumClassNames = new HashSet<>();
 
     SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries, JavaSourceSearchHelper searchHelper) {
         this.pattern = pattern;
@@ -92,9 +98,6 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
             SpanEntry entry = parseSpan(path, enumConstant, enumSource);
             if (entry != null) {
-                if (entry.overridesDefaultSpanFrom != null && entry.tagKeys.isEmpty()) {
-                    addTagsFromOverride(path, entry);
-                }
                 if (!entry.additionalKeyNames.isEmpty()) {
                     entry.tagKeys.addAll(entry.additionalKeyNames);
                 }
@@ -108,52 +111,14 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     @Override
     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        List<String> overridingNames = spanEntries.stream().filter(s -> s.overridesDefaultSpanFrom != null)
-                .map(spanEntry -> spanEntry.overridesDefaultSpanFrom.getKey())
-                .collect(Collectors.toList());
-        List<SpanEntry> spansToRemove = spanEntries.stream()
-                .filter(spanEntry -> overridingNames.stream().anyMatch(name -> spanEntry.enclosingClass.toLowerCase(Locale.ROOT).contains(name.toLowerCase(Locale.ROOT))))
-                .collect(Collectors.toList());
-        if (!spansToRemove.isEmpty()) {
-            logger.debug("Will remove the span entries <" + spansToRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
+        Set<SpanEntry> toRemove = spanEntries.stream()
+                .filter(spanEntry -> this.overrideEnumClassNames.contains(spanEntry.enclosingClass))
+                .collect(Collectors.toSet());
+        if (!toRemove.isEmpty()) {
+            logger.debug("Will remove the span entries <" + toRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
         }
-        spanEntries.removeAll(spansToRemove);
+        spanEntries.removeAll(toRemove);
         return FileVisitResult.CONTINUE;
-    }
-
-    // if entry has overridesDefaultSpanFrom - read tags from that thing
-    // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
-    // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
-    private void addTagsFromOverride(Path file, SpanEntry entry) throws IOException {
-        Map.Entry<String, String> overridesDefaultSpanFrom = entry.overridesDefaultSpanFrom;
-        logger.debug("Reading additional meta data from [" + overridesDefaultSpanFrom + "]");
-        String className = overridesDefaultSpanFrom.getKey();
-        File parent = file.getParent().toFile();
-        while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
-            parent = parent.getParentFile();
-        }
-        Path filePath = parent.toPath().resolve(className.replace(".", File.separator) + ".java");
-        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, filePath.toFile());
-        if (!javaSource.isEnum()) {
-            return;
-        }
-        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
-        if (!enumSource.hasInterface(ObservationDocumentation.class)) {
-            return;
-        }
-        logger.debug("Checking [" + enumSource.getName() + "]");
-        if (enumSource.getEnumConstants().size() == 0) {
-            return;
-        }
-        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            if (!enumConstant.getName().equals(overridesDefaultSpanFrom.getValue())) {
-                continue;
-            }
-            Collection<KeyNameEntry> low = ParsingUtils.getTags(enumConstant, enumSource, "getLowCardinalityKeyNames");
-            Collection<KeyNameEntry> high = ParsingUtils.getTags(enumConstant, enumSource, "getHighCardinalityKeyNames");
-            entry.tagKeys.addAll(low);
-            entry.tagKeys.addAll(high);
-        }
     }
 
     private SpanEntry parseSpan(Path file, EnumConstantSource enumConstant, JavaEnumSource myEnum) {
@@ -168,7 +133,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         List<KeyNameEntry> tags = new ArrayList<>();
         List<KeyNameEntry> additionalKeyNames = new ArrayList<>();
         List<EventEntry> events = new ArrayList<>();
-        Map.Entry<String, String> overridesDefaultSpanFrom = null;
+        EnumConstantSource overridesDefaultSpanFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
         for (MemberSource<EnumConstantSource.Body, ?> member : members) {
@@ -235,7 +200,34 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // SpanDocumentation
             else if ("overridesDefaultSpanFrom".equals(methodName)) {
-                overridesDefaultSpanFrom = ParsingUtils.readClassToEnum(methodDeclaration);
+                Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodDeclaration);
+                Assert.notNull(expression, "Failed to parse the expression from " + methodDeclaration);
+                overridesDefaultSpanFrom = this.searchHelper.searchReferencingEnumConstant(myEnum, expression);
+                if (overridesDefaultSpanFrom != null) {
+                    overrideEnumClassNames.add(overridesDefaultSpanFrom.getOrigin().getQualifiedName());
+                }
+            }
+        }
+
+        // prepare view model objects
+
+        // if entry has overridesDefaultSpanFrom - read tags from that thing
+        // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
+        // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
+        if (overridesDefaultSpanFrom != null && tags.isEmpty()) {
+            JavaEnumSource enclosingEnumSource = overridesDefaultSpanFrom.getOrigin();
+            MethodSource<?> lowKeysMethodSource = overridesDefaultSpanFrom.getBody().getMethod("getLowCardinalityKeyNames");
+            if (lowKeysMethodSource != null) {
+                MethodDeclaration lowKeysMethodDeclaration = ParsingUtils.getMethodDeclaration(lowKeysMethodSource);
+                List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, lowKeysMethodDeclaration, KeyNameEnumConstantReader.INSTANCE);
+                tags.addAll(lows);
+            }
+
+            MethodSource<?> highKeysMethodSource = overridesDefaultSpanFrom.getBody().getMethod("getHighCardinalityKeyNames");
+            if (highKeysMethodSource != null) {
+                MethodDeclaration highKeysMethodDeclaration = ParsingUtils.getMethodDeclaration(highKeysMethodSource);
+                List<KeyNameEntry> highs = ParsingUtils.retrieveModels(enclosingEnumSource, highKeysMethodDeclaration, KeyNameEnumConstantReader.INSTANCE);
+                tags.addAll(highs);
             }
         }
 
@@ -244,7 +236,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Collections.sort(events);
 
         return new SpanEntry(contextualName != null ? contextualName : name, conventionClass, nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
-                additionalKeyNames, events, overridesDefaultSpanFrom);
+                additionalKeyNames, events);
     }
 
 }

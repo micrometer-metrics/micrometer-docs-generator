@@ -52,10 +52,8 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final List<EventEntry> events;
 
-    final Map.Entry<String, String> overridesDefaultSpanFrom;
-
     SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
-            List<KeyNameEntry> tagKeys, List<KeyNameEntry> additionalKeyNames, List<EventEntry> events, Map.Entry<String, String> overridesDefaultSpanFrom) {
+            List<KeyNameEntry> tagKeys, List<KeyNameEntry> additionalKeyNames, List<EventEntry> events) {
         Assert.hasText(description, "Span javadoc description must not be empty");
         this.conventionClass = conventionClass;
         this.nameFromConventionClass = nameFromConventionClass;
@@ -67,7 +65,6 @@ class SpanEntry implements Comparable<SpanEntry> {
         this.tagKeys = tagKeys;
         this.additionalKeyNames = additionalKeyNames;
         this.events = events;
-        this.overridesDefaultSpanFrom = overridesDefaultSpanFrom;
         if (StringUtils.hasText(this.name) && this.conventionClass != null) {
             throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
         } else if (this.name == null && this.conventionClass == null) {
@@ -101,12 +98,12 @@ class SpanEntry implements Comparable<SpanEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SpanEntry spanEntry = (SpanEntry) o;
-        return Objects.equals(name, spanEntry.name) && Objects.equals(conventionClass, spanEntry.conventionClass) && Objects.equals(nameFromConventionClass, spanEntry.nameFromConventionClass) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(events, spanEntry.events) && Objects.equals(overridesDefaultSpanFrom, spanEntry.overridesDefaultSpanFrom);
+        return Objects.equals(name, spanEntry.name) && Objects.equals(conventionClass, spanEntry.conventionClass) && Objects.equals(nameFromConventionClass, spanEntry.nameFromConventionClass) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(events, spanEntry.events);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, conventionClass, nameFromConventionClass, enclosingClass, enumName, description, prefix, tagKeys, additionalKeyNames, events, overridesDefaultSpanFrom);
+        return Objects.hash(name, conventionClass, nameFromConventionClass, enclosingClass, enumName, description, prefix, tagKeys, additionalKeyNames, events);
     }
 
     @Override

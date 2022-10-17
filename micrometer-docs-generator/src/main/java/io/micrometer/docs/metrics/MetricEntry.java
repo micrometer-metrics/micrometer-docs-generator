@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import io.micrometer.common.lang.Nullable;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.docs.commons.EventEntry;
@@ -44,14 +43,11 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final List<KeyNameEntry> highCardinalityKeyNames;
 
-    @Nullable
-    final Map.Entry<String, String> overridesDefaultMetricFrom;
-
     final List<EventEntry> events;
 
     final List<MetricInfo> metricInfos;
 
-    MetricEntry(String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, @Nullable Map.Entry<String, String> overridesDefaultMetricFrom, List<EventEntry> events, List<MetricInfo> metricInfos) {
+    MetricEntry(String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, List<EventEntry> events, List<MetricInfo> metricInfos) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
         this.nameFromConventionClass = nameFromConventionClass;
         this.enclosingClass = enclosingClass;
@@ -60,7 +56,6 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.prefix = prefix;
         this.lowCardinalityKeyNames = lowCardinalityKeyNames;
         this.highCardinalityKeyNames = highCardinalityKeyNames;
-        this.overridesDefaultMetricFrom = overridesDefaultMetricFrom;
         this.events = events;
         this.metricInfos = metricInfos;
 
@@ -103,12 +98,12 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MetricEntry that = (MetricEntry) o;
-        return Objects.equals(nameFromConventionClass, that.nameFromConventionClass) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames) && Objects.equals(overridesDefaultMetricFrom, that.overridesDefaultMetricFrom);
+        return Objects.equals(nameFromConventionClass, that.nameFromConventionClass) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nameFromConventionClass, enclosingClass, enumName, description, prefix, lowCardinalityKeyNames, highCardinalityKeyNames, overridesDefaultMetricFrom);
+        return Objects.hash(nameFromConventionClass, enclosingClass, enumName, description, prefix, lowCardinalityKeyNames, highCardinalityKeyNames);
     }
 
     @Override

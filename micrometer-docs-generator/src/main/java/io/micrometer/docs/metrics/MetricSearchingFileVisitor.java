@@ -12,7 +12,6 @@
  */
 package io.micrometer.docs.metrics;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
@@ -22,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.lang.Nullable;
@@ -43,6 +41,7 @@ import io.micrometer.docs.commons.utils.StringUtils;
 import io.micrometer.docs.metrics.MetricEntry.MetricInfo;
 import io.micrometer.observation.docs.ObservationDocumentation;
 import org.jboss.forge.roaster.Roaster;
+import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -95,49 +94,11 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
             MetricEntry entry = parseMetric(path, enumConstant, enumSource);
             if (entry != null) {
-                logger.debug(
-                        "Found [" + entry.lowCardinalityKeyNames.size() + "] low cardinality tags and [" + entry.highCardinalityKeyNames.size() + "] high cardinality tags");
-                if (entry.overridesDefaultMetricFrom != null && entry.lowCardinalityKeyNames.isEmpty()) {
-                    addTagsFromOverride(path, entry);
-                }
                 entries.add(entry);
                 logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
             }
         }
         return FileVisitResult.CONTINUE;
-    }
-
-    // if entry has overridesDefaultSpanFrom - read tags from that thing
-    // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
-    // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
-    private void addTagsFromOverride(Path file, MetricEntry entry) throws IOException {
-        Map.Entry<String, String> overrideDefaults = entry.overridesDefaultMetricFrom;
-        logger.debug("Reading additional meta data from [" + overrideDefaults + "]");
-        String className = overrideDefaults.getKey();
-        File parent = file.getParent().toFile();
-        while (!parent.getAbsolutePath().endsWith(File.separator + "java")) {
-            parent = parent.getParentFile();
-        }
-        Path filePath = parent.toPath().resolve(className.replace(".", File.separator) + ".java");
-        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, filePath.toFile());
-        if (!javaSource.isEnum()) {
-            return;
-        }
-        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
-        if (!enumSource.hasInterface(ObservationDocumentation.class)) {
-            return;
-        }
-        logger.debug("Checking [" + enumSource.getName() + "]");
-        if (enumSource.getEnumConstants().size() == 0) {
-            return;
-        }
-        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            if (!enumConstant.getName().equals(overrideDefaults.getValue())) {
-                continue;
-            }
-            List<KeyNameEntry> lows = ParsingUtils.getTags(enumConstant, enumSource, "getLowCardinalityKeyNames");
-            entry.lowCardinalityKeyNames.addAll(lows);
-        }
     }
 
     @Nullable
@@ -153,7 +114,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         Meter.Type type = Meter.Type.TIMER;
         List<KeyNameEntry> lowCardinalityTags = new ArrayList<>();
         List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
-        Map.Entry<String, String> overridesDefaultMetricFrom = null;
+        EnumConstantSource overridesDefaultMetricFrom = null;
         String conventionClass = null; // convention class's qualified name
         String nameFromConventionClass = null;
         List<EventEntry> events = new ArrayList<>();
@@ -214,7 +175,9 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             }
             // MeterDocumentation
             else if ("overridesDefaultMetricFrom".equals(methodName)) {
-                overridesDefaultMetricFrom = ParsingUtils.readClassToEnum(methodDeclaration);
+                Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodDeclaration);
+                Assert.notNull(expression, "Failed to parse the expression from " + methodDeclaration);
+                overridesDefaultMetricFrom = this.searchHelper.searchReferencingEnumConstant(myEnum, expression);
             }
             // ObservationDocumentation
             else if ("getEvents".equals(methodName)) {
@@ -222,8 +185,25 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 events.addAll(entries);
             }
         }
+
+        // prepare view model objects
+
         final String newName = name;
         events.forEach(event -> event.setName(newName + "." + event.getName()));
+
+        // if entry has overridesDefaultSpanFrom - read tags from that thing
+        // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
+        // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
+        if (overridesDefaultMetricFrom != null && lowCardinalityTags.isEmpty()) {
+            MethodSource<?> methodSource = overridesDefaultMetricFrom.getBody().getMethod("getLowCardinalityKeyNames");
+            if (methodSource != null) {
+                JavaEnumSource enclosingEnumSource = overridesDefaultMetricFrom.getOrigin();
+                MethodDeclaration methodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
+                List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
+                lowCardinalityTags.addAll(lows);
+            }
+        }
+
         Collections.sort(lowCardinalityTags);
         Collections.sort(highCardinalityTags);
         Collections.sort(events);
@@ -240,7 +220,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
 
         return new MetricEntry(nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
-                highCardinalityTags, overridesDefaultMetricFrom, events, metricInfos);
+                highCardinalityTags, events, metricInfos);
     }
 
 }
