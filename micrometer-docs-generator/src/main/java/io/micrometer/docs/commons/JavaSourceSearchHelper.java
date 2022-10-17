@@ -243,13 +243,14 @@ public class JavaSourceSearchHelper {
             if (!qualifiedName.contains(".")) {
                 continue;  // exclude top level classes
             }
-            String candidate = qualifiedName;
-            if (qualifiedName.contains("$")) {
-                candidate = qualifiedName.substring(0, qualifiedName.indexOf("$"));
+            // when target is a nested class, only look for the nested class entries
+            if (className.contains("$") && !qualifiedName.contains("$")) {
+                continue;
             }
-            int index = candidate.lastIndexOf(".");
-            String entryPackage = candidate.substring(0, index);
-            String entryClassName = candidate.substring(index + 1);
+
+            int index = qualifiedName.lastIndexOf(".");
+            String entryPackage = qualifiedName.substring(0, index);
+            String entryClassName = qualifiedName.substring(index + 1);
             if (packageName.equals(entryPackage) && entryClassName.equals(className)) {
                 return search(qualifiedName);
             }
