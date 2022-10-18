@@ -15,16 +15,11 @@
  */
 package io.micrometer.docs.metrics;
 
-import java.io.IOException;
-import java.nio.file.FileVisitResult;
-import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
@@ -32,7 +27,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
-import io.micrometer.docs.commons.EntryEnumConstantReader;
+import io.micrometer.docs.commons.AbstractSearchingFileVisitor;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForMetricEnumConstantReader;
 import io.micrometer.docs.commons.JavaSourceSearchHelper;
@@ -44,7 +39,6 @@ import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.docs.commons.utils.StringUtils;
 import io.micrometer.docs.metrics.MetricEntry.MetricInfo;
 import io.micrometer.observation.docs.ObservationDocumentation;
-import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.EnumConstantSource.Body;
@@ -52,57 +46,27 @@ import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
-class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
+class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(MetricSearchingFileVisitor.class);
 
-    private final Pattern pattern;
-
     private final Collection<MetricEntry> entries;
 
-    private final JavaSourceSearchHelper searchHelper;
-
     MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> entries, JavaSourceSearchHelper searchHelper) {
-        this.pattern = pattern;
+        super(pattern, searchHelper);
         this.entries = entries;
-        this.searchHelper = searchHelper;
     }
 
     @Override
-    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-        if (!pattern.matcher(path.toString()).matches()) {
-            return FileVisitResult.CONTINUE;
-        }
-        else if (!path.toString().endsWith(".java")) {
-            return FileVisitResult.CONTINUE;
-        }
+    public Collection<Class<?>> supportedInterfaces() {
+        return Arrays.asList(MeterDocumentation.class, ObservationDocumentation.class);
+    }
 
-        logger.debug("Parsing [" + path + "]");
-        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
-        if (!javaSource.isEnum()) {
-            return FileVisitResult.CONTINUE;
-        }
-        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
-        if (!enumSource.hasInterface(MeterDocumentation.class) && !enumSource.hasInterface(ObservationDocumentation.class)) {
-            return FileVisitResult.CONTINUE;
-        }
-        logger.debug("Checking [" + javaSource.getName() + "]");
-        if (enumSource.getMethods().size() > 0) {
-            String message = String.format("The enum constants can define methods but the container enum class(%s) cannot define methods.", enumSource.getName());
-            throw new RuntimeException(message);
-        }
-        if (enumSource.getEnumConstants().size() == 0) {
-            return FileVisitResult.CONTINUE;
-        }
-        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            if (enumConstant.getBody().getMethods().isEmpty()) {
-                continue;
-            }
-            MetricEntry entry = parseMetric(enumConstant, enumSource);
-            entries.add(entry);
-            logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
-        }
-        return FileVisitResult.CONTINUE;
+    @Override
+    public void onEnumConstant(JavaEnumSource enclosingEnumSource, EnumConstantSource enumConstant) {
+        MetricEntry entry = parseMetric(enumConstant, enclosingEnumSource);
+        entries.add(entry);
+        logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
     }
 
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
@@ -114,7 +78,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         List<KeyNameEntry> lowCardinalityTags = new ArrayList<>();
         List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
         EnumConstantSource overridesDefaultMetricFrom = null;
-        String conventionClass = null; // convention class's qualified name
+        String conventionClassQualifiedName = null;
         String nameFromConventionClass = null;
         List<EventEntry> events = new ArrayList<>();
 
@@ -148,7 +112,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
                 throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
             }
             nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodSource);
-            conventionClass = conventionClassSource.getQualifiedName();
+            conventionClassQualifiedName = conventionClassSource.getQualifiedName();
         }
 
         // ObservationDocumentation
@@ -221,30 +185,17 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
         List<MetricInfo> metricInfos = new ArrayList<>();
         // create a metric info based on the above parsing result
-        metricInfos.add(new MetricInfo(name, nameFromConventionClass, conventionClass, type, baseUnit));
+        metricInfos.add(new MetricInfo(name, nameFromConventionClass, conventionClassQualifiedName, type, baseUnit));
 
         // DefaultMeterObservationHandler creates LongTaskTimer. Add the information.
         if (myEnum.hasInterface(ObservationDocumentation.class)) {
             String ltkMetricName = StringUtils.hasText(name) ? name + ".active" : name;
             String ltkMetricNameFromConvention = StringUtils.hasText(nameFromConventionClass) ? nameFromConventionClass + ".active" : nameFromConventionClass;
-            metricInfos.add(new MetricInfo(ltkMetricName, ltkMetricNameFromConvention, conventionClass, Type.LONG_TASK_TIMER, ""));
+            metricInfos.add(new MetricInfo(ltkMetricName, ltkMetricNameFromConvention, conventionClassQualifiedName, Type.LONG_TASK_TIMER, ""));
         }
 
         return new MetricEntry(nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
                 highCardinalityTags, events, metricInfos);
-    }
-
-    private <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource, EntryEnumConstantReader<?> converter) {
-        List<T> result = new ArrayList<>();
-        Set<String> enumClassNames = ParsingUtils.readEnumClassNames(methodSource);
-        for (String enumClassName : enumClassNames) {
-            JavaSource<?> enclosingEnumClass = this.searchHelper.searchReferencingClass(enclosingJavaSource, enumClassName);
-            if (enclosingEnumClass == null || !enclosingEnumClass.isEnum()) {
-                throw new IllegalStateException("Cannot find enum class with name [" + enumClassName + "]");
-            }
-            result.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) enclosingEnumClass, converter));
-        }
-        return result;
     }
 
 }

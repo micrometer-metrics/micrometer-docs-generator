@@ -18,9 +18,8 @@ package io.micrometer.docs.spans;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
-import java.nio.file.SimpleFileVisitor;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,7 +30,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
-import io.micrometer.docs.commons.EntryEnumConstantReader;
+import io.micrometer.docs.commons.AbstractSearchingFileVisitor;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForSpanEnumConstantReader;
 import io.micrometer.docs.commons.EventValueEntryEnumConstantReader;
@@ -43,7 +42,6 @@ import io.micrometer.docs.commons.utils.AsciidocUtils;
 import io.micrometer.docs.commons.utils.Assert;
 import io.micrometer.observation.docs.ObservationDocumentation;
 import io.micrometer.tracing.docs.SpanDocumentation;
-import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.EnumConstantSource.Body;
@@ -51,15 +49,11 @@ import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
-class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
+class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(SpanSearchingFileVisitor.class);
 
-    private final Pattern pattern;
-
     private final Collection<SpanEntry> spanEntries;
-
-    private final JavaSourceSearchHelper searchHelper;
 
     /**
      * The enclosing enum classes for overriding will be excluded from documentation
@@ -67,55 +61,29 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
     private final Set<String> overrideEnumClassNames = new HashSet<>();
 
     SpanSearchingFileVisitor(Pattern pattern, Collection<SpanEntry> spanEntries, JavaSourceSearchHelper searchHelper) {
-        this.pattern = pattern;
+        super(pattern, searchHelper);
         this.spanEntries = spanEntries;
-        this.searchHelper = searchHelper;
     }
 
     @Override
-    public FileVisitResult visitFile(Path path, BasicFileAttributes attrs) throws IOException {
-        if (!pattern.matcher(path.toString()).matches()) {
-            return FileVisitResult.CONTINUE;
-        }
-        else if (!path.toString().endsWith(".java")) {
-            return FileVisitResult.CONTINUE;
-        }
+    public Collection<Class<?>> supportedInterfaces() {
+        return Arrays.asList(SpanDocumentation.class, ObservationDocumentation.class);
+    }
 
-        logger.debug("Parsing [" + path + "]");
-        JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
-        if (!javaSource.isEnum()) {
-            return FileVisitResult.CONTINUE;
+    @Override
+    public void onEnumConstant(JavaEnumSource enclosingEnumSource, EnumConstantSource enumConstant) {
+        SpanEntry entry = parseSpan(enumConstant, enclosingEnumSource);
+        if (!entry.additionalKeyNames.isEmpty()) {
+            entry.tagKeys.addAll(entry.additionalKeyNames);
         }
-        JavaEnumSource enumSource = (JavaEnumSource) javaSource;
-        if (!enumSource.hasInterface(SpanDocumentation.class) && !enumSource.hasInterface(ObservationDocumentation.class)) {
-            return FileVisitResult.CONTINUE;
-        }
-        logger.debug("Checking [" + javaSource.getName() + "]");
-        if (enumSource.getMethods().size() > 0) {
-            String message = String.format("The enum constants can define methods but the container enum class(%s) cannot define methods.", enumSource.getName());
-            throw new RuntimeException(message);
-        }
-        if (enumSource.getEnumConstants().size() == 0) {
-            return FileVisitResult.CONTINUE;
-        }
-        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            if (enumConstant.getBody().getMethods().isEmpty()) {
-                continue;
-            }
-            SpanEntry entry = parseSpan(enumConstant, enumSource);
-            if (!entry.additionalKeyNames.isEmpty()) {
-                entry.tagKeys.addAll(entry.additionalKeyNames);
-            }
-            spanEntries.add(entry);
-            logger.debug(
-                    "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
-        }
-        return FileVisitResult.CONTINUE;
+        spanEntries.add(entry);
+        logger.debug(
+                "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
     }
 
     @Override
     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-        Set<SpanEntry> toRemove = spanEntries.stream()
+        Set<SpanEntry> toRemove = this.spanEntries.stream()
                 .filter(spanEntry -> this.overrideEnumClassNames.contains(spanEntry.enclosingClass))
                 .collect(Collectors.toSet());
         if (!toRemove.isEmpty()) {
@@ -254,19 +222,6 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             tags.addAll(keys);
         }
         return tags;
-    }
-
-    private <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource, EntryEnumConstantReader<?> converter) {
-        List<T> result = new ArrayList<>();
-        Set<String> enumClassNames = ParsingUtils.readEnumClassNames(methodSource);
-        for (String enumClassName : enumClassNames) {
-            JavaSource<?> enclosingEnumClass = this.searchHelper.searchReferencingClass(enclosingJavaSource, enumClassName);
-            if (enclosingEnumClass == null || !enclosingEnumClass.isEnum()) {
-                throw new IllegalStateException("Cannot find enum class with name [" + enumClassName + "]");
-            }
-            result.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) enclosingEnumClass, converter));
-        }
-        return result;
     }
 
 }
