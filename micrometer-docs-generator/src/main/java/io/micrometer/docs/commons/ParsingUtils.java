@@ -46,7 +46,7 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
-    private static <T> List<T> updateModelsFromEnum(JavaEnumSource enumSource,
+    private static <T> List<T> retrieveModelsFromEnum(JavaEnumSource enumSource,
             EntryEnumConstantReader<?> converter) {
         // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
         // For example, "MyEnum" implements "Observation.Event" interface as:
@@ -101,7 +101,7 @@ public class ParsingUtils {
             if (nestedEnumSource == null || !nestedEnumSource.isEnum()) {
                 throw new IllegalStateException("There's no nested enum class with name [" + enumName + "]");
             }
-            models.addAll(ParsingUtils.updateModelsFromEnum((JavaEnumSource) nestedEnumSource, converter));
+            models.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) nestedEnumSource, converter));
         });
         return models;
     }
