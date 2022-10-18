@@ -46,13 +46,8 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
-    private static <T> void updateModelsFromEnum(JavaEnumSource parentEnum, JavaSource<?> source,
-            Collection<T> models, EntryEnumConstantReader<?> converter) {
-        if (!(source instanceof JavaEnumSource)) {
-            return;
-        }
-        JavaEnumSource myEnum = (JavaEnumSource) source;
-
+    private static <T> List<T> updateModelsFromEnum(JavaEnumSource enumSource,
+            EntryEnumConstantReader<?> converter) {
         // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
         // For example, "MyEnum" implements "Observation.Event" interface as:
         //  - "enum MyEnum implements Observation.Event {"
@@ -61,16 +56,19 @@ public class ParsingUtils {
         //      "getInterfaces()" returns ["io.micrometer.observation.Observation.Event"]
         //
         // To make both cases work, use the simple name("Event" in the above example) for comparison.
-        if (!myEnum.hasInterface(converter.getRequiredClass().getSimpleName())) {
-            return;
+        if (!enumSource.hasInterface(converter.getRequiredClass().getSimpleName())) {
+            return Collections.emptyList();
         }
-        logger.debug("Checking [" + parentEnum.getName() + "." + myEnum.getName() + "]");
-        if (myEnum.getEnumConstants().size() == 0) {
-            return;
+        logger.debug("Checking [" + enumSource.getName() + "." + enumSource.getName() + "]");
+        if (enumSource.getEnumConstants().size() == 0) {
+            return Collections.emptyList();
         }
-        for (EnumConstantSource enumConstant : myEnum.getEnumConstants()) {
+
+        List<T> models = new ArrayList<>();
+        for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
             models.add((T) converter.apply(enumConstant));
         }
+        return models;
     }
 
     /**
@@ -99,11 +97,11 @@ public class ParsingUtils {
         Collection<String> enumNames = readClassValue(methodSource);
         List<T> models = new ArrayList<>();
         enumNames.forEach(enumName -> {
-            List<JavaSource<?>> nestedTypes = enclosingEnumSource.getNestedTypes();
-            JavaSource<?> nestedSource = nestedTypes.stream()
-                    .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
-                            () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateModelsFromEnum(enclosingEnumSource, nestedSource, models, converter);
+            JavaSource<?> nestedEnumSource = enclosingEnumSource.getNestedType(enumName);
+            if (nestedEnumSource == null || !nestedEnumSource.isEnum()) {
+                throw new IllegalStateException("There's no nested enum class with name [" + enumName + "]");
+            }
+            models.addAll(ParsingUtils.updateModelsFromEnum((JavaEnumSource) nestedEnumSource, converter));
         });
         return models;
     }
