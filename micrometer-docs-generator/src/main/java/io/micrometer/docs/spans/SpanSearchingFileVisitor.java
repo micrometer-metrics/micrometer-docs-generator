@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.EventEntry;
@@ -43,9 +44,9 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
+import org.jboss.forge.roaster.model.source.EnumConstantSource.Body;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
-import org.jboss.forge.roaster.model.source.MemberSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
 class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
@@ -96,7 +97,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return FileVisitResult.CONTINUE;
         }
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            SpanEntry entry = parseSpan(path, enumConstant, enumSource);
+            SpanEntry entry = parseSpan(enumConstant, enumSource);
             if (entry != null) {
                 if (!entry.additionalKeyNames.isEmpty()) {
                     entry.tagKeys.addAll(entry.additionalKeyNames);
@@ -121,9 +122,9 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         return FileVisitResult.CONTINUE;
     }
 
-    private SpanEntry parseSpan(Path file, EnumConstantSource enumConstant, JavaEnumSource myEnum) {
-        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
-        if (members.isEmpty()) {
+    @Nullable
+    private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
+        if (enumConstant.getBody().getMethods().isEmpty()) {
             return null;
         }
         String name = "";
@@ -136,76 +137,92 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         EnumConstantSource overridesDefaultSpanFrom = null;
         String conventionClass = null;
         String nameFromConventionClass = null;
-        for (MemberSource<EnumConstantSource.Body, ?> member : members) {
-            Object internal = member.getInternal();
-            if (!(internal instanceof MethodDeclaration)) {
-                return null;
-            }
-            MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-            String methodName = methodDeclaration.getName().getIdentifier();
-            // SpanDocumentation, ObservationDocumentation
-            if ("getName".equals(methodName)) {
-                name = ParsingUtils.readStringReturnValue(methodDeclaration);
-            }
-            // ObservationDocumentation
-            else if ("getDefaultConvention".equals(methodName)) {
-                // TODO: may share the logic with the metrics side
-                // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
-                String conventionClassName = ParsingUtils.readStringReturnValue(methodDeclaration);
-                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-                if (conventionClassSource == null) {
-                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-                }
-                MethodSource<?> methodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-                if (methodSource == null) {
-                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-                }
-                MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
 
-                nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
-                conventionClass = conventionClassSource.getQualifiedName();
+
+        MethodSource<?> methodSource;
+        Body enumConstantBody = enumConstant.getBody();
+
+        // SpanDocumentation, ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getName");
+        if (methodSource != null) {
+            name = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getDefaultConvention");
+        if (methodSource != null) {
+            // TODO: may share the logic with the metrics side
+            // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
+            String conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+            JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+            if (conventionClassSource == null) {
+                throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
             }
-            // ObservationDocumentation
-            else if ("getContextualName".equals(methodName)) {
-                contextualName = ParsingUtils.readStringReturnValue(methodDeclaration);
+            MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+            if (getNameMethodSource == null) {
+                throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
             }
-            // SpanDocumentation
-            else if ("getKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
+            MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(getNameMethodSource);
+
+            nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
+            conventionClass = conventionClassSource.getQualifiedName();
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getContextualName");
+        if (methodSource != null) {
+            contextualName = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // SpanDocumentation
+        methodSource = enumConstantBody.getMethod("getKeyNames");
+        if (methodSource != null) {
+            tags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getLowCardinalityKeyNames");
+        if (methodSource != null) {
+            tags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getHighCardinalityKeyNames");
+        if (methodSource != null) {
+            tags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // SpanDocumentation
+        methodSource = enumConstantBody.getMethod("getAdditionalKeyNames");
+        if (methodSource != null) {
+            additionalKeyNames.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
+        methodSource = enumConstantBody.getMethod("getEvents");
+        if (methodSource != null) {
+            if ("EventValue".equals(methodSource.getReturnType().getSimpleName())) {
+                events.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, EventValueEntryEnumConstantReader.INSTANCE));
             }
-            // ObservationDocumentation
-            else if ("getLowCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
+            else {
+                events.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, EventEntryForSpanEnumConstantReader.INSTANCE));
             }
-            // ObservationDocumentation
-            else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                tags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
-            }
-            // SpanDocumentation
-            else if ("getAdditionalKeyNames".equals(methodName)) {
-                additionalKeyNames.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
-            }
-            // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
-            else if ("getEvents".equals(methodName)) {
-                if (methodDeclaration.getReturnType2().toString().contains("EventValue")) {
-                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventValueEntryEnumConstantReader.INSTANCE));
-                }
-                else {
-                    events.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForSpanEnumConstantReader.INSTANCE));
-                }
-            }
-            // SpanDocumentation, ObservationDocumentation
-            else if ("getPrefix".equals(methodName)) {
-                prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
-            }
-            // SpanDocumentation
-            else if ("overridesDefaultSpanFrom".equals(methodName)) {
-                Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodDeclaration);
-                Assert.notNull(expression, "Failed to parse the expression from " + methodDeclaration);
-                overridesDefaultSpanFrom = this.searchHelper.searchReferencingEnumConstant(myEnum, expression);
-                if (overridesDefaultSpanFrom != null) {
-                    overrideEnumClassNames.add(overridesDefaultSpanFrom.getOrigin().getQualifiedName());
-                }
+        }
+
+        // SpanDocumentation, ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getPrefix");
+        if (methodSource != null) {
+            prefix = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // SpanDocumentation
+        methodSource = enumConstantBody.getMethod("overridesDefaultSpanFrom");
+        if (methodSource != null) {
+            Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodSource);
+            Assert.notNull(expression, "Failed to parse the expression from " + methodSource);
+            overridesDefaultSpanFrom = this.searchHelper.searchReferencingEnumConstant(myEnum, expression);
+            if (overridesDefaultSpanFrom != null) {
+                overrideEnumClassNames.add(overridesDefaultSpanFrom.getOrigin().getQualifiedName());
             }
         }
 

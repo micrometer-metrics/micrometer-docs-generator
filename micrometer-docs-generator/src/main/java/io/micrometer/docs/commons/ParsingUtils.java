@@ -96,6 +96,12 @@ public class ParsingUtils {
         return stringFromReturnMethodDeclaration(methodDeclaration);
     }
 
+    public static <T> List<T> retrieveModels(JavaEnumSource enclosingEnumSource, MethodSource<?> methodSource,
+            EntryEnumConstantReader<?> converter) {
+        MethodDeclaration methodDeclaration = getMethodDeclaration(methodSource);
+        return retrieveModels(enclosingEnumSource, methodDeclaration, converter);
+    }
+
     public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
             EntryEnumConstantReader<?> converter) {
         Collection<String> enumNames = readClassValue(methodDeclaration);
@@ -166,6 +172,12 @@ public class ParsingUtils {
         }
         logger.warn("Failed to retrieve string return value from [" + methodDeclaration.getName() + "].");
         return "";
+    }
+
+    @Nullable
+    public static Expression expressionFromReturnMethodDeclaration(MethodSource<?> methodSource) {
+        MethodDeclaration methodDeclaration = getMethodDeclaration(methodSource);
+        return expressionFromReturnMethodDeclaration(methodDeclaration);
     }
 
     @Nullable

@@ -44,9 +44,9 @@ import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
+import org.jboss.forge.roaster.model.source.EnumConstantSource.Body;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
-import org.jboss.forge.roaster.model.source.MemberSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
 class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
@@ -92,7 +92,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return FileVisitResult.CONTINUE;
         }
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            MetricEntry entry = parseMetric(path, enumConstant, enumSource);
+            MetricEntry entry = parseMetric(enumConstant, enumSource);
             if (entry != null) {
                 entries.add(entry);
                 logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
@@ -102,9 +102,8 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
     }
 
     @Nullable
-    private MetricEntry parseMetric(Path file, EnumConstantSource enumConstant, JavaEnumSource myEnum) {
-        List<MemberSource<EnumConstantSource.Body, ?>> members = enumConstant.getBody().getMembers();
-        if (members.isEmpty()) {
+    private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
+        if (enumConstant.getBody().getMethods().isEmpty()) {
             return null;
         }
         String name = "";
@@ -118,73 +117,95 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         String conventionClass = null; // convention class's qualified name
         String nameFromConventionClass = null;
         List<EventEntry> events = new ArrayList<>();
-        for (MemberSource<EnumConstantSource.Body, ?> member : members) {
-            Object internal = member.getInternal();
-            if (!(internal instanceof MethodDeclaration)) {
-                continue;
-            }
-            MethodDeclaration methodDeclaration = (MethodDeclaration) internal;
-            String methodName = methodDeclaration.getName().getIdentifier();
-            // MeterDocumentation, ObservationDocumentation
-            if ("getName".equals(methodName)) {
-                name = ParsingUtils.readStringReturnValue(methodDeclaration);
-            }
-            // MeterDocumentation
-            else if ("getKeyNames".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
-            }
-            // ObservationDocumentation(@Nullable)
-            else if ("getDefaultConvention".equals(methodName)) {
-                // TODO: may share the logic with the span side
-                // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
-                String conventionClassName = ParsingUtils.readStringReturnValue(methodDeclaration);
-                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-                if (conventionClassSource == null) {
-                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-                }
-                MethodSource<?> methodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-                if (methodSource == null) {
-                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-                }
 
-                MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
-                nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
-                conventionClass = conventionClassSource.getQualifiedName();
-            }
-            // ObservationDocumentation
-            else if ("getLowCardinalityKeyNames".equals(methodName) || "asString".equals(methodName)) {
-                lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
-            }
-            // ObservationDocumentation
-            else if ("getHighCardinalityKeyNames".equals(methodName)) {
-                highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodDeclaration, KeyNameEnumConstantReader.INSTANCE));
-            }
-            // MeterDocumentation, ObservationDocumentation
-            else if ("getPrefix".equals(methodName)) {
-                prefix = ParsingUtils.readStringReturnValue(methodDeclaration);
-            }
-            // MeterDocumentation
-            else if ("getBaseUnit".equals(methodName)) {
-                baseUnit = ParsingUtils.readStringReturnValue(methodDeclaration);
-            }
-            // MeterDocumentation
-            else if ("getType".equals(methodName)) {
-                String value = ParsingUtils.readStringReturnValue(methodDeclaration);
-                Assert.hasText(value, "Failed to read getType() method on " + myEnum.getName());
-                type = Meter.Type.valueOf(value);
-            }
-            // MeterDocumentation
-            else if ("overridesDefaultMetricFrom".equals(methodName)) {
-                Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodDeclaration);
-                Assert.notNull(expression, "Failed to parse the expression from " + methodDeclaration);
-                overridesDefaultMetricFrom = this.searchHelper.searchReferencingEnumConstant(myEnum, expression);
-            }
-            // ObservationDocumentation
-            else if ("getEvents".equals(methodName)) {
-                Collection<EventEntry> entries = ParsingUtils.retrieveModels(myEnum, methodDeclaration, EventEntryForMetricEnumConstantReader.INSTANCE);
-                events.addAll(entries);
-            }
+        MethodSource<?> methodSource;
+        Body enumConstantBody = enumConstant.getBody();
+
+        // MeterDocumentation, ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getName");
+        if (methodSource != null) {
+            name = ParsingUtils.readStringReturnValue(methodSource);
         }
+
+        // MeterDocumentation
+        methodSource = enumConstantBody.getMethod("getKeyNames");
+        if (methodSource != null) {
+            lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // ObservationDocumentation(@Nullable)
+        methodSource = enumConstantBody.getMethod("getDefaultConvention");
+        if (methodSource != null) {
+            // TODO: may share the logic with the span side
+            // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
+            String conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+            JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+            if (conventionClassSource == null) {
+                throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+            }
+            MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+            if (getNameMethodSource == null) {
+                throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+            }
+
+            MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(getNameMethodSource);
+            nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
+            conventionClass = conventionClassSource.getQualifiedName();
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getLowCardinalityKeyNames");
+        if (methodSource != null) {
+            lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("asString");
+        if (methodSource != null) {
+            lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getHighCardinalityKeyNames");
+        if (methodSource != null) {
+            highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+        }
+
+        // MeterDocumentation, ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getPrefix");
+        if (methodSource != null) {
+            prefix = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // MeterDocumentation
+        methodSource = enumConstantBody.getMethod("getBaseUnit");
+        if (methodSource != null) {
+            baseUnit = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // MeterDocumentation
+        methodSource = enumConstantBody.getMethod("getType");
+        if (methodSource != null) {
+            String value = ParsingUtils.readStringReturnValue(methodSource);
+            Assert.hasText(value, "Failed to read getType() method on " + myEnum.getName());
+            type = Meter.Type.valueOf(value);
+        }
+
+        // MeterDocumentation
+        methodSource = enumConstantBody.getMethod("overridesDefaultMetricFrom");
+        if (methodSource != null) {
+            Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodSource);
+            Assert.notNull(expression, "Failed to parse the expression from " + methodSource);
+            overridesDefaultMetricFrom = this.searchHelper.searchReferencingEnumConstant(myEnum, expression);
+        }
+
+        // ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getEvents");
+        if (methodSource != null) {
+            Collection<EventEntry> entries = ParsingUtils.retrieveModels(myEnum, methodSource, EventEntryForMetricEnumConstantReader.INSTANCE);
+            events.addAll(entries);
+        }
+
 
         // prepare view model objects
 
@@ -195,10 +216,10 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
         // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
         if (overridesDefaultMetricFrom != null && lowCardinalityTags.isEmpty()) {
-            MethodSource<?> methodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(), "getLowCardinalityKeyNames");
-            if (methodSource != null) {
+            MethodSource<?> keyMethodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(), "getLowCardinalityKeyNames");
+            if (keyMethodSource != null) {
                 JavaEnumSource enclosingEnumSource = overridesDefaultMetricFrom.getOrigin();
-                MethodDeclaration methodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
+                MethodDeclaration methodDeclaration = ParsingUtils.getMethodDeclaration(keyMethodSource);
                 List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
                 lowCardinalityTags.addAll(lows);
             }
