@@ -28,7 +28,6 @@ import io.micrometer.docs.commons.search.test2.MethodSearchSample;
 import io.micrometer.docs.commons.search.test3.MethodSearchEnumSample;
 import io.micrometer.docs.commons.search.test4.MyService;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -101,9 +100,8 @@ class JavaSourceSearchHelperTests {
         JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
         JavaClassSource enclosingSource = RoasterTestUtils.readJavaClass(MyService.class);
 
-        MethodSource<?> ms = enclosingSource.getMethod(methodName);
-        MethodDeclaration md = ParsingUtils.getMethodDeclaration(ms);
-        Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(md);
+        MethodSource<?> methodSource = enclosingSource.getMethod(methodName);
+        Expression expression = ParsingUtils.expressionFromReturnMethodDeclaration(methodSource);
 
         EnumConstantSource result = helper.searchReferencingEnumConstant(enclosingSource, expression);
 

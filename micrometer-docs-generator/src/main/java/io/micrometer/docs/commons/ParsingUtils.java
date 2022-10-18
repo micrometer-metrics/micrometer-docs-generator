@@ -84,40 +84,29 @@ public class ParsingUtils {
      * </code>
      * It resolves as "my-string" and "true" respectively.
      *
-     * @param methodDeclaration a method declaration which has the first line return statement with literal string or boolean.
+     * @param methodSource a method source which has the first line return statement with literal string or boolean.
      * @return literal value as string
      */
-    public static String readStringReturnValue(MethodDeclaration methodDeclaration) {
-        return stringFromReturnMethodDeclaration(methodDeclaration);
-    }
-
     public static String readStringReturnValue(MethodSource<?> methodSource) {
-        MethodDeclaration methodDeclaration = getMethodDeclaration(methodSource);
-        return stringFromReturnMethodDeclaration(methodDeclaration);
+        return stringFromReturnMethodDeclaration(methodSource);
     }
 
     public static <T> List<T> retrieveModels(JavaEnumSource enclosingEnumSource, MethodSource<?> methodSource,
             EntryEnumConstantReader<?> converter) {
-        MethodDeclaration methodDeclaration = getMethodDeclaration(methodSource);
-        return retrieveModels(enclosingEnumSource, methodDeclaration, converter);
-    }
-
-    public static <T> List<T> retrieveModels(JavaEnumSource myEnum, MethodDeclaration methodDeclaration,
-            EntryEnumConstantReader<?> converter) {
-        Collection<String> enumNames = readClassValue(methodDeclaration);
+        Collection<String> enumNames = readClassValue(methodSource);
         List<T> models = new ArrayList<>();
         enumNames.forEach(enumName -> {
-            List<JavaSource<?>> nestedTypes = myEnum.getNestedTypes();
+            List<JavaSource<?>> nestedTypes = enclosingEnumSource.getNestedTypes();
             JavaSource<?> nestedSource = nestedTypes.stream()
                     .filter(javaSource -> javaSource.getName().equals(enumName)).findFirst().orElseThrow(
                             () -> new IllegalStateException("There's no nested type with name [" + enumName + "]"));
-            ParsingUtils.updateModelsFromEnum(myEnum, nestedSource, models, converter);
+            ParsingUtils.updateModelsFromEnum(enclosingEnumSource, nestedSource, models, converter);
         });
         return models;
     }
 
-    public static Collection<String> readClassValue(MethodDeclaration methodDeclaration) {
-        Expression expression = expressionFromReturnMethodDeclaration(methodDeclaration);
+    private static Collection<String> readClassValue(MethodSource<?> methodSource) {
+        Expression expression = expressionFromReturnMethodDeclaration(methodSource);
         if (!(expression instanceof MethodInvocation)) {
             logger.warn("Statement [" + expression + "] is not a method invocation.");
             return Collections.emptyList();
@@ -154,8 +143,8 @@ public class ParsingUtils {
         return readStringReturnValue(methodSource);
     }
 
-    private static String stringFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
-        Expression expression = expressionFromReturnMethodDeclaration(methodDeclaration);
+    private static String stringFromReturnMethodDeclaration(MethodSource<?> methodSource) {
+        Expression expression = expressionFromReturnMethodDeclaration(methodSource);
         if (expression instanceof StringLiteral) {
             return ((StringLiteral) expression).getLiteralValue();
         }
@@ -170,18 +159,13 @@ public class ParsingUtils {
             // enum value
             return ((QualifiedName) expression).getName().toString();
         }
-        logger.warn("Failed to retrieve string return value from [" + methodDeclaration.getName() + "].");
+        logger.warn("Failed to retrieve string return value from [" + methodSource.getName() + "].");
         return "";
     }
 
     @Nullable
     public static Expression expressionFromReturnMethodDeclaration(MethodSource<?> methodSource) {
         MethodDeclaration methodDeclaration = getMethodDeclaration(methodSource);
-        return expressionFromReturnMethodDeclaration(methodDeclaration);
-    }
-
-    @Nullable
-    public static Expression expressionFromReturnMethodDeclaration(MethodDeclaration methodDeclaration) {
         Object statement = methodDeclaration.getBody().statements().get(0);
         if (!(statement instanceof ReturnStatement)) {
             logger.warn("Statement [" + statement.getClass() + "] is not a return statement.");

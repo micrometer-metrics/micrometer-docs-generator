@@ -19,7 +19,6 @@ package io.micrometer.docs.commons;
 import java.util.stream.Stream;
 
 import io.micrometer.docs.RoasterTestUtils;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.junit.jupiter.api.Named;
@@ -29,7 +28,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Tests for {@link ParsingUtils#readStringReturnValue(MethodDeclaration)}.
+ * Tests for {@link ParsingUtils#readStringReturnValue(MethodSource)}.
  *
  * @author Tadaya Tsuyukubo
  */
@@ -37,8 +36,8 @@ class ParsingUtilsReadStringReturnValueTests {
 
     @ParameterizedTest
     @org.junit.jupiter.params.provider.MethodSource
-    void readStringReturnValue(MethodDeclaration methodDeclaration, String expected) {
-        String result = ParsingUtils.readStringReturnValue(methodDeclaration);
+    void readStringReturnValue(MethodSource<?> methodSource, String expected) {
+        String result = ParsingUtils.readStringReturnValue(methodSource);
         assertThat(result).isEqualTo(expected);
     }
 
@@ -49,16 +48,12 @@ class ParsingUtilsReadStringReturnValueTests {
         MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
         MethodSource<?> typeLiteralSource = returnValueClass.getMethod("typeLiteralString");
         MethodSource<?> qualifiedNameSource = returnValueClass.getMethod("qualifiedNameLiteralEnum");
-        MethodDeclaration stringLiteralDeclaration = (MethodDeclaration) stringLiteralSource.getInternal();
-        MethodDeclaration booleanPrimitiveDeclaration = (MethodDeclaration) booleanLiteralSource.getInternal();
-        MethodDeclaration typeLiteralDeclaration = (MethodDeclaration) typeLiteralSource.getInternal();
-        MethodDeclaration qualifiedNameDeclaration = (MethodDeclaration) qualifiedNameSource.getInternal();
 
         return Stream.of(
-                Arguments.of(Named.of("stringLiteral", stringLiteralDeclaration), "my-string"),
-                Arguments.of(Named.of("booleanLiteral", booleanPrimitiveDeclaration), "true"),
-                Arguments.of(Named.of("typeLiteral", typeLiteralDeclaration), "String"),
-                Arguments.of(Named.of("qualifedNameLiteral", qualifiedNameDeclaration), "BAR")
+                Arguments.of(Named.of("stringLiteral", stringLiteralSource), "my-string"),
+                Arguments.of(Named.of("booleanLiteral", booleanLiteralSource), "true"),
+                Arguments.of(Named.of("typeLiteral", typeLiteralSource), "String"),
+                Arguments.of(Named.of("qualifedNameLiteral", qualifiedNameSource), "BAR")
         );
     }
 

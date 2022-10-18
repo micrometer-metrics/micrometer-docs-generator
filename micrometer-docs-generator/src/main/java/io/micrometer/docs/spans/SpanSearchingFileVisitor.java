@@ -42,7 +42,6 @@ import io.micrometer.observation.docs.ObservationDocumentation;
 import io.micrometer.tracing.docs.SpanDocumentation;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
-import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.EnumConstantSource.Body;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -162,9 +161,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             if (getNameMethodSource == null) {
                 throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
             }
-            MethodDeclaration getNameMethodDeclaration = ParsingUtils.getMethodDeclaration(getNameMethodSource);
-
-            nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodDeclaration);
+            nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodSource);
             conventionClass = conventionClassSource.getQualifiedName();
         }
 
@@ -252,8 +249,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         MethodSource<?> methodSource = enumConstantSource.getBody().getMethod(methodName);
         if (methodSource != null) {
             JavaEnumSource enclosingEnumSource = enumConstantSource.getOrigin();
-            MethodDeclaration methodDeclaration = ParsingUtils.getMethodDeclaration(methodSource);
-            List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, methodDeclaration, KeyNameEnumConstantReader.INSTANCE);
+            List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, methodSource, KeyNameEnumConstantReader.INSTANCE);
             tags.addAll(lows);
         }
         return tags;
