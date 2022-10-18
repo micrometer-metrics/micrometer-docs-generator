@@ -156,12 +156,6 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         }
 
         // ObservationDocumentation
-        methodSource = enumConstantBody.getMethod("asString");
-        if (methodSource != null) {
-            lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
-        }
-
-        // ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getHighCardinalityKeyNames");
         if (methodSource != null) {
             highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
