@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.EntryEnumConstantReader;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForSpanEnumConstantReader;
 import io.micrometer.docs.commons.EventValueEntryEnumConstantReader;
@@ -173,35 +174,36 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // SpanDocumentation
         methodSource = enumConstantBody.getMethod("getKeyNames");
         if (methodSource != null) {
-            tags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            tags.addAll((retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE)));
+
         }
 
         // ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getLowCardinalityKeyNames");
         if (methodSource != null) {
-            tags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            tags.addAll((retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE)));
         }
 
         // ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getHighCardinalityKeyNames");
         if (methodSource != null) {
-            tags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            tags.addAll((retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE)));
         }
 
         // SpanDocumentation
         methodSource = enumConstantBody.getMethod("getAdditionalKeyNames");
         if (methodSource != null) {
-            additionalKeyNames.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            additionalKeyNames.addAll((retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE)));
         }
 
         // SpanDocumentation(EventValue), ObservationDocumentation(Observation.Event)
         methodSource = enumConstantBody.getMethod("getEvents");
         if (methodSource != null) {
             if ("EventValue".equals(methodSource.getReturnType().getSimpleName())) {
-                events.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, EventValueEntryEnumConstantReader.INSTANCE));
+                events.addAll((retrieveEnumValues(myEnum, methodSource, EventValueEntryEnumConstantReader.INSTANCE)));
             }
             else {
-                events.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, EventEntryForSpanEnumConstantReader.INSTANCE));
+                events.addAll((retrieveEnumValues(myEnum, methodSource, EventEntryForSpanEnumConstantReader.INSTANCE)));
             }
         }
 
@@ -248,10 +250,23 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         MethodSource<?> methodSource = enumConstantSource.getBody().getMethod(methodName);
         if (methodSource != null) {
             JavaEnumSource enclosingEnumSource = enumConstantSource.getOrigin();
-            List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, methodSource, KeyNameEnumConstantReader.INSTANCE);
-            tags.addAll(lows);
+            List<KeyNameEntry> keys = retrieveEnumValues(enclosingEnumSource, methodSource, KeyNameEnumConstantReader.INSTANCE);
+            tags.addAll(keys);
         }
         return tags;
+    }
+
+    private <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource, EntryEnumConstantReader<?> converter) {
+        List<T> result = new ArrayList<>();
+        Set<String> enumClassNames = ParsingUtils.readEnumClassNames(methodSource);
+        for (String enumClassName : enumClassNames) {
+            JavaSource<?> enclosingEnumClass = this.searchHelper.searchReferencingClass(enclosingJavaSource, enumClassName);
+            if (enclosingEnumClass == null || !enclosingEnumClass.isEnum()) {
+                throw new IllegalStateException("Cannot find enum class with name [" + enumClassName + "]");
+            }
+            result.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) enclosingEnumClass, converter));
+        }
+        return result;
     }
 
 }

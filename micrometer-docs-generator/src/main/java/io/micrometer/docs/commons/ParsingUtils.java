@@ -16,9 +16,9 @@
 package io.micrometer.docs.commons;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -38,7 +38,6 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.StringLiteral;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TypeLiteral;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
-import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
 public class ParsingUtils {
@@ -46,7 +45,7 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
-    private static <T> List<T> retrieveModelsFromEnum(JavaEnumSource enumSource,
+    public static <T> List<T> retrieveModelsFromEnum(JavaEnumSource enumSource,
             EntryEnumConstantReader<?> converter) {
         // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
         // For example, "MyEnum" implements "Observation.Event" interface as:
@@ -92,25 +91,11 @@ public class ParsingUtils {
         return stringFromReturnMethodDeclaration(methodSource);
     }
 
-    public static <T> List<T> retrieveModels(JavaEnumSource enclosingEnumSource, MethodSource<?> methodSource,
-            EntryEnumConstantReader<?> converter) {
-        Collection<String> enumNames = readClassValue(methodSource);
-        List<T> models = new ArrayList<>();
-        enumNames.forEach(enumName -> {
-            JavaSource<?> nestedEnumSource = enclosingEnumSource.getNestedType(enumName);
-            if (nestedEnumSource == null || !nestedEnumSource.isEnum()) {
-                throw new IllegalStateException("There's no nested enum class with name [" + enumName + "]");
-            }
-            models.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) nestedEnumSource, converter));
-        });
-        return models;
-    }
-
-    private static Collection<String> readClassValue(MethodSource<?> methodSource) {
+    public static Set<String> readEnumClassNames(MethodSource<?> methodSource) {
         Expression expression = expressionFromReturnMethodDeclaration(methodSource);
         if (!(expression instanceof MethodInvocation)) {
             logger.warn("Statement [" + expression + "] is not a method invocation.");
-            return Collections.emptyList();
+            return Collections.emptySet();
         }
         MethodInvocation methodInvocation = (MethodInvocation) expression;
 
@@ -119,7 +104,7 @@ public class ParsingUtils {
             // KeyName.merge(TestSpanTags.values(),AsyncSpanTags.values())
             String invocationString = methodInvocation.toString();
             Matcher matcher = Pattern.compile("([a-zA-Z]+.values)").matcher(invocationString);
-            Collection<String> classNames = new TreeSet<>();
+            Set<String> classNames = new TreeSet<>();
             while (matcher.find()) {
                 String className = matcher.group(1).split("\\.")[0];
                 classNames.add(className);
@@ -131,7 +116,7 @@ public class ParsingUtils {
                     + KeyName.class + " interface or use [KeyName.merge(...)] method to merge multiple values from tags");
         }
         // will return Tags
-        return Collections.singletonList(methodInvocation.getExpression().toString());
+        return Collections.singleton(methodInvocation.getExpression().toString());
     }
 
     @Nullable

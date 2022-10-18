@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
@@ -31,6 +32,7 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
+import io.micrometer.docs.commons.EntryEnumConstantReader;
 import io.micrometer.docs.commons.EventEntry;
 import io.micrometer.docs.commons.EventEntryForMetricEnumConstantReader;
 import io.micrometer.docs.commons.JavaSourceSearchHelper;
@@ -128,7 +130,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // MeterDocumentation
         methodSource = enumConstantBody.getMethod("getKeyNames");
         if (methodSource != null) {
-            lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            lowCardinalityTags.addAll(retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
         }
 
         // ObservationDocumentation(@Nullable)
@@ -152,13 +154,13 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getLowCardinalityKeyNames");
         if (methodSource != null) {
-            lowCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            lowCardinalityTags.addAll(retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
         }
 
         // ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getHighCardinalityKeyNames");
         if (methodSource != null) {
-            highCardinalityTags.addAll(ParsingUtils.retrieveModels(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
+            highCardinalityTags.addAll(retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
         }
 
         // MeterDocumentation, ObservationDocumentation
@@ -192,8 +194,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
         // ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getEvents");
         if (methodSource != null) {
-            Collection<EventEntry> entries = ParsingUtils.retrieveModels(myEnum, methodSource, EventEntryForMetricEnumConstantReader.INSTANCE);
-            events.addAll(entries);
+            events.addAll((retrieveEnumValues(myEnum, methodSource, EventEntryForMetricEnumConstantReader.INSTANCE)));
         }
 
 
@@ -209,7 +210,7 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             MethodSource<?> keyMethodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(), "getLowCardinalityKeyNames");
             if (keyMethodSource != null) {
                 JavaEnumSource enclosingEnumSource = overridesDefaultMetricFrom.getOrigin();
-                List<KeyNameEntry> lows = ParsingUtils.retrieveModels(enclosingEnumSource, keyMethodSource, KeyNameEnumConstantReader.INSTANCE);
+                List<KeyNameEntry> lows = retrieveEnumValues(enclosingEnumSource, methodSource, KeyNameEnumConstantReader.INSTANCE);
                 lowCardinalityTags.addAll(lows);
             }
         }
@@ -231,6 +232,19 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
         return new MetricEntry(nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
                 highCardinalityTags, events, metricInfos);
+    }
+
+    private <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource, EntryEnumConstantReader<?> converter) {
+        List<T> result = new ArrayList<>();
+        Set<String> enumClassNames = ParsingUtils.readEnumClassNames(methodSource);
+        for (String enumClassName : enumClassNames) {
+            JavaSource<?> enclosingEnumClass = this.searchHelper.searchReferencingClass(enclosingJavaSource, enumClassName);
+            if (enclosingEnumClass == null || !enclosingEnumClass.isEnum()) {
+                throw new IllegalStateException("Cannot find enum class with name [" + enumClassName + "]");
+            }
+            result.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) enclosingEnumClass, converter));
+        }
+        return result;
     }
 
 }
