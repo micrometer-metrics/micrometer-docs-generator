@@ -26,7 +26,6 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.EventEntry;
@@ -96,15 +95,16 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return FileVisitResult.CONTINUE;
         }
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            SpanEntry entry = parseSpan(enumConstant, enumSource);
-            if (entry != null) {
-                if (!entry.additionalKeyNames.isEmpty()) {
-                    entry.tagKeys.addAll(entry.additionalKeyNames);
-                }
-                spanEntries.add(entry);
-                logger.debug(
-                        "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
+            if (enumConstant.getBody().getMethods().isEmpty()) {
+                continue;
             }
+            SpanEntry entry = parseSpan(enumConstant, enumSource);
+            if (!entry.additionalKeyNames.isEmpty()) {
+                entry.tagKeys.addAll(entry.additionalKeyNames);
+            }
+            spanEntries.add(entry);
+            logger.debug(
+                    "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
         }
         return FileVisitResult.CONTINUE;
     }
@@ -121,11 +121,7 @@ class SpanSearchingFileVisitor extends SimpleFileVisitor<Path> {
         return FileVisitResult.CONTINUE;
     }
 
-    @Nullable
     private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
-        if (enumConstant.getBody().getMethods().isEmpty()) {
-            return null;
-        }
         String name = "";
         String contextualName = null;
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());

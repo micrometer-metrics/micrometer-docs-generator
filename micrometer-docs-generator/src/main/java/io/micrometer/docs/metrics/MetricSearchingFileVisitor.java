@@ -23,7 +23,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
-import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.core.instrument.Meter;
@@ -91,20 +90,17 @@ class MetricSearchingFileVisitor extends SimpleFileVisitor<Path> {
             return FileVisitResult.CONTINUE;
         }
         for (EnumConstantSource enumConstant : enumSource.getEnumConstants()) {
-            MetricEntry entry = parseMetric(enumConstant, enumSource);
-            if (entry != null) {
-                entries.add(entry);
-                logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
+            if (enumConstant.getBody().getMethods().isEmpty()) {
+                continue;
             }
+            MetricEntry entry = parseMetric(enumConstant, enumSource);
+            entries.add(entry);
+            logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
         }
         return FileVisitResult.CONTINUE;
     }
 
-    @Nullable
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
-        if (enumConstant.getBody().getMethods().isEmpty()) {
-            return null;
-        }
         String name = "";
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
