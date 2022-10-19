@@ -97,8 +97,6 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
     private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         boolean isObservationDoc = myEnum.hasInterface(ObservationDocumentation.class);
 
-        String name = "";
-        String nameOrigin = "";
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         List<KeyNameEntry> tags = new ArrayList<>();
@@ -110,51 +108,8 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         MethodSource<?> methodSource;
         Body enumConstantBody = enumConstant.getBody();
 
-        // getContextualName - ObservationDocumentation
-        if (isObservationDoc) {
-            methodSource = enumConstantBody.getMethod("getContextualName");
-            if (methodSource != null) {
-                name = ParsingUtils.readStringReturnValue(methodSource);
-            }
-        }
-
-        // getName - SpanDocumentation, ObservationDocumentation
-        if (!StringUtils.hasText(name)) {
-            methodSource = enumConstantBody.getMethod("getName");
-            if (methodSource != null) {
-                name = ParsingUtils.readStringReturnValue(methodSource);
-            }
-        }
-
-        // getDefaultConvention - ObservationDocumentation
-        if (isObservationDoc) {
-            // resolve name from ObservationDocumentation if applicable
-            String conventionClassName = null;
-            methodSource = enumConstantBody.getMethod("getDefaultConvention");
-            if (methodSource != null) {
-                conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
-            }
-
-            if (StringUtils.hasText(name) && conventionClassName != null) {
-                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
-            }
-            else if (!StringUtils.hasText(name)) {
-                if (conventionClassName == null) {
-                    throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
-                }
-                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-                if (conventionClassSource == null) {
-                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-                }
-                MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-                if (getNameMethodSource == null) {
-                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-                }
-                name = ParsingUtils.readStringReturnValue(getNameMethodSource);
-                nameOrigin = conventionClassSource.getQualifiedName();
-            }
-
-        }
+        // resolve name from "getContextName", "getName", and "getDefaultConvention"
+        NameInfo nameInfo = resolveName(isObservationDoc, enumConstant, myEnum);
 
         // SpanDocumentation
         methodSource = enumConstantBody.getMethod("getKeyNames");
@@ -225,6 +180,9 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         Collections.sort(additionalKeyNames);
         Collections.sort(events);
 
+        String name = nameInfo.getName();
+        String nameOrigin = nameInfo.getNameOrigin();
+
         return new SpanEntry(name, nameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 additionalKeyNames, events);
     }
@@ -239,6 +197,55 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
             tags.addAll(keys);
         }
         return tags;
+    }
+
+    private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant, JavaEnumSource enclosingEnum) {
+        Body enumConstantBody = enumConstant.getBody();
+
+        String name = "";
+        MethodSource<?> methodSource;
+
+        // getContextualName - ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getContextualName");
+        if (methodSource != null) {
+            name = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // getName - SpanDocumentation, ObservationDocumentation
+        if (!StringUtils.hasText(name)) {
+            methodSource = enumConstantBody.getMethod("getName");
+            if (methodSource != null) {
+                name = ParsingUtils.readStringReturnValue(methodSource);
+            }
+        }
+
+        if (!isObservationDoc) {
+            return new NameInfo(name, "");
+        }
+
+        // getDefaultConvention - ObservationDocumentation
+        String conventionClassName = null;
+        methodSource = enumConstantBody.getMethod("getDefaultConvention");
+        if (methodSource != null) {
+            conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        validateNameOrConvention(name, conventionClassName, enclosingEnum);
+
+        if (!StringUtils.hasText(conventionClassName)) {
+            return new NameInfo(name, "");
+        }
+
+        JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(enclosingEnum, conventionClassName);
+        if (conventionClassSource == null) {
+            throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+        }
+        MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+        if (getNameMethodSource == null) {
+            throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+        }
+        name = ParsingUtils.readStringReturnValue(getNameMethodSource);
+        return new NameInfo(name, conventionClassSource.getQualifiedName());
     }
 
 }

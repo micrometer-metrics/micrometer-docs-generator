@@ -72,8 +72,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         boolean isObservationDoc = myEnum.hasInterface(ObservationDocumentation.class);
 
-        String name = "";
-        String nameOrigin = "";
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         String baseUnit = "";
@@ -86,40 +84,8 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         MethodSource<?> methodSource;
         Body enumConstantBody = enumConstant.getBody();
 
-        // getName - MeterDocumentation, ObservationDocumentation
-        methodSource = enumConstantBody.getMethod("getName");
-        if (methodSource != null) {
-            name = ParsingUtils.readStringReturnValue(methodSource);
-        }
-
-        // getDefaultConvention - ObservationDocumentation(@Nullable)
-        if (isObservationDoc) {
-            // resolve name from ObservationDocumentation if applicable
-            String conventionClassName = null;
-            methodSource = enumConstantBody.getMethod("getDefaultConvention");
-            if (methodSource != null) {
-                conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
-            }
-
-            if (StringUtils.hasText(name) && conventionClassName != null) {
-                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
-            }
-            else if (!StringUtils.hasText(name)) {
-                if (conventionClassName == null) {
-                    throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
-                }
-                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-                if (conventionClassSource == null) {
-                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-                }
-                MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-                if (getNameMethodSource == null) {
-                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-                }
-                name = ParsingUtils.readStringReturnValue(getNameMethodSource);
-                nameOrigin = conventionClassSource.getQualifiedName();
-            }
-        }
+        // resolve name from "getName" and "getDefaultConvention"
+        NameInfo nameInfo = resolveName(isObservationDoc, enumConstant, myEnum);
 
         // MeterDocumentation
         methodSource = enumConstantBody.getMethod("getKeyNames");
@@ -176,8 +142,9 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
         // prepare view model objects
 
-        final String newName = name;
-        events.forEach(event -> event.setName(newName + "." + event.getName()));
+        String name = nameInfo.getName();
+        String nameOrigin = nameInfo.getNameOrigin();
+        events.forEach(event -> event.setName(name + "." + event.getName()));
 
         // if entry has overridesDefaultSpanFrom - read tags from that thing
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
@@ -207,6 +174,48 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
         return new MetricEntry(myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
                 highCardinalityTags, events, metricInfos);
+    }
+
+    private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant, JavaEnumSource enclosingEnum) {
+        Body enumConstantBody = enumConstant.getBody();
+
+        String name = "";
+        MethodSource<?> methodSource;
+
+        // getName - MeterDocumentation, ObservationDocumentation
+        methodSource = enumConstantBody.getMethod("getName");
+        if (methodSource != null) {
+            name = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+
+        if (!isObservationDoc) {
+            return new NameInfo(name, "");
+        }
+        // getDefaultConvention - ObservationDocumentation(@Nullable)
+        // resolve name from ObservationDocumentation if applicable
+        String conventionClassName = null;
+        methodSource = enumConstantBody.getMethod("getDefaultConvention");
+        if (methodSource != null) {
+            conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        validateNameOrConvention(name, conventionClassName, enclosingEnum);
+
+        if (!StringUtils.hasText(conventionClassName)) {
+            return new NameInfo(name, "");
+        }
+
+        JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(enclosingEnum, conventionClassName);
+        if (conventionClassSource == null) {
+            throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+        }
+        MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+        if (getNameMethodSource == null) {
+            throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+        }
+        name = ParsingUtils.readStringReturnValue(getNameMethodSource);
+        return new NameInfo(name, conventionClassSource.getQualifiedName());
     }
 
 }

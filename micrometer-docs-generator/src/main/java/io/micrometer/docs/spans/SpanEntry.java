@@ -103,14 +103,6 @@ class SpanEntry implements Comparable<SpanEntry> {
         return enumName.compareTo(o.enumName);
     }
 
-    private String spanName() {
-        String name = Arrays.stream(enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
-        if (!name.toLowerCase(Locale.ROOT).endsWith("span")) {
-            return name + " Span";
-        }
-        return name;
-    }
-
     public String getSpanTitle() {
         // TODO: convert to handlebar helper
         String name = Arrays.stream(this.enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));

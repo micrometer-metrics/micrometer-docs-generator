@@ -27,8 +27,10 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.utils.StringUtils;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
@@ -94,6 +96,19 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
 
     public abstract void onEnumConstant(JavaEnumSource enclosingEnumSource, EnumConstantSource enumConstant);
 
+    protected void validateNameOrConvention(String name, @Nullable String conventionClassName, JavaEnumSource enclosingEnum) {
+        if (StringUtils.hasText(name)) {
+            if (conventionClassName != null) {
+                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + enclosingEnum.getName() + "] class");
+            }
+        }
+        else {
+            if (conventionClassName == null) {
+                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + enclosingEnum.getName() + "] you haven't defined any");
+            }
+        }
+    }
+
     protected <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource, EntryEnumConstantReader<?> converter) {
         List<T> result = new ArrayList<>();
         Set<String> enumClassNames = ParsingUtils.readEnumClassNames(methodSource);
@@ -105,6 +120,25 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
             result.addAll(ParsingUtils.retrieveModelsFromEnum((JavaEnumSource) enclosingEnumClass, converter));
         }
         return result;
+    }
+
+    protected static class NameInfo {
+        private final String name;
+
+        private final String nameOrigin;
+
+        public NameInfo(String name, String nameOrigin) {
+            this.name = name;
+            this.nameOrigin = nameOrigin;
+        }
+
+        public String getName() {
+            return this.name;
+        }
+
+        public String getNameOrigin() {
+            return this.nameOrigin;
+        }
     }
 
 }
