@@ -33,7 +33,6 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.templates.HandlebarsUtils;
 
-// TODO: Assert on prefixes
 public class MetricsDocGenerator {
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(MetricsDocGenerator.class);
@@ -63,7 +62,6 @@ public class MetricsDocGenerator {
         FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries, searchHelper);
         try {
             Files.walkFileTree(path, fv);
-            MetricEntry.assertThatProperlyPrefixed(entries);
             printMetricsAdoc(entries);
         }
         catch (IOException e) {

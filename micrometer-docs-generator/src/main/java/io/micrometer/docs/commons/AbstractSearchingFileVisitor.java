@@ -122,6 +122,27 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
         return result;
     }
 
+    /**
+     * Check given tags start with the given prefix.
+     *
+     * @param prefix tag name prefix
+     * @param tags tags
+     * @param enumName the enum constant
+     * @param enclosingClassName the enclosing enum class name
+     * @return list of invalid tag messages
+     */
+    protected List<String> validatePrefixOnTags(String prefix, List<KeyNameEntry> tags, String enumName, String enclosingClassName) {
+        List<String> messages = new ArrayList<>();
+        for (KeyNameEntry tag : tags) {
+            String tagName = tag.getName();
+            if (!StringUtils.hasText(tagName) || !tagName.startsWith(prefix)) {
+                String message = String.format("\tName <%s> in class <%s> has the following prefix <%s> and following invalid tag keys %s", enumName, enclosingClassName, prefix, tagName);
+                messages.add(message);
+            }
+        }
+        return messages;
+    }
+
     protected static class NameInfo {
         private final String name;
 

@@ -15,12 +15,16 @@
  */
 package io.micrometer.docs.metrics;
 
+import java.io.IOException;
+import java.nio.file.FileVisitResult;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
@@ -68,6 +72,38 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         entries.add(entry);
         logger.debug("Found [" + entry.lowCardinalityKeyNames.size() + "]");
     }
+
+    @Override
+    public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        validatePrefixOnTags();
+        return FileVisitResult.CONTINUE;
+    }
+
+    private void validatePrefixOnTags() {
+        List<String> messages = new ArrayList<>();
+        for (MetricEntry metricEntry : this.entries) {
+            String prefix = metricEntry.getPrefix();
+            if (!StringUtils.hasText(prefix)) {
+                continue;
+            }
+            String enumName = metricEntry.getEnumName();
+            String enclosingClassName = metricEntry.getEnclosingClass();
+
+            List<KeyNameEntry> allTags = new ArrayList<>();
+            allTags.addAll(metricEntry.getLowCardinalityKeyNames());
+            allTags.addAll(metricEntry.getHighCardinalityKeyNames());
+
+            messages.addAll(validatePrefixOnTags(prefix, allTags, enumName, enclosingClassName));
+        }
+        if (!messages.isEmpty()) {
+            StringBuilder sb = new StringBuilder("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");
+            sb.append(System.lineSeparator()).append(System.lineSeparator());
+            sb.append(messages.stream().collect(Collectors.joining(System.lineSeparator())));
+            sb.append(System.lineSeparator()).append(System.lineSeparator());
+            throw new IllegalStateException(sb.toString());
+        }
+    }
+
 
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         boolean isObservationDoc = myEnum.hasInterface(ObservationDocumentation.class);

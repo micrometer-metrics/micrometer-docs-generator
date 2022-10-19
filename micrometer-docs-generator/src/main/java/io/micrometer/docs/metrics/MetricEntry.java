@@ -15,13 +15,8 @@
  */
 package io.micrometer.docs.metrics;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.Meter.Type;
@@ -58,29 +53,6 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.events = events;
         this.metricInfos = metricInfos;
-    }
-
-    static void assertThatProperlyPrefixed(Collection<MetricEntry> entries) {
-        List<Map.Entry<MetricEntry, List<String>>> collect = entries.stream().map(MetricEntry::notProperlyPrefixedTags).filter(Objects::nonNull).collect(Collectors.toList());
-        if (collect.isEmpty()) {
-            return;
-        }
-        throw new IllegalStateException("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.\n\n" + collect.stream()
-                .map(e -> "\tName <" + e.getKey().enumName + "> in class <" + e.getKey().enclosingClass + "> has the following prefix <" + e.getKey().prefix + "> and following invalid tag keys " + e.getValue())
-                .collect(Collectors.joining("\n")) + "\n\n");
-    }
-
-    Map.Entry<MetricEntry, List<String>> notProperlyPrefixedTags() {
-        if (!StringUtils.hasText(this.prefix)) {
-            return null;
-        }
-        List<KeyNameEntry> allTags = new ArrayList<>(this.lowCardinalityKeyNames);
-        allTags.addAll(this.highCardinalityKeyNames);
-        List<String> collect = allTags.stream().map(KeyNameEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
-        if (collect.isEmpty()) {
-            return null;
-        }
-        return new AbstractMap.SimpleEntry<>(this, collect);
     }
 
     @Override

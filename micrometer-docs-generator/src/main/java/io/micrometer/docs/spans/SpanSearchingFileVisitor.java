@@ -81,19 +81,22 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     @Override
     public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
+        removeOverrideEntries();
+        validatePrefixOnTags();
+        return FileVisitResult.CONTINUE;
+    }
+
+    private void removeOverrideEntries() {
         Set<SpanEntry> toRemove = this.spanEntries.stream()
                 .filter(spanEntry -> this.overrideEnumClassNames.contains(spanEntry.enclosingClass))
                 .collect(Collectors.toSet());
         if (!toRemove.isEmpty()) {
             logger.debug("Will remove the span entries <" + toRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
         }
-        spanEntries.removeAll(toRemove);
-
-        validatePrefixOnTags();
-        return FileVisitResult.CONTINUE;
+        this.spanEntries.removeAll(toRemove);
     }
 
-    void validatePrefixOnTags() {
+    private void validatePrefixOnTags() {
         List<String> messages = new ArrayList<>();
         for (SpanEntry spanEntry : this.spanEntries) {
             String prefix = spanEntry.getPrefix();
@@ -101,12 +104,8 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
                 continue;
             }
             String enumName = spanEntry.getEnumName();
-            String enclosingClass = spanEntry.getEnclosingClass();
-            List<String> wrongTags = spanEntry.getTagKeys().stream().map(KeyNameEntry::getName).filter(tagName -> !tagName.startsWith(prefix)).collect(Collectors.toList());
-            for (String wrongTag : wrongTags) {
-                String message = String.format("\tName <%s> in class <%s> has the following prefix <%s> and following invalid tag keys %s", enumName, enclosingClass, prefix, wrongTag);
-                messages.add(message);
-            }
+            String enclosingClassName = spanEntry.getEnclosingClass();
+            messages.addAll(validatePrefixOnTags(prefix, spanEntry.getTagKeys(), enumName, enclosingClassName));
         }
         if (!messages.isEmpty()) {
             StringBuilder sb = new StringBuilder("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");

@@ -61,7 +61,6 @@ public class SpansDocGenerator {
         FileVisitor<Path> fv = new SpanSearchingFileVisitor(this.inclusionPattern, spanEntries, searchHelper);
         try {
             Files.walkFileTree(path, fv);
-
             printSpansAdoc(spanEntries);
         }
         catch (IOException e) {
