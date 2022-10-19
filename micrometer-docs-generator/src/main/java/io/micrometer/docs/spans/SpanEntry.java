@@ -34,9 +34,7 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final String name;
 
-    final String conventionClass;
-
-    final String nameFromConventionClass;
+    final String nameOrigin;
 
     final String enclosingClass;
 
@@ -52,11 +50,10 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final List<EventEntry> events;
 
-    SpanEntry(String name, String conventionClass, String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix,
+    SpanEntry(String name, String nameOrigin, String enclosingClass, String enumName, String description, String prefix,
             List<KeyNameEntry> tagKeys, List<KeyNameEntry> additionalKeyNames, List<EventEntry> events) {
         Assert.hasText(description, "Span javadoc description must not be empty");
-        this.conventionClass = conventionClass;
-        this.nameFromConventionClass = nameFromConventionClass;
+        this.nameOrigin = nameOrigin;
         this.name = name;
         this.enclosingClass = enclosingClass;
         this.enumName = enumName;
@@ -65,11 +62,6 @@ class SpanEntry implements Comparable<SpanEntry> {
         this.tagKeys = tagKeys;
         this.additionalKeyNames = additionalKeyNames;
         this.events = events;
-        if (StringUtils.hasText(this.name) && this.conventionClass != null) {
-            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
-        } else if (this.name == null && this.conventionClass == null) {
-            throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
-        }
     }
 
     static void assertThatProperlyPrefixed(Collection<SpanEntry> entries) {
@@ -98,12 +90,12 @@ class SpanEntry implements Comparable<SpanEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SpanEntry spanEntry = (SpanEntry) o;
-        return Objects.equals(name, spanEntry.name) && Objects.equals(conventionClass, spanEntry.conventionClass) && Objects.equals(nameFromConventionClass, spanEntry.nameFromConventionClass) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(events, spanEntry.events);
+        return Objects.equals(name, spanEntry.name) && Objects.equals(nameOrigin, spanEntry.nameOrigin) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(events, spanEntry.events);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, conventionClass, nameFromConventionClass, enclosingClass, enumName, description, prefix, tagKeys, additionalKeyNames, events);
+        return Objects.hash(name, nameOrigin, enclosingClass, enumName, description, prefix, tagKeys, additionalKeyNames, events);
     }
 
     @Override
@@ -119,21 +111,35 @@ class SpanEntry implements Comparable<SpanEntry> {
         return name;
     }
 
-    private String name() {
-        if (StringUtils.hasText(this.name)) {
-            return "`" + this.name + "`";
-        } else if (StringUtils.hasText(this.nameFromConventionClass)) {
-            return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
-        }
-        return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
-    }
-
     public String getSpanTitle() {
         // TODO: convert to handlebar helper
-        return spanName();
+        String name = Arrays.stream(this.enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
+        if (!name.toLowerCase(Locale.ROOT).endsWith("span")) {
+            return name + " Span";
+        }
+        return name;
     }
+
     public String getDisplayName() {
-        return name();
+        // TODO: convert to handlebar helper
+        StringBuilder sb = new StringBuilder();
+        if (StringUtils.hasText(this.name)) {
+            sb.append("`");
+            sb.append(this.name);
+            sb.append("`");
+            if (StringUtils.hasText(this.nameOrigin)) {
+                sb.append(" (defined by convention class `");
+                sb.append(this.nameOrigin);
+                sb.append("`)");
+            }
+        }
+        else {
+            // TODO: existing logic. Consider failing in this case.
+            sb.append("Unable to resolve the name - please check the convention class `");
+            sb.append(this.nameOrigin);
+            sb.append("` for more details");
+        }
+        return sb.toString();
     }
 
     public String getName() {

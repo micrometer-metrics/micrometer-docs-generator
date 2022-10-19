@@ -32,8 +32,6 @@ import io.micrometer.docs.commons.utils.StringUtils;
 
 class MetricEntry implements Comparable<MetricEntry> {
 
-    final String nameFromConventionClass;
-
     final String enclosingClass;
 
     final String enumName;
@@ -50,9 +48,8 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final List<MetricInfo> metricInfos;
 
-    MetricEntry(String nameFromConventionClass, String enclosingClass, String enumName, String description, String prefix, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, List<EventEntry> events, List<MetricInfo> metricInfos) {
+    MetricEntry(String enclosingClass, String enumName, String description, String prefix, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, List<EventEntry> events, List<MetricInfo> metricInfos) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
-        this.nameFromConventionClass = nameFromConventionClass;
         this.enclosingClass = enclosingClass;
         this.enumName = enumName;
         this.description = description;
@@ -61,16 +58,6 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.events = events;
         this.metricInfos = metricInfos;
-
-        // TODO: move out this check from this class
-        for (MetricInfo metricInfo : metricInfos) {
-            if (StringUtils.hasText(metricInfo.name) && metricInfo.conventionClass != null) {
-                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + this.enclosingClass + "] class");
-            }
-            else if (metricInfo.name == null && metricInfo.conventionClass == null) {
-                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + this.enclosingClass + "] you haven't defined any");
-            }
-        }
     }
 
     static void assertThatProperlyPrefixed(Collection<MetricEntry> entries) {
@@ -101,12 +88,12 @@ class MetricEntry implements Comparable<MetricEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MetricEntry that = (MetricEntry) o;
-        return Objects.equals(nameFromConventionClass, that.nameFromConventionClass) && Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames);
+        return Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(nameFromConventionClass, enclosingClass, enumName, description, prefix, lowCardinalityKeyNames, highCardinalityKeyNames);
+        return Objects.hash(enclosingClass, enumName, description, prefix, lowCardinalityKeyNames, highCardinalityKeyNames);
     }
 
     @Override
@@ -157,32 +144,21 @@ class MetricEntry implements Comparable<MetricEntry> {
     public static class MetricInfo {
         final String name;
 
-        final String nameFromConventionClass;
-
-        final String conventionClass;
+        final String nameOrigin;
 
         final Meter.Type type;
 
         final String baseUnit;
 
-        public MetricInfo(String name, String nameFromConventionClass, String conventionClass, Type type, String baseUnit) {
+        public MetricInfo(String name, String nameOrigin, Type type, String baseUnit) {
             this.name = name;
-            this.nameFromConventionClass = nameFromConventionClass;
-            this.conventionClass = conventionClass;
+            this.nameOrigin = nameOrigin;
             this.type = type;
             this.baseUnit = baseUnit;
         }
 
         public String getName() {
             return this.name;
-        }
-
-        public String getNameFromConventionClass() {
-            return this.nameFromConventionClass;
-        }
-
-        public String getConventionClass() {
-            return this.conventionClass;
         }
 
         public Type getType() {
@@ -195,13 +171,19 @@ class MetricEntry implements Comparable<MetricEntry> {
 
         public String getMetricName() {
             // TODO: convert to handlebar helper
+            StringBuilder sb = new StringBuilder();
             if (StringUtils.hasText(this.name)) {
-                return "`" + this.name + "`";
+                sb.append("`").append(this.name).append("`");
+                if (StringUtils.hasText(this.nameOrigin)) {
+                    sb.append(" (defined by convention class `").append(this.nameOrigin).append("`)");
+                }
             }
-            else if (StringUtils.hasText(this.nameFromConventionClass)) {
-                return "`" + this.nameFromConventionClass + "` (defined by convention class `" + this.conventionClass + "`)";
+            else {
+                // TODO: existing logic. Consider failing in this case.
+                sb.append("Unable to resolve the name - please check the convention class `");
+                sb.append(this.nameOrigin).append("` for more details");
             }
-            return "Unable to resolve the name - please check the convention class `" + this.conventionClass + "` for more details";
+            return sb.toString();
         }
 
     }

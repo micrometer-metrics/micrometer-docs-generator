@@ -71,6 +71,7 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         String name = "";
+        String conventionClassName = null;
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         String baseUnit = "";
@@ -79,7 +80,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
         EnumConstantSource overridesDefaultMetricFrom = null;
         String conventionClassQualifiedName = null;
-        String nameFromConventionClass = null;
         List<EventEntry> events = new ArrayList<>();
 
         MethodSource<?> methodSource;
@@ -100,19 +100,7 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         // ObservationDocumentation(@Nullable)
         methodSource = enumConstantBody.getMethod("getDefaultConvention");
         if (methodSource != null) {
-            // TODO: may share the logic with the span side
-            // this returns canonical name. e.g. "io.micrometer.Foo.Bar" where qualified name is "io.micrometer.Foo$Bar"
-            String conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
-            JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-            if (conventionClassSource == null) {
-                throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-            }
-            MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-            if (getNameMethodSource == null) {
-                throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-            }
-            nameFromConventionClass = ParsingUtils.readStringReturnValue(getNameMethodSource);
-            conventionClassQualifiedName = conventionClassSource.getQualifiedName();
+            conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
         }
 
         // ObservationDocumentation
@@ -164,6 +152,27 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
         // prepare view model objects
 
+        String nameOrigin = "";
+        if (StringUtils.hasText(name) && conventionClassName != null) {
+            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
+        }
+        else if (!StringUtils.hasText(name)) {
+            if (conventionClassName == null) {
+                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
+            }
+            JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+            if (conventionClassSource == null) {
+                throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+            }
+            MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+            if (getNameMethodSource == null) {
+                throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+            }
+            name = ParsingUtils.readStringReturnValue(getNameMethodSource);
+            nameOrigin = conventionClassSource.getQualifiedName();
+        }
+
+
         final String newName = name;
         events.forEach(event -> event.setName(newName + "." + event.getName()));
 
@@ -174,7 +183,7 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
             MethodSource<?> keyMethodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(), "getLowCardinalityKeyNames");
             if (keyMethodSource != null) {
                 JavaEnumSource enclosingEnumSource = overridesDefaultMetricFrom.getOrigin();
-                List<KeyNameEntry> lows = retrieveEnumValues(enclosingEnumSource, methodSource, KeyNameEnumConstantReader.INSTANCE);
+                List<KeyNameEntry> lows = retrieveEnumValues(enclosingEnumSource, keyMethodSource, KeyNameEnumConstantReader.INSTANCE);
                 lowCardinalityTags.addAll(lows);
             }
         }
@@ -185,16 +194,15 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
         List<MetricInfo> metricInfos = new ArrayList<>();
         // create a metric info based on the above parsing result
-        metricInfos.add(new MetricInfo(name, nameFromConventionClass, conventionClassQualifiedName, type, baseUnit));
+        metricInfos.add(new MetricInfo(name, nameOrigin, type, baseUnit));
 
         // DefaultMeterObservationHandler creates LongTaskTimer. Add the information.
         if (myEnum.hasInterface(ObservationDocumentation.class)) {
-            String ltkMetricName = StringUtils.hasText(name) ? name + ".active" : name;
-            String ltkMetricNameFromConvention = StringUtils.hasText(nameFromConventionClass) ? nameFromConventionClass + ".active" : nameFromConventionClass;
-            metricInfos.add(new MetricInfo(ltkMetricName, ltkMetricNameFromConvention, conventionClassQualifiedName, Type.LONG_TASK_TIMER, ""));
+            String ltkMetricName = name + ".active";
+            metricInfos.add(new MetricInfo(ltkMetricName, nameOrigin, Type.LONG_TASK_TIMER, ""));
         }
 
-        return new MetricEntry(nameFromConventionClass, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
+        return new MetricEntry(myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
                 highCardinalityTags, events, metricInfos);
     }
 
