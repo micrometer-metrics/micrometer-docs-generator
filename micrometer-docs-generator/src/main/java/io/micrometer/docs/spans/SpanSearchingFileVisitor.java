@@ -95,9 +95,10 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
     }
 
     private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
+        boolean isObservationDoc = myEnum.hasInterface(ObservationDocumentation.class);
+
         String name = "";
-        String conventionClassName = null;
-        String contextualName = null;
+        String nameOrigin = "";
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         List<KeyNameEntry> tags = new ArrayList<>();
@@ -109,22 +110,50 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         MethodSource<?> methodSource;
         Body enumConstantBody = enumConstant.getBody();
 
-        // SpanDocumentation, ObservationDocumentation
-        methodSource = enumConstantBody.getMethod("getName");
-        if (methodSource != null) {
-            name = ParsingUtils.readStringReturnValue(methodSource);
+        // getContextualName - ObservationDocumentation
+        if (isObservationDoc) {
+            methodSource = enumConstantBody.getMethod("getContextualName");
+            if (methodSource != null) {
+                name = ParsingUtils.readStringReturnValue(methodSource);
+            }
         }
 
-        // ObservationDocumentation
-        methodSource = enumConstantBody.getMethod("getDefaultConvention");
-        if (methodSource != null) {
-            conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+        // getName - SpanDocumentation, ObservationDocumentation
+        if (!StringUtils.hasText(name)) {
+            methodSource = enumConstantBody.getMethod("getName");
+            if (methodSource != null) {
+                name = ParsingUtils.readStringReturnValue(methodSource);
+            }
         }
 
-        // ObservationDocumentation
-        methodSource = enumConstantBody.getMethod("getContextualName");
-        if (methodSource != null) {
-            contextualName = ParsingUtils.readStringReturnValue(methodSource);
+        // getDefaultConvention - ObservationDocumentation
+        if (isObservationDoc) {
+            // resolve name from ObservationDocumentation if applicable
+            String conventionClassName = null;
+            methodSource = enumConstantBody.getMethod("getDefaultConvention");
+            if (methodSource != null) {
+                conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+            }
+
+            if (StringUtils.hasText(name) && conventionClassName != null) {
+                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
+            }
+            else if (!StringUtils.hasText(name)) {
+                if (conventionClassName == null) {
+                    throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
+                }
+                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+                if (conventionClassSource == null) {
+                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+                }
+                MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+                if (getNameMethodSource == null) {
+                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+                }
+                name = ParsingUtils.readStringReturnValue(getNameMethodSource);
+                nameOrigin = conventionClassSource.getQualifiedName();
+            }
+
         }
 
         // SpanDocumentation
@@ -182,28 +211,6 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
         // prepare view model objects
 
-        String spanName = contextualName != null ? contextualName : name;
-        String spanNameOrigin = "";
-
-        if (StringUtils.hasText(spanName) && conventionClassName != null) {
-            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
-        }
-        else if (!StringUtils.hasText(spanName)) {
-            if (conventionClassName == null) {
-                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
-            }
-            JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-            if (conventionClassSource == null) {
-                throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-            }
-            MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-            if (getNameMethodSource == null) {
-                throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-            }
-            spanName = ParsingUtils.readStringReturnValue(getNameMethodSource);
-            spanNameOrigin = conventionClassSource.getQualifiedName();
-        }
-
         // if entry has overridesDefaultSpanFrom - read tags from that thing
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
         // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
@@ -218,7 +225,7 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         Collections.sort(additionalKeyNames);
         Collections.sort(events);
 
-        return new SpanEntry(spanName, spanNameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
+        return new SpanEntry(name, nameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
                 additionalKeyNames, events);
     }
 

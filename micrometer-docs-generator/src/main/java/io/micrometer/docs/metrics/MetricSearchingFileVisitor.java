@@ -70,8 +70,10 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
     }
 
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
+        boolean isObservationDoc = myEnum.hasInterface(ObservationDocumentation.class);
+
         String name = "";
-        String conventionClassName = null;
+        String nameOrigin = "";
         String description = AsciidocUtils.javadocToAsciidoc(enumConstant.getJavaDoc());
         String prefix = "";
         String baseUnit = "";
@@ -79,28 +81,50 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         List<KeyNameEntry> lowCardinalityTags = new ArrayList<>();
         List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
         EnumConstantSource overridesDefaultMetricFrom = null;
-        String conventionClassQualifiedName = null;
         List<EventEntry> events = new ArrayList<>();
 
         MethodSource<?> methodSource;
         Body enumConstantBody = enumConstant.getBody();
 
-        // MeterDocumentation, ObservationDocumentation
+        // getName - MeterDocumentation, ObservationDocumentation
         methodSource = enumConstantBody.getMethod("getName");
         if (methodSource != null) {
             name = ParsingUtils.readStringReturnValue(methodSource);
+        }
+
+        // getDefaultConvention - ObservationDocumentation(@Nullable)
+        if (isObservationDoc) {
+            // resolve name from ObservationDocumentation if applicable
+            String conventionClassName = null;
+            methodSource = enumConstantBody.getMethod("getDefaultConvention");
+            if (methodSource != null) {
+                conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
+            }
+
+            if (StringUtils.hasText(name) && conventionClassName != null) {
+                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
+            }
+            else if (!StringUtils.hasText(name)) {
+                if (conventionClassName == null) {
+                    throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
+                }
+                JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
+                if (conventionClassSource == null) {
+                    throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
+                }
+                MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
+                if (getNameMethodSource == null) {
+                    throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
+                }
+                name = ParsingUtils.readStringReturnValue(getNameMethodSource);
+                nameOrigin = conventionClassSource.getQualifiedName();
+            }
         }
 
         // MeterDocumentation
         methodSource = enumConstantBody.getMethod("getKeyNames");
         if (methodSource != null) {
             lowCardinalityTags.addAll(retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
-        }
-
-        // ObservationDocumentation(@Nullable)
-        methodSource = enumConstantBody.getMethod("getDefaultConvention");
-        if (methodSource != null) {
-            conventionClassName = ParsingUtils.readStringReturnValue(methodSource);
         }
 
         // ObservationDocumentation
@@ -151,27 +175,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
 
         // prepare view model objects
-
-        String nameOrigin = "";
-        if (StringUtils.hasText(name) && conventionClassName != null) {
-            throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + myEnum.getName() + "] class");
-        }
-        else if (!StringUtils.hasText(name)) {
-            if (conventionClassName == null) {
-                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + myEnum.getName() + "] you haven't defined any");
-            }
-            JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(myEnum, conventionClassName);
-            if (conventionClassSource == null) {
-                throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
-            }
-            MethodSource<?> getNameMethodSource = this.searchHelper.searchMethodSource(conventionClassSource, "getName");
-            if (getNameMethodSource == null) {
-                throw new RuntimeException("Cannot find getName() method in the hierarchy of " + conventionClassName);
-            }
-            name = ParsingUtils.readStringReturnValue(getNameMethodSource);
-            nameOrigin = conventionClassSource.getQualifiedName();
-        }
-
 
         final String newName = name;
         events.forEach(event -> event.setName(newName + "." + event.getName()));
