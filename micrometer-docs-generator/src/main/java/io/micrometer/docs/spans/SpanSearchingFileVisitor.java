@@ -74,9 +74,6 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
     @Override
     public void onEnumConstant(JavaEnumSource enclosingEnumSource, EnumConstantSource enumConstant) {
         SpanEntry entry = parseSpan(enumConstant, enclosingEnumSource);
-        if (!entry.additionalKeyNames.isEmpty()) {
-            entry.tagKeys.addAll(entry.additionalKeyNames);
-        }
         spanEntries.add(entry);
         logger.debug(
                 "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
@@ -91,7 +88,33 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
             logger.debug("Will remove the span entries <" + toRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
         }
         spanEntries.removeAll(toRemove);
+
+        validatePrefixOnTags();
         return FileVisitResult.CONTINUE;
+    }
+
+    void validatePrefixOnTags() {
+        List<String> messages = new ArrayList<>();
+        for (SpanEntry spanEntry : this.spanEntries) {
+            String prefix = spanEntry.getPrefix();
+            if (!StringUtils.hasText(prefix)) {
+                continue;
+            }
+            String enumName = spanEntry.getEnumName();
+            String enclosingClass = spanEntry.getEnclosingClass();
+            List<String> wrongTags = spanEntry.getTagKeys().stream().map(KeyNameEntry::getName).filter(tagName -> !tagName.startsWith(prefix)).collect(Collectors.toList());
+            for (String wrongTag : wrongTags) {
+                String message = String.format("\tName <%s> in class <%s> has the following prefix <%s> and following invalid tag keys %s", enumName, enclosingClass, prefix, wrongTag);
+                messages.add(message);
+            }
+        }
+        if (!messages.isEmpty()) {
+            StringBuilder sb = new StringBuilder("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");
+            sb.append(System.lineSeparator()).append(System.lineSeparator());
+            sb.append(messages.stream().collect(Collectors.joining(System.lineSeparator())));
+            sb.append(System.lineSeparator()).append(System.lineSeparator());
+            throw new IllegalStateException(sb.toString());
+        }
     }
 
     private SpanEntry parseSpan(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
@@ -174,6 +197,7 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
             List<KeyNameEntry> highs = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom, "getHighCardinalityKeyNames");
             tags.addAll(lows);
             tags.addAll(highs);
+            tags.addAll(additionalKeyNames);
         }
 
         Collections.sort(tags);
@@ -183,8 +207,7 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         String name = nameInfo.getName();
         String nameOrigin = nameInfo.getNameOrigin();
 
-        return new SpanEntry(name, nameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags,
-                additionalKeyNames, events);
+        return new SpanEntry(name, nameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags, events);
     }
 
 

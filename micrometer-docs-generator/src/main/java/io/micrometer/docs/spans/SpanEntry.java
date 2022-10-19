@@ -15,13 +15,9 @@
  */
 package io.micrometer.docs.spans;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -46,12 +42,10 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     final List<KeyNameEntry> tagKeys;
 
-    final List<KeyNameEntry> additionalKeyNames;
-
     final List<EventEntry> events;
 
     SpanEntry(String name, String nameOrigin, String enclosingClass, String enumName, String description, String prefix,
-            List<KeyNameEntry> tagKeys, List<KeyNameEntry> additionalKeyNames, List<EventEntry> events) {
+            List<KeyNameEntry> tagKeys, List<EventEntry> events) {
         Assert.hasText(description, "Span javadoc description must not be empty");
         this.nameOrigin = nameOrigin;
         this.name = name;
@@ -60,29 +54,7 @@ class SpanEntry implements Comparable<SpanEntry> {
         this.description = description;
         this.prefix = prefix;
         this.tagKeys = tagKeys;
-        this.additionalKeyNames = additionalKeyNames;
         this.events = events;
-    }
-
-    static void assertThatProperlyPrefixed(Collection<SpanEntry> entries) {
-        List<Map.Entry<SpanEntry, List<String>>> collect = entries.stream().map(SpanEntry::notProperlyPrefixedTags).filter(Objects::nonNull).collect(Collectors.toList());
-        if (collect.isEmpty()) {
-            return;
-        }
-        throw new IllegalStateException("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.\n\n" + collect.stream().map(e -> "\tName <" + e.getKey().enumName + "> in class <" + e.getKey().enclosingClass + "> has the following prefix <" + e.getKey().prefix + "> and following invalid tag keys " + e.getValue()).collect(Collectors.joining("\n")) + "\n\n");
-    }
-
-    Map.Entry<SpanEntry, List<String>> notProperlyPrefixedTags() {
-        if (!StringUtils.hasText(this.prefix)) {
-            return null;
-        }
-        List<KeyNameEntry> allTags = new ArrayList<>(this.tagKeys);
-        allTags.addAll(this.additionalKeyNames);
-        List<String> collect = allTags.stream().map(KeyNameEntry::getName).filter(eName -> !eName.startsWith(this.prefix)).collect(Collectors.toList());
-        if (collect.isEmpty()) {
-            return null;
-        }
-        return new AbstractMap.SimpleEntry<>(this, collect);
     }
 
     @Override
@@ -90,12 +62,12 @@ class SpanEntry implements Comparable<SpanEntry> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SpanEntry spanEntry = (SpanEntry) o;
-        return Objects.equals(name, spanEntry.name) && Objects.equals(nameOrigin, spanEntry.nameOrigin) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(additionalKeyNames, spanEntry.additionalKeyNames) && Objects.equals(events, spanEntry.events);
+        return Objects.equals(name, spanEntry.name) && Objects.equals(nameOrigin, spanEntry.nameOrigin) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(events, spanEntry.events);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, nameOrigin, enclosingClass, enumName, description, prefix, tagKeys, additionalKeyNames, events);
+        return Objects.hash(name, nameOrigin, enclosingClass, enumName, description, prefix, tagKeys, events);
     }
 
     @Override
