@@ -31,8 +31,9 @@ import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
-import io.micrometer.docs.conventions.ObservationConventionEntry.Type;
+import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.templates.HandlebarsUtils;
+import io.micrometer.docs.conventions.ObservationConventionEntry.Type;
 
 public class ObservationConventionsDocGenerator {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ObservationConventionsDocGenerator.class);
@@ -40,6 +41,7 @@ public class ObservationConventionsDocGenerator {
     private final File projectRoot;
 
     private final Pattern inclusionPattern;
+
     private final String templateLocation;
 
     private final Path output;
@@ -55,7 +57,8 @@ public class ObservationConventionsDocGenerator {
         Path path = this.projectRoot.toPath();
         logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
         TreeSet<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
-        FileVisitor<Path> fv = new ObservationConventionSearchingFileVisitor(this.inclusionPattern, observationConventionEntries);
+        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(this.projectRoot.toPath(), this.inclusionPattern);
+        FileVisitor<Path> fv = new ObservationConventionSearchingFileVisitor(this.inclusionPattern, observationConventionEntries, searchHelper);
         try {
             Files.walkFileTree(path, fv);
             printObservationConventionsAdoc(observationConventionEntries);

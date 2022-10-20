@@ -36,6 +36,8 @@ import io.micrometer.common.lang.Nullable;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.utils.Assert;
+import io.micrometer.observation.GlobalObservationConvention;
+import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.Expression;
 import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.QualifiedName;
@@ -444,6 +446,63 @@ public class JavaSourceSearchHelper {
             }
         }
         return null;
+    }
+
+    /**
+     * Hierarchically search the implementing name of {@link ObservationConvention} or {@link GlobalObservationConvention}.
+     * <p>
+     * NOTE: the observation convention has generics and returning name will contain the
+     * generics information.
+     *
+     * @param javaSource enclosing java source
+     * @return name of the convention class with generics. (e.g. "io.micrometer.observation.ObservationConvention&lt;KafkaRecordReceiverContext&gt;")
+     */
+    @Nullable
+    public String searchObservationConventionInterfaceName(JavaSource<?> javaSource) {
+        // search on interfaces and parent interfaces
+        if (javaSource instanceof InterfaceCapable) {
+            List<String> interfaces = ((InterfaceCapable) javaSource).getInterfaces();
+            for (String interfaceName : interfaces) {
+                if (interfaceName.contains(ObservationConvention.class.getCanonicalName())
+                        || interfaceName.contains(GlobalObservationConvention.class.getCanonicalName())) {
+                    return interfaceName;
+                }
+
+                JavaSource<?> interfaceSource = searchJavaSourceByRoasterTypeName(javaSource, interfaceName);
+                if (interfaceSource != null) {
+                    String result = searchObservationConventionInterfaceName(interfaceSource);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+            }
+        }
+
+        // search on nested classes
+        if (javaSource instanceof TypeHolderSource) {
+            for (JavaSource<?> nested : ((TypeHolderSource<?>) javaSource).getNestedTypes()) {
+                String result = searchObservationConventionInterfaceName(nested);
+                if (result != null) {
+                    return result;
+                }
+            }
+        }
+
+        // search on parent classes
+        if (javaSource instanceof Extendable) {
+            String parentClassName = ((Extendable<?>) javaSource).getSuperType();
+            if (!Object.class.getName().equals(parentClassName)) {
+                JavaSource<?> parentSource = searchJavaSourceByRoasterTypeName(javaSource, parentClassName);
+                if (parentSource != null) {
+                    String result = searchObservationConventionInterfaceName(parentSource);
+                    if (result != null) {
+                        return result;
+                    }
+                }
+            }
+        }
+
+        return null;  // not found
     }
 
 

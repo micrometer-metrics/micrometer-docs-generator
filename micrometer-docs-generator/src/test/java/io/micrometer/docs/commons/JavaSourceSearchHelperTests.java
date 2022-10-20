@@ -22,6 +22,12 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import io.micrometer.docs.RoasterTestUtils;
+import io.micrometer.docs.commons.search.convention.test1.SimpleObservationConvention;
+import io.micrometer.docs.commons.search.convention.test2.NestedHolder;
+import io.micrometer.docs.commons.search.convention.test3.NoContextObservationConvention;
+import io.micrometer.docs.commons.search.convention.test4.NoImportObservationConvention;
+import io.micrometer.docs.commons.search.convention.test5.InterfaceInheritingObservationConvention;
+import io.micrometer.docs.commons.search.convention.test6.ClassInheritingObservationConvention;
 import io.micrometer.docs.commons.search.search_test.Container;
 import io.micrometer.docs.commons.search.test1.ReferenceSample;
 import io.micrometer.docs.commons.search.test2.MethodSearchSample;
@@ -33,6 +39,7 @@ import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
+import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -109,6 +116,15 @@ class JavaSourceSearchHelperTests {
         assertThat(result.getName()).isEqualTo(expectedEnumConstantName);
     }
 
+    @ParameterizedTest(name = "[{index}] {1}")
+    @org.junit.jupiter.params.provider.MethodSource
+    void searchObservationConventionInterfaceName(Path path, Class<?> clazz, String expectedName) {
+        JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
+        JavaSource<?> javaSource = helper.search(clazz.getName());
+        String result = helper.searchObservationConventionInterfaceName(javaSource);
+        assertThat(result).isEqualTo(expectedName);
+    }
+
     static Stream<Arguments> searchReferencingClass() {
         // uses test1
         // @formatter:off
@@ -161,6 +177,7 @@ class JavaSourceSearchHelperTests {
         );
         // @formatter:on
     }
+
     static Stream<Arguments> searchReferencingEnumConstant() {
         // uses test4
         // @formatter:off
@@ -169,6 +186,32 @@ class JavaSourceSearchHelperTests {
                 Arguments.of("same", "SAME"),
                 Arguments.of("different", "DIFFERENT"),
                 Arguments.of("hello", "HELLO")
+        );
+        // @formatter:on
+    }
+
+    static Stream<Arguments> searchObservationConventionInterfaceName() {
+        // uses convention
+        // @formatter:off
+        return Stream.of(
+                Arguments.of(Paths.get("src/test/java/io/micrometer/docs/commons/search/convention/test1"),
+                        Named.of(SimpleObservationConvention.class.getSimpleName(), SimpleObservationConvention.class),
+                        "io.micrometer.observation.ObservationConvention<Observation.Context>"),
+                Arguments.of(Paths.get("src/test/java/io/micrometer/docs/commons/search/convention/test2"),
+                        Named.of(NestedHolder.class.getSimpleName(), NestedHolder.class),
+                        "io.micrometer.observation.ObservationConvention<Observation.Context>"),
+                Arguments.of(Paths.get("src/test/java/io/micrometer/docs/commons/search/convention/test3"),
+                        Named.of(NoContextObservationConvention.class.getSimpleName(), NoContextObservationConvention.class),
+                        "io.micrometer.observation.ObservationConvention"),
+                Arguments.of(Paths.get("src/test/java/io/micrometer/docs/commons/search/convention/test4"),
+                        Named.of(NoImportObservationConvention.class.getSimpleName(), NoImportObservationConvention.class),
+                        "io.micrometer.observation.ObservationConvention<io.micrometer.observation.Observation.Context>"),
+                Arguments.of(Paths.get("src/test/java/io/micrometer/docs/commons/search/convention/test5"),
+                        Named.of(InterfaceInheritingObservationConvention.class.getSimpleName(), InterfaceInheritingObservationConvention.class),
+                        "io.micrometer.observation.ObservationConvention<Observation.Context>"),
+                Arguments.of(Paths.get("src/test/java/io/micrometer/docs/commons/search/convention/test6"),
+                        Named.of(ClassInheritingObservationConvention.class.getSimpleName(), ClassInheritingObservationConvention.class),
+                        "io.micrometer.observation.ObservationConvention<Observation.Context>")
         );
         // @formatter:on
     }

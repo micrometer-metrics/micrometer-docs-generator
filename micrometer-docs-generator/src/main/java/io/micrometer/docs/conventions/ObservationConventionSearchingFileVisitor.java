@@ -20,17 +20,21 @@ import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
+import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.observation.GlobalObservationConvention;
 import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
+import org.jboss.forge.roaster.model.source.TypeHolderSource;
 
 class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
@@ -40,9 +44,12 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
 
     private final Collection<ObservationConventionEntry> observationConventionEntries;
 
-    ObservationConventionSearchingFileVisitor(Pattern pattern, Collection<ObservationConventionEntry> observationConventionEntries) {
+    private final JavaSourceSearchHelper searchHelper;
+
+    ObservationConventionSearchingFileVisitor(Pattern pattern, Collection<ObservationConventionEntry> observationConventionEntries, JavaSourceSearchHelper searchHelper) {
         this.pattern = pattern;
         this.observationConventionEntries = observationConventionEntries;
+        this.searchHelper = searchHelper;
     }
 
     @Override
@@ -56,22 +63,50 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
 
         logger.debug("Parsing [" + path + "]");
         JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
-        if (!javaSource.isClass()) {
+        List<JavaClassSource> candidates = getCandidates(javaSource); ;
+        if (candidates.isEmpty()) {
             return FileVisitResult.CONTINUE;
         }
-        JavaClassSource classSource = (JavaClassSource) javaSource;
-        String classCanonicalName = classSource.getCanonicalName();
-        Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
-        for (String anInterface : classSource.getInterfaces()) {
-            if (isGlobalObservationConvention(anInterface)) {
-                this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.GLOBAL, contextClassName(classPattern, anInterface)));
-            }
-            else if (isLocalObservationConvention(anInterface)) {
-                this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.LOCAL, contextClassName(classPattern, anInterface)));
-            }
+
+        for (JavaClassSource candidate : candidates) {
+            process(candidate);
         }
         return FileVisitResult.CONTINUE;
     }
+
+    private List<JavaClassSource> getCandidates(JavaSource<?> javaSource) {
+        List<JavaClassSource> candidates = new ArrayList<>();
+        if (javaSource.isClass()) {
+            candidates.add((JavaClassSource) javaSource);
+        }
+        if (javaSource instanceof TypeHolderSource) {
+            for (JavaSource<?> nestedType : ((TypeHolderSource<?>) javaSource).getNestedTypes()) {
+                if (nestedType.isClass()) {
+                    candidates.add((JavaClassSource) nestedType);
+                }
+            }
+        }
+        return candidates;
+    }
+
+    private void process(JavaClassSource javaSource) {
+        String interfaceName = this.searchHelper.searchObservationConventionInterfaceName(javaSource);
+        if (interfaceName == null) {
+            return;
+        }
+
+        String classCanonicalName = javaSource.getCanonicalName();
+        Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
+        String conventionContextName = contextClassName(classPattern, interfaceName);
+
+        if (isGlobalObservationConvention(interfaceName)) {
+            this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.GLOBAL, conventionContextName));
+        }
+        else if (isLocalObservationConvention(interfaceName)) {
+            this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.LOCAL, conventionContextName));
+        }
+    }
+
 
     private String contextClassName(Pattern classPattern, String anInterface) {
         Matcher matcher = classPattern.matcher(anInterface);
