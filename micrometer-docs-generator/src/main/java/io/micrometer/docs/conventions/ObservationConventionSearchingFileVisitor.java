@@ -30,7 +30,6 @@ import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.observation.GlobalObservationConvention;
-import io.micrometer.observation.ObservationConvention;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
@@ -94,19 +93,20 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
         if (interfaceName == null) {
             return;
         }
-
-        String classCanonicalName = javaSource.getCanonicalName();
+        // the returned interface name is canonical name with generics.
+        // e.g. "io.micrometer.observation.ObservationConvention<Observation.Context>"
+        boolean isGlobal = interfaceName.startsWith(GlobalObservationConvention.class.getName());
+        String canonicalName = javaSource.getCanonicalName();
         Pattern classPattern = Pattern.compile("^.*ObservationConvention<(.*)>$");
         String conventionContextName = contextClassName(classPattern, interfaceName);
 
-        if (isGlobalObservationConvention(interfaceName)) {
-            this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.GLOBAL, conventionContextName));
+        if (isGlobal) {
+            this.observationConventionEntries.add(new ObservationConventionEntry(canonicalName, ObservationConventionEntry.Type.GLOBAL, conventionContextName));
         }
-        else if (isLocalObservationConvention(interfaceName)) {
-            this.observationConventionEntries.add(new ObservationConventionEntry(classCanonicalName, ObservationConventionEntry.Type.LOCAL, conventionContextName));
+        else {
+            this.observationConventionEntries.add(new ObservationConventionEntry(canonicalName, ObservationConventionEntry.Type.LOCAL, conventionContextName));
         }
     }
-
 
     private String contextClassName(Pattern classPattern, String anInterface) {
         Matcher matcher = classPattern.matcher(anInterface);
@@ -117,14 +117,6 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
             return "n/a";
         }
         return "";
-    }
-
-    private boolean isLocalObservationConvention(String interf) {
-        return interf.contains(ObservationConvention.class.getSimpleName()) || interf.contains(ObservationConvention.class.getCanonicalName());
-    }
-
-    private boolean isGlobalObservationConvention(String interf) {
-        return interf.contains(GlobalObservationConvention.class.getSimpleName()) || interf.contains(GlobalObservationConvention.class.getCanonicalName());
     }
 
 }
