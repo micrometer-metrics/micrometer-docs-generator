@@ -1,5 +1,6 @@
 plugins {
 	id 'idea'
+	id 'com.github.johnrengelman.shadow'
 }
 
 dependencies {
@@ -17,3 +18,12 @@ dependencies {
 	testImplementation 'org.mockito:mockito-core'
 }
 
+shadowJar {
+	archiveClassifier.set('')
+}
+
+jar {
+	manifest {
+		attributes 'Main-Class': 'io.micrometer.docs.DocsGeneratorCommand'
+	}
+}

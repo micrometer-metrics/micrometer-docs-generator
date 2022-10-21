@@ -17,6 +17,7 @@
 		classpath 'io.spring.nohttp:nohttp-gradle:0.0.10'
 		classpath 'org.gradle:test-retry-gradle-plugin:1.4.1'
 		classpath 'io.github.gradle-nexus:publish-plugin:1.1.0'
+		classpath 'gradle.plugin.com.github.johnrengelman:shadow:7.1.2'
 
 		constraints {
 			classpath('org.ow2.asm:asm:7.3.1') {
