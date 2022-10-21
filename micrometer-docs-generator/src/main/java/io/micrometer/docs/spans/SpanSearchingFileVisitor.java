@@ -75,8 +75,7 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
     public void onEnumConstant(JavaEnumSource enclosingEnumSource, EnumConstantSource enumConstant) {
         SpanEntry entry = parseSpan(enumConstant, enclosingEnumSource);
         spanEntries.add(entry);
-        logger.debug(
-                "Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
+        logger.debug("Found [" + entry.tagKeys.size() + "] tags and [" + entry.events.size() + "] events");
     }
 
     @Override
@@ -91,7 +90,9 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
                 .filter(spanEntry -> this.overrideEnumClassNames.contains(spanEntry.enclosingClass))
                 .collect(Collectors.toSet());
         if (!toRemove.isEmpty()) {
-            logger.debug("Will remove the span entries <" + toRemove.stream().map(s -> s.name).collect(Collectors.joining(",")) + "> because they are overridden");
+            logger.debug("Will remove the span entries <"
+                    + toRemove.stream().map(s -> s.name).collect(Collectors.joining(","))
+                    + "> because they are overridden");
         }
         this.spanEntries.removeAll(toRemove);
     }
@@ -108,7 +109,8 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
             messages.addAll(validatePrefixOnTags(prefix, spanEntry.getTagKeys(), enumName, enclosingClassName));
         }
         if (!messages.isEmpty()) {
-            StringBuilder sb = new StringBuilder("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");
+            StringBuilder sb = new StringBuilder(
+                    "The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");
             sb.append(System.lineSeparator()).append(System.lineSeparator());
             sb.append(messages.stream().collect(Collectors.joining(System.lineSeparator())));
             sb.append(System.lineSeparator()).append(System.lineSeparator());
@@ -125,7 +127,6 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         List<KeyNameEntry> additionalKeyNames = new ArrayList<>();
         List<EventEntry> events = new ArrayList<>();
         EnumConstantSource overridesDefaultSpanFrom = null;
-
 
         MethodSource<?> methodSource;
         Body enumConstantBody = enumConstant.getBody();
@@ -188,12 +189,16 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
         // prepare view model objects
 
+        // @formatter:off
         // if entry has overridesDefaultSpanFrom - read tags from that thing
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
         // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
+        // @formatter:on
         if (overridesDefaultSpanFrom != null && tags.isEmpty()) {
-            List<KeyNameEntry> lows = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom, "getLowCardinalityKeyNames");
-            List<KeyNameEntry> highs = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom, "getHighCardinalityKeyNames");
+            List<KeyNameEntry> lows = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom,
+                    "getLowCardinalityKeyNames");
+            List<KeyNameEntry> highs = getKeyNameEntriesFromEnumConstant(overridesDefaultSpanFrom,
+                    "getHighCardinalityKeyNames");
             tags.addAll(lows);
             tags.addAll(highs);
             tags.addAll(additionalKeyNames);
@@ -206,22 +211,25 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
         String name = nameInfo.getName();
         String nameOrigin = nameInfo.getNameOrigin();
 
-        return new SpanEntry(name, nameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, tags, events);
+        return new SpanEntry(name, nameOrigin, myEnum.getCanonicalName(), enumConstant.getName(), description, prefix,
+                tags, events);
     }
 
-
-    private List<KeyNameEntry> getKeyNameEntriesFromEnumConstant(EnumConstantSource enumConstantSource, String methodName) {
+    private List<KeyNameEntry> getKeyNameEntriesFromEnumConstant(EnumConstantSource enumConstantSource,
+            String methodName) {
         List<KeyNameEntry> tags = new ArrayList<>();
         MethodSource<?> methodSource = enumConstantSource.getBody().getMethod(methodName);
         if (methodSource != null) {
             JavaEnumSource enclosingEnumSource = enumConstantSource.getOrigin();
-            List<KeyNameEntry> keys = retrieveEnumValues(enclosingEnumSource, methodSource, KeyNameEnumConstantReader.INSTANCE);
+            List<KeyNameEntry> keys = retrieveEnumValues(enclosingEnumSource, methodSource,
+                    KeyNameEnumConstantReader.INSTANCE);
             tags.addAll(keys);
         }
         return tags;
     }
 
-    private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant, JavaEnumSource enclosingEnum) {
+    private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant,
+            JavaEnumSource enclosingEnum) {
         Body enumConstantBody = enumConstant.getBody();
 
         String name = "";
@@ -258,7 +266,8 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
             return new NameInfo(name, "");
         }
 
-        JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(enclosingEnum, conventionClassName);
+        JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(enclosingEnum,
+                conventionClassName);
         if (conventionClassSource == null) {
             throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
         }

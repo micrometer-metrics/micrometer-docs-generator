@@ -36,11 +36,13 @@ class TagsFromKeyNamesDocsFromSourcesTests {
 
         new SpansDocGenerator(root, Pattern.compile(".*"), "templates/spans.adoc.hbs", output).generate();
 
+        // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .doesNotContain("==== Parent Span")  // this should be overridden
                 .contains("**Span name** `%s` - since").contains("Fully qualified name of")
                 .contains("==== Should Return Tag Keys Only Span")
                 .contains("|`foooooo` _(required)_|Test foo");
+        // @formatter:on
     }
 
 }

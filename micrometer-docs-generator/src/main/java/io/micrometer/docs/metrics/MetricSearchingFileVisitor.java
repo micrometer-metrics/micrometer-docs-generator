@@ -96,14 +96,14 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
             messages.addAll(validatePrefixOnTags(prefix, allTags, enumName, enclosingClassName));
         }
         if (!messages.isEmpty()) {
-            StringBuilder sb = new StringBuilder("The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");
+            StringBuilder sb = new StringBuilder(
+                    "The following documented objects do not have properly prefixed tag keys according to their prefix() method. Please align the tag keys.");
             sb.append(System.lineSeparator()).append(System.lineSeparator());
             sb.append(messages.stream().collect(Collectors.joining(System.lineSeparator())));
             sb.append(System.lineSeparator()).append(System.lineSeparator());
             throw new IllegalStateException(sb.toString());
         }
     }
-
 
     private MetricEntry parseMetric(EnumConstantSource enumConstant, JavaEnumSource myEnum) {
         boolean isObservationDoc = myEnum.hasInterface(ObservationDocumentation.class);
@@ -175,21 +175,24 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
             events.addAll((retrieveEnumValues(myEnum, methodSource, EventEntryForMetricEnumConstantReader.INSTANCE)));
         }
 
-
         // prepare view model objects
 
         String name = nameInfo.getName();
         String nameOrigin = nameInfo.getNameOrigin();
         events.forEach(event -> event.setName(name + "." + event.getName()));
 
+        // @formatter:off
         // if entry has overridesDefaultSpanFrom - read tags from that thing
         // if entry has overridesDefaultSpanFrom AND getKeyNames() - we pick only the latter
         // if entry has overridesDefaultSpanFrom AND getAdditionalKeyNames() - we pick both
+        // @formatter:on
         if (overridesDefaultMetricFrom != null && lowCardinalityTags.isEmpty()) {
-            MethodSource<?> keyMethodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(), "getLowCardinalityKeyNames");
+            MethodSource<?> keyMethodSource = this.searchHelper.searchMethodSource(overridesDefaultMetricFrom.getBody(),
+                    "getLowCardinalityKeyNames");
             if (keyMethodSource != null) {
                 JavaEnumSource enclosingEnumSource = overridesDefaultMetricFrom.getOrigin();
-                List<KeyNameEntry> lows = retrieveEnumValues(enclosingEnumSource, keyMethodSource, KeyNameEnumConstantReader.INSTANCE);
+                List<KeyNameEntry> lows = retrieveEnumValues(enclosingEnumSource, keyMethodSource,
+                        KeyNameEnumConstantReader.INSTANCE);
                 lowCardinalityTags.addAll(lows);
             }
         }
@@ -208,11 +211,12 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
             metricInfos.add(new MetricInfo(ltkMetricName, nameOrigin, Type.LONG_TASK_TIMER, ""));
         }
 
-        return new MetricEntry(myEnum.getCanonicalName(), enumConstant.getName(), description, prefix, lowCardinalityTags,
-                highCardinalityTags, events, metricInfos);
+        return new MetricEntry(myEnum.getCanonicalName(), enumConstant.getName(), description, prefix,
+                lowCardinalityTags, highCardinalityTags, events, metricInfos);
     }
 
-    private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant, JavaEnumSource enclosingEnum) {
+    private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant,
+            JavaEnumSource enclosingEnum) {
         Body enumConstantBody = enumConstant.getBody();
 
         String name = "";
@@ -223,7 +227,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         if (methodSource != null) {
             name = ParsingUtils.readStringReturnValue(methodSource);
         }
-
 
         if (!isObservationDoc) {
             return new NameInfo(name, "");
@@ -242,7 +245,8 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
             return new NameInfo(name, "");
         }
 
-        JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(enclosingEnum, conventionClassName);
+        JavaSource<?> conventionClassSource = this.searchHelper.searchReferencingClass(enclosingEnum,
+                conventionClassName);
         if (conventionClassSource == null) {
             throw new RuntimeException("Cannot find the source java file for " + conventionClassName);
         }

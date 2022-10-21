@@ -36,6 +36,7 @@ class NoOverridingOfTagsDocsFromSourcesTests {
 
         new SpansDocGenerator(root, Pattern.compile(".*"), "templates/spans.adoc.hbs", output).generate();
 
+        // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .contains("==== Async Annotation Span").contains("> Span that wraps a")
                 .contains("**Span name** `%s` - since").contains("Fully qualified name of")
@@ -50,6 +51,7 @@ class NoOverridingOfTagsDocsFromSourcesTests {
                 .contains("Events Having Observation Span")
                 .contains("|`start annotation`|Start event.")
                 .contains("|`stop %s %s foo`|Stop event. (since the name contains `%s` the final value will be resolved at runtime)");
+        // @formatter:on
     }
 
 }

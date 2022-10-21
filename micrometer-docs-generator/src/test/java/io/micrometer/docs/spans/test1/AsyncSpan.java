@@ -15,7 +15,6 @@
  */
 package io.micrometer.docs.spans.test1;
 
-
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.tracing.docs.SpanDocumentation;
 

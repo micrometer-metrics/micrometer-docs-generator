@@ -43,8 +43,11 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final List<MetricInfo> metricInfos;
 
-    MetricEntry(String enclosingClass, String enumName, String description, String prefix, List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames, List<EventEntry> events, List<MetricInfo> metricInfos) {
-        Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <" + enclosingClass + "#" + enumName + ">");
+    MetricEntry(String enclosingClass, String enumName, String description, String prefix,
+            List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames,
+            List<EventEntry> events, List<MetricInfo> metricInfos) {
+        Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <"
+                + enclosingClass + "#" + enumName + ">");
         this.enclosingClass = enclosingClass;
         this.enumName = enumName;
         this.description = description;
@@ -57,15 +60,21 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         MetricEntry that = (MetricEntry) o;
-        return Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName) && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix) && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames) && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames);
+        return Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName)
+                && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix)
+                && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames)
+                && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(enclosingClass, enumName, description, prefix, lowCardinalityKeyNames, highCardinalityKeyNames);
+        return Objects.hash(enclosingClass, enumName, description, prefix, lowCardinalityKeyNames,
+                highCardinalityKeyNames);
     }
 
     @Override
@@ -89,7 +98,6 @@ class MetricEntry implements Comparable<MetricEntry> {
         return this.prefix;
     }
 
-
     public List<KeyNameEntry> getLowCardinalityKeyNames() {
         return this.lowCardinalityKeyNames;
     }
@@ -107,13 +115,16 @@ class MetricEntry implements Comparable<MetricEntry> {
     }
 
     // Handlebars require the method name to be "isX" or "getX". see JavaBeanValueResolver
-    // TODO: this should be handled by template by checking nested types satisfies the condition.
+    // TODO: this should be handled by template by checking nested types satisfies the
+    // condition.
     // If there is no native way to do it, may need to have a helper function.
     public boolean isTimerMetric() {
-        return this.metricInfos.stream().anyMatch(info -> Type.TIMER.equals(info.getType()) || Type.LONG_TASK_TIMER.equals(info.getType()));
+        return this.metricInfos.stream()
+                .anyMatch(info -> Type.TIMER.equals(info.getType()) || Type.LONG_TASK_TIMER.equals(info.getType()));
     }
 
     public static class MetricInfo {
+
         final String name;
 
         final String nameOrigin;
@@ -159,4 +170,5 @@ class MetricEntry implements Comparable<MetricEntry> {
         }
 
     }
+
 }

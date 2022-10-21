@@ -21,7 +21,6 @@ import io.micrometer.docs.commons.search.test4.sub.DifferentPackageEnum;
 import static io.micrometer.docs.commons.search.test4.MyService.MyAnotherEnum.HELLO;
 
 /**
- *
  * @author Tadaya Tsuyukubo
  */
 public class MyService {
@@ -47,11 +46,15 @@ public class MyService {
     }
 
     enum MyEnum {
+
         FOO
+
     }
 
     enum MyAnotherEnum {
+
         HELLO
+
     }
 
 }

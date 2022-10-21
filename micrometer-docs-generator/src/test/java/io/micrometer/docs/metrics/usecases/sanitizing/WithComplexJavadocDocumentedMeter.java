@@ -15,13 +15,13 @@
  */
 package io.micrometer.docs.metrics.usecases.sanitizing;
 
-
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.docs.MeterDocumentation;
 
 enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
 
+    // @formatter:off
     /**
      * This javadoc includes sanitized HTML elements and should result in multi-line output,
      * except when a line is just there for wrapping like this one.
@@ -43,6 +43,7 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
      * @return nothing
      * @param none no parameter
      */
+    // @formatter:on
     HTML {
         @Override
         public String getName() {
@@ -55,12 +56,14 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
         }
     },
 
+    // @formatter:off
     /**
      * This javadoc includes sanitized taglets elements which should all result in a single line:
      * This is code: {@code someCode}.
      * This is a simple link: {@linkplain #HTML}.
      * This is a complex link with alias text: {@link io.micrometer.docs.commons.utils.AsciidocUtils#simpleHtmlToAsciidoc(String, boolean) some custom alias}.
      */
+    // @formatter:on
     TAGLETS {
         @Override
         public String getName() {
@@ -73,9 +76,11 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
         }
     },
 
+    // @formatter:off
     /**
      * Single line with<br/>inline new line then an admonition.<strong>This is an admonition with *bold* and _italics_.</strong> This text is not part of the admonition.
      */
+    // @formatter:on
     INLINE_HTML_TAGS {
         @Override
         public String getName() {
@@ -88,9 +93,11 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
         }
     },
 
+    // @formatter:off
     /**
      * This one demonstrates javadoc extraction and sanitization in tags.
      */
+    // @formatter:on
     WITH_TAGS {
         @Override
         public String getName() {
@@ -110,6 +117,7 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
 
     enum ComplexJavadocTags implements KeyName {
 
+        // @formatter:off
         /**
          * This tag javadoc includes sanitized HTML elements and should result in multi-line output:
          * <p>
@@ -126,6 +134,7 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
          *     <li>an unordered list</li>
          * </ul>
          */
+        // @formatter:on
         TAG_HTML {
             @Override
             public String asString() {
@@ -133,12 +142,14 @@ enum WithComplexJavadocMeterDocumentation implements MeterDocumentation {
             }
         },
 
+        // @formatter:off
         /**
          * This tag javadoc includes sanitized taglets elements which should all result in a single line:
          * This is code: {@code someCode}.
          * This is a simple link: {@link #HTML}.
          * This is a link with alias text: {@link #HTML alias}.
          */
+        // @formatter:on
         TAG_TAGLETS {
             @Override
             public String asString() {

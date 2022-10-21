@@ -43,21 +43,21 @@ class ParsingUtilsReadStringReturnValueTests {
 
     static Stream<Arguments> readStringReturnValue() {
         JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsReadStringReturnValueTests.class);
-        JavaClassSource returnValueClass = (JavaClassSource) classSource.getNestedType(ReturnValueClass.class.getSimpleName());
+        JavaClassSource returnValueClass = (JavaClassSource) classSource
+                .getNestedType(ReturnValueClass.class.getSimpleName());
         MethodSource<?> stringLiteralSource = returnValueClass.getMethod("stringLiteral");
         MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
         MethodSource<?> typeLiteralSource = returnValueClass.getMethod("typeLiteralString");
         MethodSource<?> qualifiedNameSource = returnValueClass.getMethod("qualifiedNameLiteralEnum");
 
-        return Stream.of(
-                Arguments.of(Named.of("stringLiteral", stringLiteralSource), "my-string"),
+        return Stream.of(Arguments.of(Named.of("stringLiteral", stringLiteralSource), "my-string"),
                 Arguments.of(Named.of("booleanLiteral", booleanLiteralSource), "true"),
                 Arguments.of(Named.of("typeLiteral", typeLiteralSource), "String"),
-                Arguments.of(Named.of("qualifedNameLiteral", qualifiedNameSource), "BAR")
-        );
+                Arguments.of(Named.of("qualifedNameLiteral", qualifiedNameSource), "BAR"));
     }
 
     static class ReturnValueClass {
+
         String stringLiteral() {
             return "my-string";
         }
@@ -75,10 +75,13 @@ class ParsingUtilsReadStringReturnValueTests {
         MyEnum qualifiedNameLiteralEnum() {
             return MyEnum.BAR;
         }
+
     }
 
     enum MyEnum {
+
         FOO, BAR
+
     }
 
 }

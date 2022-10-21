@@ -42,4 +42,5 @@ public class HandlebarsUtils {
 
         return handlebars;
     }
+
 }

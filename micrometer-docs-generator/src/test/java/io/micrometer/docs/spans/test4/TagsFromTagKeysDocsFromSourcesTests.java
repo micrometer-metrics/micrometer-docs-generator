@@ -36,8 +36,10 @@ class TagsFromIndependentEnumDocsFromSourcesTests {
 
         new SpansDocGenerator(root, Pattern.compile(".*"), "templates/spans.adoc.hbs", output).generate();
 
+        // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .contains("|`foo` _(required)_|My FOO enum");
+        // @formatter:on
     }
 
 }

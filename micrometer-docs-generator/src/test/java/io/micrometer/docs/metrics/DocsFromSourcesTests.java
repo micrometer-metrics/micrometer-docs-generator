@@ -31,15 +31,20 @@ class DocsFromSourcesTests {
     void should_build_a_table_out_of_enum_tag_key() throws IOException {
         Path output = Paths.get(".", "build", "_metrics.adoc");
 
-        //FIXME consider isolating classes relevant to this test into their own package and use that as source root
-        //for now only consider the java classes at the root of package io.micrometer.docs.metrics
+        // FIXME consider isolating classes relevant to this test into their own package
+        // and use that as source root
+        // for now only consider the java classes at the root of package
+        // io.micrometer.docs.metrics
         File sourceRoot = new File(".", "src/test");
-        new MetricsDocGenerator(sourceRoot, Pattern.compile(".*/docs/metrics/[a-zA-Z]+\\.java"), "templates/metrics.adoc.hbs", output).generate();
+        new MetricsDocGenerator(sourceRoot, Pattern.compile(".*/docs/metrics/[a-zA-Z]+\\.java"),
+                "templates/metrics.adoc.hbs", output).generate();
 
+        // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))
                 .contains("==== Async Annotation")
                 .contains("____" + System.lineSeparator() + "Observation that wraps a")
-                .contains("**Metric name** `%s` - since").contains("Fully qualified name of")
+                .contains("**Metric name** `%s` - since")
+                .contains("Fully qualified name of")
                 .contains("|`class` _(required)_|Class name where a method got annotated with @Async.")
                 .contains("|`class2`|Class name where a method got annotated.")
                 .contains("==== Annotation New Or Continue")
@@ -61,6 +66,7 @@ class DocsFromSourcesTests {
                 .contains("> Stop event.")
                 .contains("**Metric name** `foo.stop`. **Type** `counter`.")
                 .doesNotContain("docs.metrics.usecases"); //smoke test that usecases have been excluded
+        // @formatter:on
     }
 
 }

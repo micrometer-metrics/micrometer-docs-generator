@@ -29,6 +29,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ObservationConventionEntryTests {
+
     File output = new File(".", "build/conventions");
 
     @BeforeEach
@@ -36,11 +37,13 @@ class ObservationConventionEntryTests {
         output.mkdirs();
     }
 
-    //TODO: Write other test cases
+    // TODO: Write other test cases
     @Test
     void should_save_conventions_as_adoc_table() throws IOException {
-        ObservationConventionEntry localEntry = new ObservationConventionEntry("foo.bar.LocalBaz", ObservationConventionEntry.Type.LOCAL, "Observation.Context");
-        ObservationConventionEntry globalEntry = new ObservationConventionEntry("foo.bar.GlobalBaz", ObservationConventionEntry.Type.GLOBAL, "Foo");
+        ObservationConventionEntry localEntry = new ObservationConventionEntry("foo.bar.LocalBaz",
+                ObservationConventionEntry.Type.LOCAL, "Observation.Context");
+        ObservationConventionEntry globalEntry = new ObservationConventionEntry("foo.bar.GlobalBaz",
+                ObservationConventionEntry.Type.GLOBAL, "Foo");
         List<ObservationConventionEntry> globals = Collections.singletonList(globalEntry);
         List<ObservationConventionEntry> locals = Collections.singletonList(localEntry);
 
@@ -54,8 +57,8 @@ class ObservationConventionEntryTests {
 
         String result = handlebars.compile(template).apply(map);
 
-        BDDAssertions.then(result)
-                .contains("|`foo.bar.GlobalBaz`|`Foo`")
+        BDDAssertions.then(result).contains("|`foo.bar.GlobalBaz`|`Foo`")
                 .contains("|`foo.bar.LocalBaz`|`Observation.Context`");
     }
+
 }

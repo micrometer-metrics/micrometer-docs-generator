@@ -64,7 +64,9 @@ class ObservationConventionEntry implements Comparable<ObservationConventionEntr
     }
 
     public enum Type {
+
         GLOBAL, LOCAL
+
     }
 
 }

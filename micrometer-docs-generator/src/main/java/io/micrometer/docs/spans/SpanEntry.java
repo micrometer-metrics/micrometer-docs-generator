@@ -59,10 +59,16 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         SpanEntry spanEntry = (SpanEntry) o;
-        return Objects.equals(name, spanEntry.name) && Objects.equals(nameOrigin, spanEntry.nameOrigin) && Objects.equals(enclosingClass, spanEntry.enclosingClass) && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description) && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys) && Objects.equals(events, spanEntry.events);
+        return Objects.equals(name, spanEntry.name) && Objects.equals(nameOrigin, spanEntry.nameOrigin)
+                && Objects.equals(enclosingClass, spanEntry.enclosingClass)
+                && Objects.equals(enumName, spanEntry.enumName) && Objects.equals(description, spanEntry.description)
+                && Objects.equals(prefix, spanEntry.prefix) && Objects.equals(tagKeys, spanEntry.tagKeys)
+                && Objects.equals(events, spanEntry.events);
     }
 
     @Override
@@ -77,7 +83,8 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     public String getSpanTitle() {
         // TODO: convert to handlebar helper
-        String name = Arrays.stream(this.enumName.replace("_", " ").split(" ")).map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
+        String name = Arrays.stream(this.enumName.replace("_", " ").split(" "))
+                .map(s -> StringUtils.capitalize(s.toLowerCase(Locale.ROOT))).collect(Collectors.joining(" "));
         if (!name.toLowerCase(Locale.ROOT).endsWith("span")) {
             return name + " Span";
         }
@@ -133,4 +140,5 @@ class SpanEntry implements Comparable<SpanEntry> {
     public List<EventEntry> getEvents() {
         return this.events;
     }
+
 }

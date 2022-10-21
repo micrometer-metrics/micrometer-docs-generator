@@ -15,7 +15,6 @@
  */
 package io.micrometer.docs.metrics;
 
-
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationConvention;
@@ -114,6 +113,7 @@ enum AsyncObservation implements ObservationDocumentation {
         public boolean supportsContext(Observation.Context context) {
             return true;
         }
+
     }
 
     static class MyDynamicConvention implements ObservationConvention<Observation.Context> {
@@ -127,6 +127,7 @@ enum AsyncObservation implements ObservationDocumentation {
         public boolean supportsContext(Observation.Context context) {
             return true;
         }
+
     }
 
     enum AsyncSpanTags implements KeyName {

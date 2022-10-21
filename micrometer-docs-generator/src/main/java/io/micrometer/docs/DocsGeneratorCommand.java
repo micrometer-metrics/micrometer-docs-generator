@@ -81,7 +81,8 @@ public class DocsGeneratorCommand implements Runnable {
 
     public static void main(String... args) {
         int exitCode = new CommandLine(new DocsGeneratorCommand()).execute(args);
-        // Do not call System.exit here since exec-maven-plugin's "exec:java" halts the maven run
+        // Do not call System.exit here since exec-maven-plugin's "exec:java" halts the
+        // maven run
         if (exitCode != ExitCode.OK) {
             throw new IllegalStateException("DocsGeneratorCommand failed.");
         }
@@ -118,7 +119,8 @@ public class DocsGeneratorCommand implements Runnable {
 
     void generateConventionsDoc() {
         Path output = resolveAndPrepareOutputPath(this.conventionsOutput);
-        new ObservationConventionsDocGenerator(this.projectRoot, this.inclusionPattern, this.conventionsTemplate, output).generate();
+        new ObservationConventionsDocGenerator(this.projectRoot, this.inclusionPattern, this.conventionsTemplate,
+                output).generate();
     }
 
     private Path resolveAndPrepareOutputPath(Path specified) {
@@ -144,8 +146,8 @@ public class DocsGeneratorCommand implements Runnable {
         return this.outputDir.resolve(specified);
     }
 
-
     static class Options {
+
         @Option(names = "--metrics", description = "Generate metrics documentation")
         private boolean metrics;
 
@@ -164,4 +166,5 @@ public class DocsGeneratorCommand implements Runnable {
         }
 
     }
+
 }

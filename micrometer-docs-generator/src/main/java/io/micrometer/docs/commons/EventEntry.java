@@ -59,4 +59,5 @@ public class EventEntry implements Comparable<EventEntry> {
     public void setDescription(String description) {
         this.description = description;
     }
+
 }

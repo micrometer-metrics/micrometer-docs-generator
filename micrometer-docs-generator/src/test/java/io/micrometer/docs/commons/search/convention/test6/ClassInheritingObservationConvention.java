@@ -24,4 +24,5 @@ public class ClassInheritingObservationConvention extends ParentClass {
     public boolean supportsContext(Context context) {
         return false;
     }
+
 }

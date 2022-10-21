@@ -54,9 +54,11 @@ public class MetricsDocGenerator {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is ["
+                + this.inclusionPattern + "]");
 
-        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(this.projectRoot.toPath(), this.inclusionPattern);
+        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(this.projectRoot.toPath(),
+                this.inclusionPattern);
 
         Collection<MetricEntry> entries = new TreeSet<>();
         FileVisitor<Path> fv = new MetricSearchingFileVisitor(this.inclusionPattern, entries, searchHelper);

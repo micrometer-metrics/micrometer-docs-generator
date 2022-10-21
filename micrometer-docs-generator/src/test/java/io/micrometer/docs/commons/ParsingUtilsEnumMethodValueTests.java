@@ -51,6 +51,7 @@ class ParsingUtilsEnumMethodValueTests {
     }
 
     enum MyEnum {
+
         FOO {
             // no method defined
         },
@@ -60,5 +61,7 @@ class ParsingUtilsEnumMethodValueTests {
                 return "toString-override";
             }
         }
+
     }
+
 }

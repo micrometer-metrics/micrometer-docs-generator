@@ -77,7 +77,9 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
 
         logger.debug("Checking [" + javaSource.getName() + "]");
         if (enumSource.getMethods().size() > 0) {
-            String message = String.format("The enum constants can define methods but the container enum class(%s) cannot define methods.", enumSource.getName());
+            String message = String.format(
+                    "The enum constants can define methods but the container enum class(%s) cannot define methods.",
+                    enumSource.getName());
             throw new RuntimeException(message);
         }
         if (enumSource.getEnumConstants().size() == 0) {
@@ -96,24 +98,31 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
 
     public abstract void onEnumConstant(JavaEnumSource enclosingEnumSource, EnumConstantSource enumConstant);
 
-    protected void validateNameOrConvention(String name, @Nullable String conventionClassName, JavaEnumSource enclosingEnum) {
+    protected void validateNameOrConvention(String name, @Nullable String conventionClassName,
+            JavaEnumSource enclosingEnum) {
         if (StringUtils.hasText(name)) {
             if (conventionClassName != null) {
-                throw new IllegalStateException("You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in [" + enclosingEnum.getName() + "] class");
+                throw new IllegalStateException(
+                        "You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in ["
+                                + enclosingEnum.getName() + "] class");
             }
         }
         else {
             if (conventionClassName == null) {
-                throw new IllegalStateException("You have to set either [getName()] or [getDefaultConvention()] methods. In case of [" + enclosingEnum.getName() + "] you haven't defined any");
+                throw new IllegalStateException(
+                        "You have to set either [getName()] or [getDefaultConvention()] methods. In case of ["
+                                + enclosingEnum.getName() + "] you haven't defined any");
             }
         }
     }
 
-    protected <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource, EntryEnumConstantReader<?> converter) {
+    protected <T> List<T> retrieveEnumValues(JavaSource<?> enclosingJavaSource, MethodSource<?> methodSource,
+            EntryEnumConstantReader<?> converter) {
         List<T> result = new ArrayList<>();
         Set<String> enumClassNames = ParsingUtils.readEnumClassNames(methodSource);
         for (String enumClassName : enumClassNames) {
-            JavaSource<?> enclosingEnumClass = this.searchHelper.searchReferencingClass(enclosingJavaSource, enumClassName);
+            JavaSource<?> enclosingEnumClass = this.searchHelper.searchReferencingClass(enclosingJavaSource,
+                    enumClassName);
             if (enclosingEnumClass == null || !enclosingEnumClass.isEnum()) {
                 throw new IllegalStateException("Cannot find enum class with name [" + enumClassName + "]");
             }
@@ -124,19 +133,21 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
 
     /**
      * Check given tags start with the given prefix.
-     *
      * @param prefix tag name prefix
      * @param tags tags
      * @param enumName the enum constant
      * @param enclosingClassName the enclosing enum class name
      * @return list of invalid tag messages
      */
-    protected List<String> validatePrefixOnTags(String prefix, List<KeyNameEntry> tags, String enumName, String enclosingClassName) {
+    protected List<String> validatePrefixOnTags(String prefix, List<KeyNameEntry> tags, String enumName,
+            String enclosingClassName) {
         List<String> messages = new ArrayList<>();
         for (KeyNameEntry tag : tags) {
             String tagName = tag.getName();
             if (!StringUtils.hasText(tagName) || !tagName.startsWith(prefix)) {
-                String message = String.format("\tName <%s> in class <%s> has the following prefix <%s> and following invalid tag keys %s", enumName, enclosingClassName, prefix, tagName);
+                String message = String.format(
+                        "\tName <%s> in class <%s> has the following prefix <%s> and following invalid tag keys %s",
+                        enumName, enclosingClassName, prefix, tagName);
                 messages.add(message);
             }
         }
@@ -144,6 +155,7 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
     }
 
     protected static class NameInfo {
+
         private final String name;
 
         private final String nameOrigin;
@@ -160,6 +172,7 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
         public String getNameOrigin() {
             return this.nameOrigin;
         }
+
     }
 
 }

@@ -16,10 +16,12 @@
 
 package io.micrometer.docs.commons.search.convention.test4;
 
-public class NoImportObservationConvention implements io.micrometer.observation.ObservationConvention<io.micrometer.observation.Observation.Context> {
+public class NoImportObservationConvention
+        implements io.micrometer.observation.ObservationConvention<io.micrometer.observation.Observation.Context> {
 
     @Override
     public boolean supportsContext(io.micrometer.observation.Observation.Context context) {
         return false;
     }
+
 }

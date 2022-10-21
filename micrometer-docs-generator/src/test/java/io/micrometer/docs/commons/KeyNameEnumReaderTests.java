@@ -57,12 +57,11 @@ class KeyNameEnumReaderTests {
                 // enum source, name, description
                 Arguments.of(Named.of("FOO", foo), "foo", "Foo title", true),
                 Arguments.of(Named.of("BAR", bar), "bar", "Bar title", false),
-                Arguments.of(Named.of("BAZ", baz), "baz", "Baz title", true)
-        );
+                Arguments.of(Named.of("BAZ", baz), "baz", "Baz title", true));
     }
 
-
     enum MyKeyNameEnum implements KeyName {
+
         /**
          * Foo title
          */
@@ -101,5 +100,7 @@ class KeyNameEnumReaderTests {
                 return true;
             }
         }
+
     }
+
 }

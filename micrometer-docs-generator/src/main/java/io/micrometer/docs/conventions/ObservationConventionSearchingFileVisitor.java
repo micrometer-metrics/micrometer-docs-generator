@@ -37,7 +37,8 @@ import org.jboss.forge.roaster.model.source.TypeHolderSource;
 
 class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ObservationConventionSearchingFileVisitor.class);
+    private static final InternalLogger logger = InternalLoggerFactory
+            .getInstance(ObservationConventionSearchingFileVisitor.class);
 
     private final Pattern pattern;
 
@@ -45,7 +46,8 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
 
     private final JavaSourceSearchHelper searchHelper;
 
-    ObservationConventionSearchingFileVisitor(Pattern pattern, Collection<ObservationConventionEntry> observationConventionEntries, JavaSourceSearchHelper searchHelper) {
+    ObservationConventionSearchingFileVisitor(Pattern pattern,
+            Collection<ObservationConventionEntry> observationConventionEntries, JavaSourceSearchHelper searchHelper) {
         this.pattern = pattern;
         this.observationConventionEntries = observationConventionEntries;
         this.searchHelper = searchHelper;
@@ -62,7 +64,8 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
 
         logger.debug("Parsing [" + path + "]");
         JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
-        List<JavaClassSource> candidates = getCandidates(javaSource); ;
+        List<JavaClassSource> candidates = getCandidates(javaSource);
+        ;
         if (candidates.isEmpty()) {
             return FileVisitResult.CONTINUE;
         }
@@ -101,10 +104,12 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
         String conventionContextName = contextClassName(classPattern, interfaceName);
 
         if (isGlobal) {
-            this.observationConventionEntries.add(new ObservationConventionEntry(canonicalName, ObservationConventionEntry.Type.GLOBAL, conventionContextName));
+            this.observationConventionEntries.add(new ObservationConventionEntry(canonicalName,
+                    ObservationConventionEntry.Type.GLOBAL, conventionContextName));
         }
         else {
-            this.observationConventionEntries.add(new ObservationConventionEntry(canonicalName, ObservationConventionEntry.Type.LOCAL, conventionContextName));
+            this.observationConventionEntries.add(new ObservationConventionEntry(canonicalName,
+                    ObservationConventionEntry.Type.LOCAL, conventionContextName));
         }
     }
 

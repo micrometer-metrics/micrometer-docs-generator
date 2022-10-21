@@ -53,7 +53,8 @@ import org.jboss.forge.roaster.model.source.MethodSource;
 import org.jboss.forge.roaster.model.source.TypeHolderSource;
 
 /**
- * Helper class to search any {@link JavaSource} from java files under specified directory.
+ * Helper class to search any {@link JavaSource} from java files under specified
+ * directory.
  *
  * @author Tadaya Tsuyukubo
  */
@@ -75,8 +76,7 @@ public class JavaSourceSearchHelper {
 
     /**
      * This map holds keys with enclosing classes and their nested classes using qualified
-     * name.
-     * <pre>
+     * name. <pre>
      * Example:
      *    key: io.micrometer.Foo  (enclosing class in "io/micrometer/Foo.java" file)
      *    key: io.micrometer.Foo$Bar (nested class in "io/micrometer/Foo.java" file)
@@ -85,13 +85,13 @@ public class JavaSourceSearchHelper {
     private final Map<String, JavaSourcePathInfo> pathInfoMap;
 
     /**
-     * Canonical class name to qualified class names. (note: in rare case, different qualified
-     * name can be same canonical name. (ref <a href="https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.7">Java Spec</a>)
-     * This map is useful for resolving import statement referenced classes since they use
-     * canonical names.
+     * Canonical class name to qualified class names. (note: in rare case, different
+     * qualified name can be same canonical name. (ref <a href=
+     * "https://docs.oracle.com/javase/specs/jls/se11/html/jls-6.html#jls-6.7">Java
+     * Spec</a>) This map is useful for resolving import statement referenced classes
+     * since they use canonical names.
      */
     private final Map<String, Set<String>> qualifiedClassNames = new HashMap<>();
-
 
     public static JavaSourceSearchHelper create(Path projectRoot, Pattern inclusionPattern) {
         PathCollectingFileVisitor visitor = new PathCollectingFileVisitor(inclusionPattern);
@@ -131,10 +131,8 @@ public class JavaSourceSearchHelper {
         }
     }
 
-
     /**
      * Search a {@link JavaSource} by qualified class name.
-     *
      * @param qualifiedName a qualified class name
      * @return matched {@link JavaSource} or {@code null} if not found.
      */
@@ -142,7 +140,7 @@ public class JavaSourceSearchHelper {
     public JavaSource<?> search(String qualifiedName) {
         boolean isGeneric = qualifiedName.contains("<");
         String resolvedName = qualifiedName;
-        if (isGeneric) {  // TODO: need to handle generics here??
+        if (isGeneric) { // TODO: need to handle generics here??
             resolvedName = qualifiedName.substring(0, qualifiedName.indexOf("<"));
         }
 
@@ -155,7 +153,6 @@ public class JavaSourceSearchHelper {
 
     /**
      * Search the class which is referenced by the enclosing class.
-     *
      * @param enclosingJavaSource enclosing java class source
      * @param className search target class name. This cannot be an enum constant name.
      * @return matched java source or {@code null}
@@ -206,7 +203,7 @@ public class JavaSourceSearchHelper {
         // search from import
         for (Import anImport : enclosingJavaSource.getImports()) {
             if (anImport.isStatic()) {
-                continue;  // for class reference, static import doesn't apply
+                continue; // for class reference, static import doesn't apply
             }
             if (anImport.isWildcard()) {
                 // search the package
@@ -243,7 +240,7 @@ public class JavaSourceSearchHelper {
         // TODO: inefficient algorithm for now.
         for (String qualifiedName : this.pathInfoMap.keySet()) {
             if (!qualifiedName.contains(".")) {
-                continue;  // exclude top level classes
+                continue; // exclude top level classes
             }
             // when target is a nested class, only look for the nested class entries
             if (className.contains("$") && !qualifiedName.contains("$")) {
@@ -262,17 +259,19 @@ public class JavaSourceSearchHelper {
 
     /**
      * Search an enum constant referenced by the enclosing class.
-     *
      * @param enclosingJavaSource enclosing class {@link JavaSource}.
-     * @param expression target enum constant. This can be {@link QualifiedName}, such as {@code MyEnum.FOO} or {@link SimpleName}, such as {@code FOO} for static imported one.
+     * @param expression target enum constant. This can be {@link QualifiedName}, such as
+     * {@code MyEnum.FOO} or {@link SimpleName}, such as {@code FOO} for static imported
+     * one.
      * @return an enum constant source or {@code null} if not found.
      */
     @Nullable
     public EnumConstantSource searchReferencingEnumConstant(JavaSource<?> enclosingJavaSource, Expression expression) {
         if (expression instanceof QualifiedName) {
-            // e.g.  MyEnum.FOO
+            // e.g. MyEnum.FOO
             QualifiedName qualifiedName = (QualifiedName) expression;
-            String qualifier = qualifiedName.getQualifier().getFullyQualifiedName(); // e.g. MyEnum
+            String qualifier = qualifiedName.getQualifier().getFullyQualifiedName(); // e.g.
+                                                                                     // MyEnum
             String enumValue = qualifiedName.getName().getIdentifier();
             JavaSource<?> javaSource = searchReferencingClass(enclosingJavaSource, qualifier);
             if (javaSource == null) {
@@ -284,16 +283,18 @@ public class JavaSourceSearchHelper {
             return ((JavaEnumSource) javaSource).getEnumConstant(enumValue);
         }
         else if (expression instanceof SimpleName) {
-            // The enum doesn't have qualifier, which means it is static imported. e.g. FOO
+            // The enum doesn't have qualifier, which means it is static imported. e.g.
+            // FOO
             String enumConstantName = ((SimpleName) expression).getIdentifier();
 
             // search from import
             for (Import anImport : enclosingJavaSource.getImports()) {
                 if (!anImport.isStatic()) {
-                    continue;  // enum must be static imported
+                    continue; // enum must be static imported
                 }
                 if (anImport.isWildcard()) {
-                    // getPackage() returns "package name" + "enum class name" in this case
+                    // getPackage() returns "package name" + "enum class name" in this
+                    // case
                     String enumClassCanonicalName = anImport.getPackage();
                     JavaSource<?> javaSource = searchByCanonicalName(enumClassCanonicalName);
                     if (javaSource == null || !javaSource.isEnum()) {
@@ -339,8 +340,8 @@ public class JavaSourceSearchHelper {
     }
 
     /**
-     * Search the method source in the hierarchy(parents/interfaces) of the given {@link JavaSource}.
-     *
+     * Search the method source in the hierarchy(parents/interfaces) of the given
+     * {@link JavaSource}.
      * @param javaSource a {@link JavaSource} to search from
      * @param methodName target method name
      * @return found {@link MethodSource} or {@code null} if not found
@@ -449,13 +450,14 @@ public class JavaSourceSearchHelper {
     }
 
     /**
-     * Hierarchically search the implementing name of {@link ObservationConvention} or {@link GlobalObservationConvention}.
+     * Hierarchically search the implementing name of {@link ObservationConvention} or
+     * {@link GlobalObservationConvention}.
      * <p>
      * NOTE: the observation convention has generics and returning name will contain the
      * generics information.
-     *
      * @param javaSource enclosing java source
-     * @return name of the convention class with generics. (e.g. "io.micrometer.observation.ObservationConvention&lt;KafkaRecordReceiverContext&gt;")
+     * @return name of the convention class with generics. (e.g.
+     * "io.micrometer.observation.ObservationConvention&lt;KafkaRecordReceiverContext&gt;")
      */
     @Nullable
     public String searchObservationConventionInterfaceName(JavaSource<?> javaSource) {
@@ -502,9 +504,8 @@ public class JavaSourceSearchHelper {
             }
         }
 
-        return null;  // not found
+        return null; // not found
     }
-
 
     static class PathCollectingFileVisitor extends SimpleFileVisitor<Path> {
 
@@ -560,9 +561,11 @@ public class JavaSourceSearchHelper {
                 }
             }
         }
+
     }
 
     static class JavaSourcePathInfo {
+
         final Path path;
 
         // e.g. "io.micrometer.Foo.Bar.Baz"
@@ -612,6 +615,7 @@ public class JavaSourceSearchHelper {
             }
             return null;
         }
+
     }
 
 }

@@ -117,6 +117,7 @@ enum AnnotationSpan implements ObservationDocumentation {
         public boolean supportsContext(Observation.Context context) {
             return false;
         }
+
     }
 
     /**

@@ -18,6 +18,7 @@ package io.micrometer.docs.commons.utils;
 import io.micrometer.common.lang.Nullable;
 
 public final class StringUtils {
+
     public static boolean hasText(@Nullable String text) {
         return text != null && text.length() > 0;
     }
@@ -47,4 +48,5 @@ public final class StringUtils {
         chars[0] = updatedChar;
         return new String(chars);
     }
+
 }

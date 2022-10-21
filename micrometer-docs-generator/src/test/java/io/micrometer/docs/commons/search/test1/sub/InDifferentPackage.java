@@ -20,4 +20,5 @@ package io.micrometer.docs.commons.search.test1.sub;
  * @author Tadaya Tsuyukubo
  */
 public class InDifferentPackage {
+
 }

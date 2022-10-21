@@ -23,10 +23,12 @@ import io.micrometer.observation.ObservationConvention;
 public class NestedHolder {
 
     static class MyNestedObservationConvention implements ObservationConvention<Observation.Context> {
+
         @Override
         public boolean supportsContext(Context context) {
             return true;
         }
+
     }
 
 }

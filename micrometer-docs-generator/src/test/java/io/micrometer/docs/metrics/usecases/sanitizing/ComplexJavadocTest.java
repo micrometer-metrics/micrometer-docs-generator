@@ -15,7 +15,6 @@
  */
 package io.micrometer.docs.metrics.usecases.sanitizing;
 
-
 import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -37,4 +36,5 @@ class ComplexJavadocTest {
         BDDAssertions.then(output)
                 .hasSameTextualContentAs(Paths.get(getClass().getResource("/expected-sanitizing.adoc").getFile()));
     }
+
 }

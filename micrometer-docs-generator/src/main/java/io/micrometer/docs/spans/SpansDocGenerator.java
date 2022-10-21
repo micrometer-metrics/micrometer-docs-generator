@@ -34,6 +34,7 @@ import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.docs.commons.templates.HandlebarsUtils;
 
 public class SpansDocGenerator {
+
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(SpansDocGenerator.class);
 
     private final File projectRoot;
@@ -53,7 +54,8 @@ public class SpansDocGenerator {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is ["
+                + this.inclusionPattern + "]");
 
         JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(path, this.inclusionPattern);
 

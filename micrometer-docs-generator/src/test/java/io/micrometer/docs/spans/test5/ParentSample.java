@@ -42,6 +42,7 @@ enum ParentSample implements ObservationDocumentation {
     };
 
     enum MyKeyNames implements KeyName {
+
         CORRECT {
             @Override
             public String asString() {
@@ -60,6 +61,7 @@ enum ParentSample implements ObservationDocumentation {
                 return "bar";
             }
         }
+
     }
 
 }

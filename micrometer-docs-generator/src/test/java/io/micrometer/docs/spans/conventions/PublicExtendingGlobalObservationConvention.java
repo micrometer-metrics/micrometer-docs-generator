@@ -28,4 +28,5 @@ public class PublicExtendingGlobalObservationConvention extends PublicGlobalObse
     public boolean supportsContext(Observation.Context context) {
         return context instanceof Observation.Context;
     }
+
 }

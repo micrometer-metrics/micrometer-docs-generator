@@ -28,19 +28,23 @@ import org.jboss.forge.roaster._shade.org.eclipse.jdt.core.dom.TextElement;
 import org.jboss.forge.roaster.model.source.JavaDocSource;
 
 /**
- * Utilities to parse javadoc fragments in various form (String, modelling objects) to asciidoc strings.
+ * Utilities to parse javadoc fragments in various form (String, modelling objects) to
+ * asciidoc strings.
  */
 public class AsciidocUtils {
 
     private static final InternalLogger LOGGER = InternalLoggerFactory.getInstance(AsciidocUtils.class);
 
     private static final String NEWLINE = System.lineSeparator();
+
     private static final String LINE_BREAK = " +" + NEWLINE;
+
     private static final String PARAGRAPH_BREAK = NEWLINE + NEWLINE;
 
     private static final Pattern NEWLINE_PATTERN = Pattern.compile("\\R");
 
     public static final String simpleHtmlToAsciidoc(String line, boolean assumeLiOrdered) {
+        // @formatter:off
         String asciidoc = line
                 .replaceAll("<p/?>", PARAGRAPH_BREAK)
                 .replaceAll("<br/?>", LINE_BREAK)
@@ -52,34 +56,24 @@ public class AsciidocUtils {
                 .replaceAll("<ol>", NEWLINE)
                 .replaceAll("</[uo]l>", NEWLINE)
                 .replaceAll("<li>", NEWLINE + (assumeLiOrdered ? " 1. " : " - "));
-        //strip all other tags (closing tags, unknown tags)
+        // @formatter:on
+        // strip all other tags (closing tags, unknown tags)
         return asciidoc.replaceAll("<[^<>]*>", "");
     }
 
     public static final String simpleTagletToAsciidoc(String tagletName, List<?> tagletFragments) {
         if ("@code".equals(tagletName) || "@value".equals(tagletName)) {
-            return tagletFragments
-                    .stream()
-                    .map(o -> o.toString().trim())
-                    .collect(Collectors.joining(" ", "`", "`"));
+            return tagletFragments.stream().map(o -> o.toString().trim()).collect(Collectors.joining(" ", "`", "`"));
         }
         if ("@link".equals(tagletName) || "@linkplain".equals(tagletName)) {
-            Stream<String> stream = tagletFragments
-                    .stream()
-                    .map(o -> o.toString().trim());
+            Stream<String> stream = tagletFragments.stream().map(o -> o.toString().trim());
 
             if (tagletFragments.size() > 1)
-                return stream
-                        .skip(1)
-                        .collect(Collectors.joining(" "));
-            return stream
-                    .collect(Collectors.joining(" ", "`", "`"));
+                return stream.skip(1).collect(Collectors.joining(" "));
+            return stream.collect(Collectors.joining(" ", "`", "`"));
         }
-        //render the full taglet as an inline code block
-        return Stream.concat(
-                        Stream.of(tagletName),
-                        tagletFragments.stream().map(o -> o.toString().trim())
-                )
+        // render the full taglet as an inline code block
+        return Stream.concat(Stream.of(tagletName), tagletFragments.stream().map(o -> o.toString().trim()))
                 .collect(Collectors.joining(" ", "`{", "}`"));
     }
 
@@ -95,18 +89,21 @@ public class AsciidocUtils {
 
         boolean openedOrderedList = false;
         for (TagElement tagElement : tagList) {
-            //only consider the javadoc description
+            // only consider the javadoc description
             if (tagElement.getTagName() != null)
                 continue;
-            for (Object fragment: tagElement.fragments()) {
-                //ignored: SimpleName
+            for (Object fragment : tagElement.fragments()) {
+                // ignored: SimpleName
                 if (fragment instanceof TextElement) {
                     TextElement textElement = (TextElement) fragment;
                     String line = textElement.getText();
-                    //inline taglets will be separate fragments. we only care for embedded HTML subset
+                    // inline taglets will be separate fragments. we only care for
+                    // embedded HTML subset
                     if (line.contains("<") && line.contains(">")) {
-                        //only reset the li type when explicitly encountering an ol or ul.
-                        //note ol takes precedence, and this doesn't really work with nested ol/ul combinations.
+                        // only reset the li type when explicitly encountering an ol or
+                        // ul.
+                        // note ol takes precedence, and this doesn't really work with
+                        // nested ol/ul combinations.
                         if (line.contains("<ul>")) {
                             openedOrderedList = false;
                         }
@@ -117,7 +114,8 @@ public class AsciidocUtils {
                         text.append(simpleHtmlToAsciidoc(line, openedOrderedList));
                     }
                     else {
-                        //we append a space at the end so that javadoc linebreaks in the middle of a simple text translate to a space
+                        // we append a space at the end so that javadoc linebreaks in the
+                        // middle of a simple text translate to a space
                         text.append(line).append(' ');
                     }
                 }
@@ -130,6 +128,7 @@ public class AsciidocUtils {
                 }
             }
         }
+        // @formatter:off
         //second pass on each line to trim undesirable spaces
         String trimmed = NEWLINE_PATTERN
                 .splitAsStream(text)
@@ -139,6 +138,8 @@ public class AsciidocUtils {
                         //we don't want trailing whitespaces, trim() doesn't work because we do want leading space when relevant
                         .replaceAll("\\h+$", ""))
                 .collect(Collectors.joining(System.lineSeparator()));
+        // @formatter:on
         return trimmed;
     }
+
 }

@@ -29,4 +29,5 @@ public class DynamicObservationConvention implements ObservationConvention<Obser
     public boolean supportsContext(Observation.Context context) {
         return context instanceof Observation.Context;
     }
+
 }

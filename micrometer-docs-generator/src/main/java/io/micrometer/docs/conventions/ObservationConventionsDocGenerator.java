@@ -36,7 +36,9 @@ import io.micrometer.docs.commons.templates.HandlebarsUtils;
 import io.micrometer.docs.conventions.ObservationConventionEntry.Type;
 
 public class ObservationConventionsDocGenerator {
-    private static final InternalLogger logger = InternalLoggerFactory.getInstance(ObservationConventionsDocGenerator.class);
+
+    private static final InternalLogger logger = InternalLoggerFactory
+            .getInstance(ObservationConventionsDocGenerator.class);
 
     private final File projectRoot;
 
@@ -46,7 +48,8 @@ public class ObservationConventionsDocGenerator {
 
     private final Path output;
 
-    public ObservationConventionsDocGenerator(File projectRoot, Pattern inclusionPattern, String templateLocation, Path output) {
+    public ObservationConventionsDocGenerator(File projectRoot, Pattern inclusionPattern, String templateLocation,
+            Path output) {
         this.projectRoot = projectRoot;
         this.inclusionPattern = inclusionPattern;
         this.templateLocation = templateLocation;
@@ -55,10 +58,13 @@ public class ObservationConventionsDocGenerator {
 
     public void generate() {
         Path path = this.projectRoot.toPath();
-        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is [" + this.inclusionPattern + "]");
+        logger.debug("Path is [" + this.projectRoot.getAbsolutePath() + "]. Inclusion pattern is ["
+                + this.inclusionPattern + "]");
         TreeSet<ObservationConventionEntry> observationConventionEntries = new TreeSet<>();
-        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(this.projectRoot.toPath(), this.inclusionPattern);
-        FileVisitor<Path> fv = new ObservationConventionSearchingFileVisitor(this.inclusionPattern, observationConventionEntries, searchHelper);
+        JavaSourceSearchHelper searchHelper = JavaSourceSearchHelper.create(this.projectRoot.toPath(),
+                this.inclusionPattern);
+        FileVisitor<Path> fv = new ObservationConventionSearchingFileVisitor(this.inclusionPattern,
+                observationConventionEntries, searchHelper);
         try {
             Files.walkFileTree(path, fv);
             printObservationConventionsAdoc(observationConventionEntries);
@@ -69,8 +75,10 @@ public class ObservationConventionsDocGenerator {
     }
 
     private void printObservationConventionsAdoc(TreeSet<ObservationConventionEntry> entries) throws IOException {
-        List<ObservationConventionEntry> globals = entries.stream().filter(e -> e.getType() == Type.GLOBAL).collect(Collectors.toList());
-        List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL).collect(Collectors.toList());
+        List<ObservationConventionEntry> globals = entries.stream().filter(e -> e.getType() == Type.GLOBAL)
+                .collect(Collectors.toList());
+        List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL)
+                .collect(Collectors.toList());
 
         Handlebars handlebars = HandlebarsUtils.createHandlebars();
         Template template = handlebars.compile(this.templateLocation);

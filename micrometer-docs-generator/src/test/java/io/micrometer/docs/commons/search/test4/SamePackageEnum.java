@@ -21,5 +21,7 @@ package io.micrometer.docs.commons.search.test4;
  * @author Tadaya Tsuyukubo
  */
 public enum SamePackageEnum {
+
     SAME
+
 }

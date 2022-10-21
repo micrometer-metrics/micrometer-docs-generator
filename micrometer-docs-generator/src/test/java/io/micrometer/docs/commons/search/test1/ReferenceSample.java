@@ -31,6 +31,7 @@ public class ReferenceSample {
         public static class NestedBar {
 
         }
+
     }
 
 }

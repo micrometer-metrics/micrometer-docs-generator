@@ -62,30 +62,36 @@ class ParsingUtilsReadEnumClassNamesTests {
     }
 
     enum FooKeyName implements KeyName {
+
         FOO {
             @Override
             public String asString() {
                 return "foo";
             }
         }
+
     }
 
     enum BarKeyName implements KeyName {
+
         BAR {
             @Override
             public String asString() {
                 return "bar";
             }
         }
+
     }
 
     enum BazKeyName implements KeyName {
+
         BAZ {
             @Override
             public String asString() {
                 return "baz";
             }
         }
+
     }
 
 }

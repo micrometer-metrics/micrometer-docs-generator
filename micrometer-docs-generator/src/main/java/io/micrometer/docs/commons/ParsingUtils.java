@@ -45,16 +45,19 @@ public class ParsingUtils {
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
-    public static <T> List<T> retrieveModelsFromEnum(JavaEnumSource enumSource,
-            EntryEnumConstantReader<?> converter) {
-        // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has different values.
+    public static <T> List<T> retrieveModelsFromEnum(JavaEnumSource enumSource, EntryEnumConstantReader<?> converter) {
+        // @formatter:off
+        // Based on how interfaces are implemented in enum, "myEnum.getInterfaces()" has
+        // different values.
         // For example, "MyEnum" implements "Observation.Event" interface as:
         //  - "enum MyEnum implements Observation.Event {"
         //      "getInterfaces()" returns ["Observation.Event"]
         //  - "enum MyEnum implements Event {"
         //      "getInterfaces()" returns ["io.micrometer.observation.Observation.Event"]
         //
-        // To make both cases work, use the simple name("Event" in the above example) for comparison.
+        // To make both cases work, use the simple name("Event" in the above example) for
+        // comparison.
+        // @formatter:on
         if (!enumSource.hasInterface(converter.getRequiredClass().getSimpleName())) {
             return Collections.emptyList();
         }
@@ -71,20 +74,19 @@ public class ParsingUtils {
     }
 
     /**
-     * Read the return statement value as string.
-     * Currently, the string literal and boolean literal are supported.
-     * For example:
-     * <code>
+     * Read the return statement value as string. Currently, the string literal and
+     * boolean literal are supported.
+     * <p>
+     * For example: <code>
      * String returnStringLiteral() {
      * return "my-string";
      * }
      * boolean returnBooleanPrimitive() {
      * return true;
      * }
-     * </code>
-     * It resolves as "my-string" and "true" respectively.
-     *
-     * @param methodSource a method source which has the first line return statement with literal string or boolean.
+     * </code> It resolves as "my-string" and "true" respectively.
+     * @param methodSource a method source which has the first line return statement with
+     * literal string or boolean.
      * @return literal value as string
      */
     public static String readStringReturnValue(MethodSource<?> methodSource) {
@@ -112,8 +114,9 @@ public class ParsingUtils {
             return classNames;
         }
         else if (!methodInvocation.toString().endsWith(".values()")) {
-            throw new IllegalStateException("You have to use the static .values() method on the enum that implements "
-                    + KeyName.class + " interface or use [KeyName.merge(...)] method to merge multiple values from tags");
+            throw new IllegalStateException(
+                    "You have to use the static .values() method on the enum that implements " + KeyName.class
+                            + " interface or use [KeyName.merge(...)] method to merge multiple values from tags");
         }
         // will return Tags
         return Collections.singleton(methodInvocation.getExpression().toString());
@@ -163,7 +166,6 @@ public class ParsingUtils {
 
     /**
      * Retrieve {@link MethodDeclaration} from {@link MethodSource}.
-     *
      * @param methodSource a method source
      * @return retrieved method declaration
      */
@@ -172,4 +174,5 @@ public class ParsingUtils {
         Assert.isInstanceOf(MethodDeclaration.class, methodInternal);
         return (MethodDeclaration) methodInternal;
     }
+
 }
