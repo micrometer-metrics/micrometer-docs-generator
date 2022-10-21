@@ -29,6 +29,7 @@ import io.micrometer.docs.spans.SpansDocGenerator;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -79,8 +80,11 @@ public class DocsGeneratorCommand implements Runnable {
     private Path conventionsOutput;
 
     public static void main(String... args) {
-        new CommandLine(new DocsGeneratorCommand()).execute(args);
-        // Do not call System.exit here since exec-maven-plugin stops the maven run
+        int exitCode = new CommandLine(new DocsGeneratorCommand()).execute(args);
+        // Do not call System.exit here since exec-maven-plugin's "exec:java" halts the maven run
+        if (exitCode != ExitCode.OK) {
+            throw new IllegalStateException("DocsGeneratorCommand failed.");
+        }
     }
 
     @Override
