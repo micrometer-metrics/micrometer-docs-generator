@@ -27,7 +27,6 @@ import java.util.TreeSet;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
@@ -80,8 +79,7 @@ public class ObservationConventionsDocGenerator {
         List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL)
                 .collect(Collectors.toList());
 
-        Handlebars handlebars = HandlebarsUtils.createHandlebars();
-        Template template = handlebars.compile(this.templateLocation);
+        Template template = HandlebarsUtils.createTemplate(this.templateLocation);
 
         Map<String, Object> map = new HashMap<>();
         map.put("globals", globals);

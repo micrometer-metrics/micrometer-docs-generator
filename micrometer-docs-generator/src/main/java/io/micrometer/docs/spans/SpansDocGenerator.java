@@ -26,7 +26,6 @@ import java.util.Map;
 import java.util.TreeSet;
 import java.util.regex.Pattern;
 
-import com.github.jknack.handlebars.Handlebars;
 import com.github.jknack.handlebars.Template;
 import io.micrometer.common.util.internal.logging.InternalLogger;
 import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
@@ -71,8 +70,7 @@ public class SpansDocGenerator {
     }
 
     private void printSpansAdoc(Collection<SpanEntry> spanEntries) throws IOException {
-        Handlebars handlebars = HandlebarsUtils.createHandlebars();
-        Template template = handlebars.compile(this.templateLocation);
+        Template template = HandlebarsUtils.createTemplate(this.templateLocation);
 
         Map<String, Object> map = new HashMap<>();
         map.put("entries", spanEntries);

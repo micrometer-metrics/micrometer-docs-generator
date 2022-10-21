@@ -15,7 +15,12 @@
  */
 package io.micrometer.docs.commons.templates;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
+
 import com.github.jknack.handlebars.Handlebars;
+import com.github.jknack.handlebars.Template;
 import com.github.jknack.handlebars.helper.StringHelpers;
 import com.github.jknack.handlebars.io.ClassPathTemplateLoader;
 import com.github.jknack.handlebars.io.CompositeTemplateLoader;
@@ -41,6 +46,31 @@ public class HandlebarsUtils {
         StringHelpers.register(handlebars);
 
         return handlebars;
+    }
+
+    /**
+     * Create a handlebar {@link Template} from template location.
+     * <p>
+     * While loading the template, this method converts the line delimiter from the one
+     * used in template file("LF") to the one from the running OS. (for example, "CRLF" on
+     * a windows machine).
+     * @param templateLocation template location (either in classpath or file system)
+     * @return a template
+     * @throws IOException If the template's source can't be resolved.
+     */
+    public static Template createTemplate(String templateLocation) throws IOException {
+        Handlebars handlebars = createHandlebars();
+        String content = handlebars.getLoader().sourceAt(templateLocation).content(StandardCharsets.UTF_8);
+
+        // replace the line delimiter in template file to the running OS specific one
+        StringBuilder sb = new StringBuilder();
+        try (Scanner scanner = new Scanner(content)) {
+            while (scanner.hasNext()) {
+                sb.append(scanner.nextLine());
+                sb.append(System.lineSeparator());
+            }
+        }
+        return handlebars.compileInline(sb.toString());
     }
 
 }
