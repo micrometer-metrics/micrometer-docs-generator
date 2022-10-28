@@ -29,6 +29,8 @@ import io.micrometer.docs.commons.search.convention.test4.NoImportObservationCon
 import io.micrometer.docs.commons.search.convention.test5.InterfaceInheritingObservationConvention;
 import io.micrometer.docs.commons.search.convention.test6.ClassInheritingObservationConvention;
 import io.micrometer.docs.commons.search.search_test.Container;
+import io.micrometer.docs.commons.search.search_test.MySearchEnum;
+import io.micrometer.docs.commons.search.search_test.MySearchInterface;
 import io.micrometer.docs.commons.search.test1.ReferenceSample;
 import io.micrometer.docs.commons.search.test2.MethodSearchSample;
 import io.micrometer.docs.commons.search.test3.MethodSearchEnumSample;
@@ -54,7 +56,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 class JavaSourceSearchHelperTests {
 
     @ParameterizedTest
-    @ValueSource(classes = { Container.class, Container.Nest1.class, Container.Nest1.Nest2.class })
+    @ValueSource(classes = { Container.class, Container.Nest1.class, Container.Nest1.Nest2.class, MySearchEnum.class,
+            MySearchEnum.NestedClass.class, MySearchEnum.NestedInterface.class, MySearchEnum.NestedEnum.class,
+            MySearchInterface.class, MySearchInterface.NestedInterface.class, MySearchInterface.NestedEnum.class })
     void search(Class<?> clazz) {
         Path path = Paths.get("src/test/java/io/micrometer/docs/commons/search/search_test");
         JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
