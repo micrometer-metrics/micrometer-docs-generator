@@ -29,9 +29,11 @@ import io.micrometer.docs.spans.SpansDocGenerator;
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
-import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.Option;
+import picocli.CommandLine.ParameterException;
 import picocli.CommandLine.Parameters;
+import picocli.CommandLine.ParseResult;
+import picocli.CommandLine.UnmatchedArgumentException;
 
 /**
  * Entry point for document generation.
@@ -80,11 +82,46 @@ public class DocsGeneratorCommand implements Runnable {
     private Path conventionsOutput;
 
     public static void main(String... args) {
-        int exitCode = new CommandLine(new DocsGeneratorCommand()).execute(args);
-        // Do not call System.exit here since exec-maven-plugin's "exec:java" halts the
-        // maven run
-        if (exitCode != ExitCode.OK) {
-            throw new IllegalStateException("DocsGeneratorCommand failed.");
+        DocsGeneratorCommand command = new DocsGeneratorCommand();
+        // Do not call "System.exit" here since exec-maven-plugin's "exec:java" halts the
+        // maven run. Then, to properly bubble up the exception, uses "parseArgs" instead
+        // of "CommandLine.execute()". This is because "execute" captures an exception
+        // thrown while executing the business logic, then convert it to an exit code.
+        // This squashes the thrown exception. To avoid it, we need to DIY the command
+        // execution.
+        // See https://picocli.info/#_diy_command_execution
+        execute(command, args);
+    }
+
+    private static void execute(Runnable runnable, String[] args) {
+        CommandLine cmd = new CommandLine(runnable);
+        try {
+            ParseResult parseResult = cmd.parseArgs(args);
+            // Did user request usage help (--help)?
+            if (cmd.isUsageHelpRequested()) {
+                cmd.usage(cmd.getOut());
+                return;
+            }
+            // Did user request version help (--version)?
+            else if (cmd.isVersionHelpRequested()) {
+                cmd.printVersionHelp(cmd.getOut());
+                return;
+            }
+            // invoke the business logic
+            runnable.run();
+        }
+        // invalid user input: print error message and usage help
+        catch (ParameterException ex) {
+            cmd.getErr().println(ex.getMessage());
+            if (!UnmatchedArgumentException.printSuggestions(ex, cmd.getErr())) {
+                ex.getCommandLine().usage(cmd.getErr());
+            }
+            throw ex;
+        }
+        // exception occurred in business logic
+        catch (Exception ex) {
+            ex.printStackTrace(cmd.getErr());
+            throw ex;
         }
     }
 
