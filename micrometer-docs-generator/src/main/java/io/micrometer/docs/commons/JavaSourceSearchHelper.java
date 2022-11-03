@@ -461,6 +461,19 @@ public class JavaSourceSearchHelper {
      */
     @Nullable
     public String searchObservationConventionInterfaceName(JavaSource<?> javaSource) {
+        return searchObservationConventionInterfaceName(javaSource, new HashSet<>());
+    }
+
+    @Nullable
+    private String searchObservationConventionInterfaceName(JavaSource<?> javaSource, Set<String> visited) {
+        String qualifiedName = javaSource.getQualifiedName();
+        logger.trace("Searching ObservationConvention on {} - start", qualifiedName);
+
+        if (visited.contains(qualifiedName)) {
+            return null; // already visited but not found
+        }
+        visited.add(qualifiedName);
+
         // search on interfaces and parent interfaces
         if (javaSource instanceof InterfaceCapable) {
             List<String> interfaces = ((InterfaceCapable) javaSource).getInterfaces();
@@ -472,7 +485,7 @@ public class JavaSourceSearchHelper {
 
                 JavaSource<?> interfaceSource = searchJavaSourceByRoasterTypeName(javaSource, interfaceName);
                 if (interfaceSource != null) {
-                    String result = searchObservationConventionInterfaceName(interfaceSource);
+                    String result = searchObservationConventionInterfaceName(interfaceSource, visited);
                     if (result != null) {
                         return result;
                     }
@@ -483,7 +496,7 @@ public class JavaSourceSearchHelper {
         // search on nested classes
         if (javaSource instanceof TypeHolderSource) {
             for (JavaSource<?> nested : ((TypeHolderSource<?>) javaSource).getNestedTypes()) {
-                String result = searchObservationConventionInterfaceName(nested);
+                String result = searchObservationConventionInterfaceName(nested, visited);
                 if (result != null) {
                     return result;
                 }
@@ -496,7 +509,7 @@ public class JavaSourceSearchHelper {
             if (!Object.class.getName().equals(parentClassName)) {
                 JavaSource<?> parentSource = searchJavaSourceByRoasterTypeName(javaSource, parentClassName);
                 if (parentSource != null) {
-                    String result = searchObservationConventionInterfaceName(parentSource);
+                    String result = searchObservationConventionInterfaceName(parentSource, visited);
                     if (result != null) {
                         return result;
                     }
@@ -504,6 +517,7 @@ public class JavaSourceSearchHelper {
             }
         }
 
+        logger.trace("Searching ObservationConvention on {} - not found", qualifiedName);
         return null; // not found
     }
 
