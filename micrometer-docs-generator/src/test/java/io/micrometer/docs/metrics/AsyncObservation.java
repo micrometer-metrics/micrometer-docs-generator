@@ -33,7 +33,8 @@ enum AsyncObservation implements ObservationDocumentation {
 
         @Override
         public KeyName[] getLowCardinalityKeyNames() {
-            return AsyncSpanTags.values();
+            // with enclosing class
+            return AsyncObservation.AsyncSpanTags.values();
         }
 
     },
