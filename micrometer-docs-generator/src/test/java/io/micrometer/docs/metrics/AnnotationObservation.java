@@ -15,8 +15,6 @@ package io.micrometer.docs.metrics;
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.observation.docs.ObservationDocumentation;
 
-;
-
 enum AnnotationObservation implements ObservationDocumentation {
 
     /**

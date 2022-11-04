@@ -185,10 +185,11 @@ public class JavaSourceSearchHelper {
         // search in nested classes
         if (enclosingJavaSource instanceof TypeHolderSource) {
             for (JavaSource<?> nestedType : ((TypeHolderSource<?>) enclosingJavaSource).getNestedTypes()) {
-                String name = nestedType.getName();
+                String simpleName = nestedType.getName();
                 String canonicalName = nestedType.getCanonicalName();
                 String qualifiedName = nestedType.getQualifiedName();
-                if (className.equals(name) || className.equals(canonicalName) || className.equals(qualifiedName)) {
+                if (className.equals(simpleName) || className.equals(canonicalName)
+                        || className.equals(qualifiedName)) {
                     return nestedType;
                 }
 
