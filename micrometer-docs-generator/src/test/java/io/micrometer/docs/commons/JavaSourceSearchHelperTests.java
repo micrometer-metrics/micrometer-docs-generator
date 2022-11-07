@@ -42,6 +42,7 @@ import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -90,6 +91,18 @@ class JavaSourceSearchHelperTests {
         MethodSource<?> result = helper.searchMethodSource(enclosingSource, methodName);
         assertThat(result).isNotNull();
         assertThat(result.getOrigin().getName()).isEqualTo(expectedEnclosingClassName);
+    }
+
+    @Test
+    void searchMethodSourceInDefaultPackage() throws Exception {
+        Path path = Paths.get("src/test/java");
+        JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
+        Class<?> clazz = Class.forName("DefaultPackageChild");
+        JavaClassSource enclosingSource = RoasterTestUtils.readJavaClass(clazz);
+
+        MethodSource<?> result = helper.searchMethodSource(enclosingSource, "parentMethod");
+        assertThat(result).isNotNull();
+        assertThat(result.getOrigin().getName()).isEqualTo("DefaultPackageParent");
     }
 
     @ParameterizedTest
