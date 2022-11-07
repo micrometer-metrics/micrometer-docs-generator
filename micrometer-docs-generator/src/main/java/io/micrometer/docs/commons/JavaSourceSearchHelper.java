@@ -231,9 +231,9 @@ public class JavaSourceSearchHelper {
     }
 
     @Nullable
-    private JavaSource<?> searchWithinPackage(String packageName, String className) {
-        // TODO: do we want to handle empty package case? (top level classes)
-        if ("".equals(packageName)) {
+    private JavaSource<?> searchWithinPackage(@Nullable String packageName, String className) {
+        // top level classes (no package name)
+        if (packageName == null || "".equals(packageName)) {
             return search(className);
         }
 
