@@ -81,6 +81,18 @@ class JavaSourceSearchHelperTests {
         assertThat(result.getName()).isEqualTo(expectedSimpleName);
     }
 
+    @Test
+    void searchReferencingClassInDefaultPackage() throws Exception {
+        Path path = Paths.get("src/test/java");
+        JavaSourceSearchHelper helper = JavaSourceSearchHelper.create(path, Pattern.compile(".*"));
+        Class<?> clazz = Class.forName("DefaultPackageChild");
+        JavaClassSource enclosingSource = RoasterTestUtils.readJavaClass(clazz);
+
+        JavaSource<?> result = helper.searchReferencingClass(enclosingSource, "DefaultPackageParent");
+        assertThat(result).isNotNull();
+        assertThat(result.getName()).isEqualTo("DefaultPackageParent");
+    }
+
     @ParameterizedTest
     @org.junit.jupiter.params.provider.MethodSource
     void searchMethodSource(String methodName, String expectedEnclosingClassName) {
