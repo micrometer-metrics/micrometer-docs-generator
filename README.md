@@ -49,7 +49,7 @@ repositories {
 }
 
 ext {
-	micrometerDocsVersion="1.0.0-SNAPSHOT"
+	micrometerDocsVersion="1.0.0"
 }
 
 configurations {
@@ -57,93 +57,60 @@ configurations {
 }
 
 dependencies {
-	adoc "io.micrometer:micrometer-docs-generator-spans:$micrometerDocsVersion"
-	adoc "io.micrometer:micrometer-docs-generator-metrics:$micrometerDocsVersion"
+	adoc "io.micrometer:micrometer-docs-generator:$micrometerDocsVersion"
 }
 
-task generateObservabilityDocs(dependsOn: ["generateObservabilityMetricsDocs", "generateObservabilitySpansDocs"]) {
-}
-
-task generateObservabilityMetricsDocs(type: JavaExec) {
-	mainClass = "io.micrometer.docs.metrics.DocsFromSources"
+task generateObservabilityDocs() {
+	mainClass = "io.micrometer.docs.DocsGeneratorCommand"
 	classpath configurations.adoc
+	// input folder, inclusion pattern, output folder
 	args project.rootDir.getAbsolutePath(), ".*", project.rootProject.buildDir.getAbsolutePath()
 }
 
-task generateObservabilitySpansDocs(type: JavaExec) {
-	mainClass = "io.micrometer.docs.spans.DocsFromSources"
-	classpath configurations.adoc
-	args project.rootDir.getAbsolutePath(), ".*", project.rootProject.buildDir.getAbsolutePath()
-}
 ```
 Example for a Maven setup that scans your sources from the root project and creates the metrics and spans output under the root project's `target` folder.
 
 ```xml
-
-<properties>
-	<!-- Observability -->
-	<micrometer-docs-generator.version>1.0.0-SNAPSHOT</micrometer-docs-generator.version>
-	<micrometer-docs-generator.inputPath>${maven.multiModuleProjectDirectory}/</micrometer-docs-generator.inputPath>
-	<micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
-	<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/</micrometer-docs-generator.outputPath>
-</properties>
-
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <executions>
-                <execution>
-                    <id>generate-metrics-metadata</id>
-                    <phase>prepare-package</phase>
-                    <goals>
-                        <goal>java</goal>
-                    </goals>
-                    <configuration>
-                        <mainClass>io.micrometer.docs.metrics.DocsFromSources</mainClass>
-                    </configuration>
-                </execution>
-                <execution>
-                    <id>generate-tracing-metadata</id>
-                    <phase>prepare-package</phase>
-                    <goals>
-                        <goal>java</goal>
-                    </goals>
-                    <configuration>
-                        <mainClass>io.micrometer.docs.spans.DocsFromSources</mainClass>
-                    </configuration>
-                </execution>
-            </executions>
-            <dependencies>
-                <dependency>
-                    <groupId>io.micrometer
-                    </groupId>
-                    <artifactId>micrometer-docs-generator-spans</artifactId>
-                    <version>${micrometer-docs-generator.version}
-                    </version>
-                    <type>jar</type>
-                </dependency>
-                <dependency>
-                    <groupId>io.micrometer
-                    </groupId>
-                    <artifactId>micrometer-docs-generator-metrics</artifactId>
-                    <version>${micrometer-docs-generator.version}
-                    </version>
-                    <type>jar</type>
-                </dependency>
-            </dependencies>
-            <configuration>
-                <includePluginDependencies>true</includePluginDependencies>
-                <arguments>
-                    <argument>${micrometer-docs-generator.inputPath}</argument>
-                    <argument>${micrometer-docs-generator.inclusionPattern}</argument>
-                    <argument>${micrometer-docs-generator.outputPath}</argument>
-                </arguments>
-            </configuration>
-        </plugin>
-    </plugins>
-</build>
+	<properties>
+		<micrometer-docs-generator.version>1.0.0</micrometer-docs-generator.version>
+		<micrometer-docs-generator.inputPath>${maven.multiModuleProjectDirectory}/folder-with-sources-to-scan/</micrometer-docs-generator.inputPath>
+		<micrometer-docs-generator.inclusionPattern>.*</micrometer-docs-generator.inclusionPattern>
+		<micrometer-docs-generator.outputPath>${maven.multiModuleProjectDirectory}/target/output-folder-with-adocs/'</micrometer-docs-generator.outputPath>
+	</properties>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>generate-docs</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>java</goal>
+						</goals>
+						<configuration>
+							<mainClass>io.micrometer.docs.DocsGeneratorCommand</mainClass>
+							<includePluginDependencies>true</includePluginDependencies>
+							<arguments>
+								<argument>${micrometer-docs-generator.inputPath}</argument>
+								<argument>${micrometer-docs-generator.inclusionPattern}</argument>
+								<argument>${micrometer-docs-generator.outputPath}</argument>
+							</arguments>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>io.micrometer</groupId>
+						<artifactId>micrometer-docs-generator</artifactId>
+						<version>${micrometer-docs-generator.version}</version>
+						<type>jar</type>
+					</dependency>
+				</dependencies>
+			</plugin>
+		</plugins>
+	</build>
 
 <repositories>
     <repository>

@@ -435,7 +435,7 @@ public class JavaSourceSearchHelper {
         candidateNames.add(typeName);
 
         String packageName = enclosingJavaSource.getPackage();
-        if (typeName.contains(packageName)) {
+        if (packageName != null && typeName.contains(packageName)) {
             String targetClassName = typeName.substring(0, packageName.length());
             String qualifiedName = enclosingJavaSource.getQualifiedName() + "$" + targetClassName;
             candidateNames.add(targetClassName);
