@@ -31,7 +31,6 @@ import io.micrometer.common.util.internal.logging.InternalLoggerFactory;
 import io.micrometer.docs.commons.JavaSourceSearchHelper;
 import io.micrometer.observation.GlobalObservationConvention;
 import org.jboss.forge.roaster.Roaster;
-import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.TypeHolderSource;
 
@@ -64,34 +63,31 @@ class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> 
 
         logger.debug("Parsing [" + path + "]");
         JavaSource<?> javaSource = Roaster.parse(JavaSource.class, path.toFile());
-        List<JavaClassSource> candidates = getCandidates(javaSource);
-        ;
+        List<JavaSource<?>> candidates = getCandidates(javaSource);
         if (candidates.isEmpty()) {
             return FileVisitResult.CONTINUE;
         }
 
-        for (JavaClassSource candidate : candidates) {
+        for (JavaSource<?> candidate : candidates) {
             process(candidate);
         }
         return FileVisitResult.CONTINUE;
     }
 
-    private List<JavaClassSource> getCandidates(JavaSource<?> javaSource) {
-        List<JavaClassSource> candidates = new ArrayList<>();
-        if (javaSource.isClass()) {
-            candidates.add((JavaClassSource) javaSource);
-        }
+    private List<JavaSource<?>> getCandidates(JavaSource<?> javaSource) {
+        List<JavaSource<?>> candidates = new ArrayList<>();
+        candidates.add(javaSource);
         if (javaSource instanceof TypeHolderSource) {
             for (JavaSource<?> nestedType : ((TypeHolderSource<?>) javaSource).getNestedTypes()) {
                 if (nestedType.isClass()) {
-                    candidates.add((JavaClassSource) nestedType);
+                    candidates.add(nestedType);
                 }
             }
         }
         return candidates;
     }
 
-    private void process(JavaClassSource javaSource) {
+    private void process(JavaSource<?> javaSource) {
         String interfaceName = this.searchHelper.searchObservationConventionInterfaceName(javaSource);
         if (interfaceName == null) {
             return;
