@@ -103,7 +103,7 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
         if (StringUtils.hasText(name)) {
             if (conventionClassName != null) {
                 throw new IllegalStateException(
-                        "You can't declare both [getName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in ["
+                        "You can't declare both [getName(),getContextualName()] and [getDefaultConvention()] methods at the same time, you have to chose only one. Problem occurred in ["
                                 + enclosingEnum.getName() + "] class");
             }
         }

@@ -39,7 +39,9 @@ public class EventEntryForSpanEnumConstantReader implements EntryEnumConstantRea
     public EventEntry apply(EnumConstantSource enumConstantSource) {
         String description = AsciidocUtils.javadocToAsciidoc(enumConstantSource.getJavaDoc());
         String name = ParsingUtils.enumMethodValue(enumConstantSource, "getContextualName");
-        Assert.notNull(name, "Event enum constants require readable getContextualName() for spans documentation.");
+        Assert.notNull(name,
+                String.format("Event enum constants require readable getContextualName() for spans documentation. [%s]",
+                        enumConstantSource.getName()));
 
         EventEntry model = new EventEntry();
         model.setName(name);
