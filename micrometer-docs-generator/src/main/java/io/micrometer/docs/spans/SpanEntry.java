@@ -78,7 +78,11 @@ class SpanEntry implements Comparable<SpanEntry> {
 
     @Override
     public int compareTo(SpanEntry o) {
-        return enumName.compareTo(o.enumName);
+        int compare = this.enumName.compareTo(o.enumName);
+        if (compare != 0) {
+            return compare;
+        }
+        return this.enclosingClass.compareTo(o.enclosingClass);
     }
 
     public String getSpanTitle() {
