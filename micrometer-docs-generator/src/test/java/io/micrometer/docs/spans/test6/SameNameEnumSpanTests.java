@@ -46,6 +46,14 @@ class SameNameEnumSpanTests {
                 .contains("foo-span in one")
                 .contains("foo-span in two")
                 .contains("foo-span in same-enum-value")
+                .contains("[[observability-spans-foo]]")  // anchors
+                .contains("[[observability-spans-foo-1]]")
+                .contains("[[observability-spans-foo-2]]")
+                .contains("[[observability-spans-foo-3]]")
+                .contains("[[observability-spans-foo-4]]")
+                .contains("[[observability-spans-foo-5]]")
+                .contains("[[observability-spans-foo-6]]")
+                .contains("[[observability-spans-foo-7]]")
         ;
         // @formatter:on
     }

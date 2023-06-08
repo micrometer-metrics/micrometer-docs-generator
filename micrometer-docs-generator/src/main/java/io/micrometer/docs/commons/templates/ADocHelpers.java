@@ -15,6 +15,13 @@
  */
 package io.micrometer.docs.commons.templates;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import com.github.jknack.handlebars.Helper;
+import com.github.jknack.handlebars.Options;
+
 /**
  * Helper source class for handlebars.
  *
@@ -24,6 +31,25 @@ public class ADocHelpers {
 
     public static boolean isDynamic(String input) {
         return input.contains("%s");
+    }
+
+    /**
+     * A helper class to generate unique anchor values. When this helper receives the same
+     * value multiple times, it appends a suffix to the anchor value to make it unique.
+     * The suffix takes the form of "-1", "-2", and so on, incrementing with each
+     * occurrence.
+     */
+    public static class AnchorHelper implements Helper<String> {
+
+        private final Map<String, Integer> map = new HashMap<>();
+
+        @Override
+        public Object apply(String context, Options options) throws IOException {
+            int suffixNumber = this.map.compute(context, (key, number) -> (number == null) ? 0 : number + 1);
+            // returns foo, foo-1, foo-2, ...
+            return suffixNumber == 0 ? context : context + "-" + suffixNumber;
+        }
+
     }
 
 }
