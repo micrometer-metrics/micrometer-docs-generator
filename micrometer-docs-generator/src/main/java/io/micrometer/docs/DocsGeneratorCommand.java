@@ -157,7 +157,8 @@ public class DocsGeneratorCommand implements Runnable {
     void generateConventionsDoc() {
         Path output = resolveAndPrepareOutputPath(this.conventionsOutput);
         new ObservationConventionsDocGenerator(this.projectRoot, this.inclusionPattern, this.conventionsTemplate,
-                output).generate();
+                output)
+            .generate();
     }
 
     private Path resolveAndPrepareOutputPath(Path specified) {

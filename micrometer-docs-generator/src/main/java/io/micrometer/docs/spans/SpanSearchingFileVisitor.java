@@ -87,8 +87,8 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     private void removeOverrideEntries() {
         Set<SpanEntry> toRemove = this.spanEntries.stream()
-                .filter(spanEntry -> this.overrideEnumClassNames.contains(spanEntry.enclosingClass))
-                .collect(Collectors.toSet());
+            .filter(spanEntry -> this.overrideEnumClassNames.contains(spanEntry.enclosingClass))
+            .collect(Collectors.toSet());
         if (!toRemove.isEmpty()) {
             logger.debug("Will remove the span entries <"
                     + toRemove.stream().map(s -> s.name).collect(Collectors.joining(","))

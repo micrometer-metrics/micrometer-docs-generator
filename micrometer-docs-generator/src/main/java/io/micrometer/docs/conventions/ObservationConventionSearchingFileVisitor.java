@@ -37,7 +37,7 @@ import org.jboss.forge.roaster.model.source.TypeHolderSource;
 class ObservationConventionSearchingFileVisitor extends SimpleFileVisitor<Path> {
 
     private static final InternalLogger logger = InternalLoggerFactory
-            .getInstance(ObservationConventionSearchingFileVisitor.class);
+        .getInstance(ObservationConventionSearchingFileVisitor.class);
 
     private final Pattern pattern;
 

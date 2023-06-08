@@ -17,7 +17,6 @@
 package io.micrometer.docs.commons.search.test4.sub;
 
 /**
- *
  * @author Tadaya Tsuyukubo
  */
 public enum DifferentPackageEnum {

@@ -37,7 +37,7 @@ import io.micrometer.docs.conventions.ObservationConventionEntry.Type;
 public class ObservationConventionsDocGenerator {
 
     private static final InternalLogger logger = InternalLoggerFactory
-            .getInstance(ObservationConventionsDocGenerator.class);
+        .getInstance(ObservationConventionsDocGenerator.class);
 
     private final File projectRoot;
 
@@ -74,10 +74,12 @@ public class ObservationConventionsDocGenerator {
     }
 
     private void printObservationConventionsAdoc(TreeSet<ObservationConventionEntry> entries) throws IOException {
-        List<ObservationConventionEntry> globals = entries.stream().filter(e -> e.getType() == Type.GLOBAL)
-                .collect(Collectors.toList());
-        List<ObservationConventionEntry> locals = entries.stream().filter(e -> e.getType() == Type.LOCAL)
-                .collect(Collectors.toList());
+        List<ObservationConventionEntry> globals = entries.stream()
+            .filter(e -> e.getType() == Type.GLOBAL)
+            .collect(Collectors.toList());
+        List<ObservationConventionEntry> locals = entries.stream()
+            .filter(e -> e.getType() == Type.LOCAL)
+            .collect(Collectors.toList());
 
         Template template = HandlebarsUtils.createTemplate(this.templateLocation);
 

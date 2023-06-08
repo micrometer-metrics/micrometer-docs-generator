@@ -124,7 +124,7 @@ class MetricEntry implements Comparable<MetricEntry> {
     // If there is no native way to do it, may need to have a helper function.
     public boolean isTimerMetric() {
         return this.metricInfos.stream()
-                .anyMatch(info -> Type.TIMER.equals(info.getType()) || Type.LONG_TASK_TIMER.equals(info.getType()));
+            .anyMatch(info -> Type.TIMER.equals(info.getType()) || Type.LONG_TASK_TIMER.equals(info.getType()));
     }
 
     public static class MetricInfo {
