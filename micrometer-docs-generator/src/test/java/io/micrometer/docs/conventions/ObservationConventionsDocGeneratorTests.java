@@ -39,7 +39,7 @@ class ObservationConventionsDocGeneratorTests {
         Files.createDirectories(output.getParent());
 
         new ObservationConventionsDocGenerator(root, Pattern.compile(".*"), "templates/conventions.adoc.hbs", output)
-                .generate();
+            .generate();
 
         // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))
@@ -56,7 +56,7 @@ class ObservationConventionsDocGeneratorTests {
         Files.createDirectories(output.getParent());
 
         new ObservationConventionsDocGenerator(root, Pattern.compile(".*"), "templates/conventions.adoc.hbs", output)
-                .generate();
+            .generate();
 
         // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))

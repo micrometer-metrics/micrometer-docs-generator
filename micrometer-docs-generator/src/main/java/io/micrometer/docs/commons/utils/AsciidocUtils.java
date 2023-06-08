@@ -74,7 +74,7 @@ public class AsciidocUtils {
         }
         // render the full taglet as an inline code block
         return Stream.concat(Stream.of(tagletName), tagletFragments.stream().map(o -> o.toString().trim()))
-                .collect(Collectors.joining(" ", "`{", "}`"));
+            .collect(Collectors.joining(" ", "`{", "}`"));
     }
 
     public static final String javadocToAsciidoc(JavaDocSource<?> javadoc) {

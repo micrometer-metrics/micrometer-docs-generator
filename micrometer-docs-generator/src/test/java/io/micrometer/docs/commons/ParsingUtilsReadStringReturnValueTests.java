@@ -44,7 +44,7 @@ class ParsingUtilsReadStringReturnValueTests {
     static Stream<Arguments> readStringReturnValue() {
         JavaClassSource classSource = RoasterTestUtils.readJavaClass(ParsingUtilsReadStringReturnValueTests.class);
         JavaClassSource returnValueClass = (JavaClassSource) classSource
-                .getNestedType(ReturnValueClass.class.getSimpleName());
+            .getNestedType(ReturnValueClass.class.getSimpleName());
         MethodSource<?> stringLiteralSource = returnValueClass.getMethod("stringLiteral");
         MethodSource<?> booleanLiteralSource = returnValueClass.getMethod("booleanLiteral");
         MethodSource<?> typeLiteralSource = returnValueClass.getMethod("typeLiteralString");

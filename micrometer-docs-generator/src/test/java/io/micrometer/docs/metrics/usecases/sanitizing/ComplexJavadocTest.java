@@ -34,7 +34,7 @@ class ComplexJavadocTest {
         new MetricsDocGenerator(sourceRoot, Pattern.compile(".*"), "templates/metrics.adoc.hbs", output).generate();
 
         BDDAssertions.then(output)
-                .hasSameTextualContentAs(Paths.get(getClass().getResource("/expected-sanitizing.adoc").getFile()));
+            .hasSameTextualContentAs(Paths.get(getClass().getResource("/expected-sanitizing.adoc").getFile()));
     }
 
 }

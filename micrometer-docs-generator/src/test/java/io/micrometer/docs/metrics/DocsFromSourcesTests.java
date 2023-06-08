@@ -37,7 +37,8 @@ class DocsFromSourcesTests {
         // io.micrometer.docs.metrics
         File sourceRoot = new File(".", "src/test");
         new MetricsDocGenerator(sourceRoot, Pattern.compile(".*/docs/metrics/[a-zA-Z]+\\.java"),
-                "templates/metrics.adoc.hbs", output).generate();
+                "templates/metrics.adoc.hbs", output)
+            .generate();
 
         // @formatter:off
         BDDAssertions.then(new String(Files.readAllBytes(output)))

@@ -57,8 +57,9 @@ class ObservationConventionEntryTests {
 
         String result = handlebars.compile(template).apply(map);
 
-        BDDAssertions.then(result).contains("|`foo.bar.GlobalBaz`|`Foo`")
-                .contains("|`foo.bar.LocalBaz`|`Observation.Context`");
+        BDDAssertions.then(result)
+            .contains("|`foo.bar.GlobalBaz`|`Foo`")
+            .contains("|`foo.bar.LocalBaz`|`Observation.Context`");
     }
 
 }
