@@ -47,6 +47,14 @@ class SameNameEnumMeterTests {
                 .contains("foo-meter-2")
                 .contains("foo-enum")
                 .contains("foo-meter-enum")
+                .contains("[[observability-metrics-foo]]")  // anchors
+                .contains("[[observability-metrics-foo-1]]")
+                .contains("[[observability-metrics-foo-2]]")
+                .contains("[[observability-metrics-foo-3]]")
+                .contains("[[observability-metrics-foo-4]]")
+                .contains("[[observability-metrics-foo-5]]")
+                .contains("[[observability-metrics-foo-6]]")
+                .contains("[[observability-metrics-foo-7]]")
         ;
         // @formatter:on
     }

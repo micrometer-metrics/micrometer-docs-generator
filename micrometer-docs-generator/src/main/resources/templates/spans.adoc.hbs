@@ -8,7 +8,7 @@ Below you can find a list of all spans declared by this project.
 
 {{#each entries~}}
 
-[[observability-spans-{{slugify (lower (replace enumName "_" " "))}}]]
+[[observability-spans-{{anchor (slugify (lower (replace enumName "_" " ")))}}]]
 ==== {{capitalize (lower (replace spanTitle "_" " "))}}
 
 > {{{description}}}

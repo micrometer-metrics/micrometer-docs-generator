@@ -43,6 +43,7 @@ public class HandlebarsUtils {
 
         Handlebars handlebars = new Handlebars(compositeLoader);
         handlebars.registerHelpers(ADocHelpers.class);
+        handlebars.registerHelper("anchor", new ADocHelpers.AnchorHelper());
         StringHelpers.register(handlebars);
 
         return handlebars;
