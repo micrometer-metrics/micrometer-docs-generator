@@ -23,7 +23,7 @@ def MICROMETER_PLATFORM_VERSIONS = [
 ]
 
 def PLATFORM_VERSIONS = [
-	'org.junit:junit-bom:5.9.+' // Not using latest.release to avoid using a milestone version.
+	'org.junit:junit-bom:5.10.+' // Not using latest.release to avoid using a milestone version.
 ]
 
 subprojects {
