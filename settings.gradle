@@ -21,5 +21,4 @@ gradleEnterprise {
 	server = 'https://ge.micrometer.io'
 }
 
-include "docs", "micrometer-docs-generator"
-
+include 'micrometer-docs-generator', 'docs'
