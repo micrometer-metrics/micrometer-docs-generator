@@ -6,7 +6,7 @@ antora:
     - '@antora/collector-extension'
     - '@antora/atlas-extension'
     - require: '@springio/antora-extensions/root-component-extension'
-      root_component_name: 'tracing'
+      root_component_name: 'micrometer-docs-generator'
 site:
   title: Micrometer Docs Generation
   url: https://docs.micrometer.io/micrometer-docs-generator/reference/
