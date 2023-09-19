@@ -1,29 +1,25 @@
 def VERSIONS = [
-	'org.jboss.forge.roaster:roaster-api:2.22.3.Final', // last using jdk8
-	'org.jboss.forge.roaster:roaster-jdt:2.22.3.Final', // last using jdk8
-	'com.github.jknack:handlebars:latest.release',
-	'info.picocli:picocli:latest.release',
+		libs.roasterApi,
+		libs.roasterJdt,
+		libs.handlebars,
+		libs.picocli,
 
-	// logging
-	'ch.qos.logback:logback-classic:1.2.+',
-	'org.slf4j:slf4j-api:1.7.+',
+		// logging
+		libs.logback,
+		libs.slf4j,
 
-	// test
-	'org.assertj:assertj-core:latest.release',
-	'org.awaitility:awaitility:latest.release',
-	'org.mockito:mockito-core:latest.release',
-	'org.mockito:mockito-inline:latest.release',
-	'org.testcontainers:testcontainers:latest.release',
-	'org.testcontainers:junit-jupiter:latest.release'
+		// test
+		libs.assertj,
+		libs.mockitoCore,
+		libs.mockitoInline
 ]
 
 def MICROMETER_PLATFORM_VERSIONS = [
-	'io.micrometer:micrometer-bom:1.10.+',
-	'io.micrometer:micrometer-tracing-bom:1.0.+'
+		libs.micrometerBom, libs.micrometerTracingBom
 ]
 
 def PLATFORM_VERSIONS = [
-	'org.junit:junit-bom:5.10.+' // Not using latest.release to avoid using a milestone version.
+		libs.junitBom
 ]
 
 subprojects {
@@ -50,8 +46,8 @@ subprojects {
 		dependencies {
 			constraints {
 				rootProject.subprojects
-					.findAll { !it.name.contains('micrometer-docs-generator-bom') }
-					.each { api(group: it.group, name: it.name, version: it.version.toString()) }
+						.findAll { !it.name.contains('micrometer-docs-generator-bom') }
+						.each { api(group: it.group, name: it.name, version: it.version.toString()) }
 			}
 			javaPlatform.allowDependencies()
 			MICROMETER_PLATFORM_VERSIONS.each { api platform(it) }
