@@ -16,6 +16,11 @@ updates:
     target-branch: "1.0.x" # oldest OSS supported branch
     schedule:
       interval: "weekly"
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    target-branch: "main"
+    schedule:
+      interval: "weekly"
   - package-ecosystem: gradle
     directory: /
     schedule:
@@ -35,3 +40,8 @@ updates:
     schedule:
       interval: daily
     target-branch: main
+    ignore:
+      # only upgrade by minor or patch
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
