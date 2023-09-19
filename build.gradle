@@ -235,17 +235,6 @@ subprojects {
 		}
 	}
 
-	tasks.register('resolveAndLockAll') {
-		description = 'Resolves dependencies of all configurations and writes them into the lock file.'
-		outputs.upToDateWhen { false }
-		doFirst {
-			assert gradle.startParameter.writeDependencyLocks || gradle.startParameter.lockedDependenciesToUpdate: 'Execute resolveAndLockAll --write-locks or --update-locks <dependencies>'
-		}
-		doLast {
-			project.configurations.findAll { it.canBeResolved }*.resolve()
-		}
-	}
-
 	tasks.register('downloadDependencies') {
 		outputs.upToDateWhen { false }
 		doLast {
@@ -310,10 +299,6 @@ nexusPublishing {
 			password = findProperty('MAVEN_CENTRAL_PASSWORD')
 		}
 	}
-}
-
-task deleteLockFiles(type: Delete) {
-	delete fileTree(dir: '.', include: '**/gradle.lockfile')
 }
 
 wrapper {
