@@ -16,11 +16,6 @@ updates:
     target-branch: "1.0.x" # oldest OSS supported branch
     schedule:
       interval: "weekly"
-  - package-ecosystem: "github-actions"
-    directory: "/"
-    target-branch: "main"
-    schedule:
-      interval: "weekly"
   - package-ecosystem: gradle
     directory: /
     schedule:
