@@ -55,6 +55,8 @@ updates:
       interval: daily
     target-branch: 1.0.x
     ignore:
+      # newer versions do not support Java 8
+      - dependency-name: "org.jboss.forge.roaster:roaster-api"
       # only upgrade patch versions
       - dependency-name: "*"
         update-types:
@@ -66,6 +68,8 @@ updates:
       interval: daily
     target-branch: main
     ignore:
+      # newer versions do not support Java 8
+      - dependency-name: "org.jboss.forge.roaster:roaster-api"
       # only upgrade by minor or patch
       - dependency-name: "*"
         update-types:
