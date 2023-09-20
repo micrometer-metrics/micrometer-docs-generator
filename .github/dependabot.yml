@@ -16,20 +16,50 @@ updates:
     target-branch: "1.0.x" # oldest OSS supported branch
     schedule:
       interval: "weekly"
+  # Build dependencies
   - package-ecosystem: gradle
     directory: /
     schedule:
       interval: daily
     target-branch: 1.0.x
+    groups:
+      netflix-plugins:
+        patterns:
+          - "nebula*"
+          - "com.netflix.nebula*"
+        update-types:
+          - minor
+          - patch
+    allow:
+      - dependency-name: "com.github.hierynomus.license*"
+      - dependency-name: "nebula*"
+      - dependency-name: "com.netflix.nebula*"
+      - dependency-name: "io.spring.nohttp*"
+      - dependency-name: "io.github.gradle-nexus*"
+      - dependency-name: "io.spring.javaformat*"
+      - dependency-name: "io.spring.ge.conventions*"
+      - dependency-name: "com.gradle*"
+      - dependency-name: "org.gradle*"
     ignore:
-      # only upgrade patch versions for maintenance branch
+      # only upgrade minor and patch versions for build dependencies
+      - dependency-name: "*"
+        update-types:
+          - version-update:semver-major
+    registries:
+      - gradle-plugin-portal
+      - maven-central
+  # Non-build dependencies maintenance branch
+  - package-ecosystem: gradle
+    directory: /gradle
+    schedule:
+      interval: daily
+    target-branch: 1.0.x
+    ignore:
+      # only upgrade patch versions
       - dependency-name: "*"
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
-    registries:
-      - gradle-plugin-portal
-      - maven-central
   - package-ecosystem: gradle
     directory: /
     schedule:
