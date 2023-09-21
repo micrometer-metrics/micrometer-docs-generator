@@ -46,7 +46,7 @@ updates:
     registries:
       - gradle-plugin-portal
       - maven-central
-    milestone: 1.0.x
+    milestone: 10
   # Non-build dependencies maintenance branch
   - package-ecosystem: gradle
     directory: /gradle
@@ -61,7 +61,7 @@ updates:
         update-types:
           - version-update:semver-major
           - version-update:semver-minor
-    milestone: 1.0.x
+    milestone: 10
   - package-ecosystem: gradle
     directory: /
     schedule:
@@ -74,4 +74,4 @@ updates:
       - dependency-name: "*"
         update-types:
           - version-update:semver-major
-    milestone: 1.1.x
+    milestone: 14
