@@ -25,14 +25,12 @@ updates:
     groups:
       netflix-plugins:
         patterns:
-          - "nebula*"
           - "com.netflix.nebula*"
         update-types:
           - minor
           - patch
     allow:
-      - dependency-name: "com.github.hierynomus.license*"
-      - dependency-name: "nebula*"
+      - dependency-name: "gradle.plugin.com.hierynomus.gradle.plugins*"
       - dependency-name: "com.netflix.nebula*"
       - dependency-name: "io.spring.nohttp*"
       - dependency-name: "io.github.gradle-nexus*"
