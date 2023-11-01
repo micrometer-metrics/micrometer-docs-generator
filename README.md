@@ -1,4 +1,4 @@
-# Micrometer Application Metrics
+# Micrometer Docs Generator
 
 [![Build Status](https://circleci.com/gh/micrometer-metrics/micrometer-docs-generator.svg?style=shield)](https://circleci.com/gh/micrometer-metrics/micrometer-docs-generator)
 [![Apache 2.0](https://img.shields.io/github/license/micrometer-metrics/micrometer-docs-generator.svg)](https://www.apache.org/licenses/LICENSE-2.0)
