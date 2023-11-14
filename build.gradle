@@ -304,10 +304,6 @@ subprojects {
 	description = 'Documentation generator for Micrometer'
 
 	repositories {
-		maven {
-			url 'https://repo.spring.io/snapshot/'
-			content { includeGroup 'io.micrometer' }
-		}
 		mavenCentral()
 	}
 
