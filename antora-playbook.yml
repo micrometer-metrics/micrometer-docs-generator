@@ -20,8 +20,8 @@ content:
         - '+({1..9}).+({0..9}).x' # 1.0.x and above
         - '!(1.0.x)' # Except 1.0.x
       tags:
-        - '+({1..9}).+({0..9}).+({0..9})?(-{RC,M}*)' # 1.0 and above
-        - '!(1.0.+({0..9})?(-{RC,M}*)' # Except 1.0
+        - 'v+({1..9}).+({0..9}).+({0..9})?(-{RC,M}*)' # 1.0 and above
+        - '!(v1.0.*)' # Except 1.0
       start_path: docs
 asciidoc:
   attributes:
