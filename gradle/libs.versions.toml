@@ -1,5 +1,5 @@
 [versions]
-micrometer = "1.12.3"
+micrometer = "1.12.4"
 micrometerTracing = "1.2.3"
 junit = "5.10.2"
 roaster = "2.22.3.Final" # last using jdk8
