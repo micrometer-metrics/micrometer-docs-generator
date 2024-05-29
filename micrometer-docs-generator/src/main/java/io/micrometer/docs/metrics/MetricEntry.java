@@ -37,15 +37,12 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     final List<KeyNameEntry> lowCardinalityKeyNames;
 
-    final List<KeyNameEntry> highCardinalityKeyNames;
-
     final List<EventEntry> events;
 
     final List<MetricInfo> metricInfos;
 
     MetricEntry(String enclosingClass, String enumName, String description, String prefix,
-            List<KeyNameEntry> lowCardinalityKeyNames, List<KeyNameEntry> highCardinalityKeyNames,
-            List<EventEntry> events, List<MetricInfo> metricInfos) {
+            List<KeyNameEntry> lowCardinalityKeyNames, List<EventEntry> events, List<MetricInfo> metricInfos) {
         Assert.hasText(description, "Observation / Meter javadoc description must not be empty. Check <"
                 + enclosingClass + "#" + enumName + ">");
         this.enclosingClass = enclosingClass;
@@ -53,7 +50,6 @@ class MetricEntry implements Comparable<MetricEntry> {
         this.description = description;
         this.prefix = prefix;
         this.lowCardinalityKeyNames = lowCardinalityKeyNames;
-        this.highCardinalityKeyNames = highCardinalityKeyNames;
         this.events = events;
         this.metricInfos = metricInfos;
     }
@@ -67,14 +63,12 @@ class MetricEntry implements Comparable<MetricEntry> {
         MetricEntry that = (MetricEntry) o;
         return Objects.equals(enclosingClass, that.enclosingClass) && Objects.equals(enumName, that.enumName)
                 && Objects.equals(description, that.description) && Objects.equals(prefix, that.prefix)
-                && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames)
-                && Objects.equals(highCardinalityKeyNames, that.highCardinalityKeyNames);
+                && Objects.equals(lowCardinalityKeyNames, that.lowCardinalityKeyNames);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(enclosingClass, enumName, description, prefix, lowCardinalityKeyNames,
-                highCardinalityKeyNames);
+        return Objects.hash(enclosingClass, enumName, description, prefix, lowCardinalityKeyNames);
     }
 
     @Override
@@ -104,10 +98,6 @@ class MetricEntry implements Comparable<MetricEntry> {
 
     public List<KeyNameEntry> getLowCardinalityKeyNames() {
         return this.lowCardinalityKeyNames;
-    }
-
-    public List<KeyNameEntry> getHighCardinalityKeyNames() {
-        return this.highCardinalityKeyNames;
     }
 
     public List<EventEntry> getEvents() {

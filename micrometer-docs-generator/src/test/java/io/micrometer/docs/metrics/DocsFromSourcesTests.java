@@ -47,7 +47,6 @@ class DocsFromSourcesTests {
                 .contains("**Metric name** `%s` - since")
                 .contains("Fully qualified name of")
                 .contains("|`class` _(required)_|Class name where a method got annotated with @Async.")
-                .contains("|`class2`|Class name where a method got annotated.")
                 .contains("==== Annotation New Or Continue")
                 .contains("**Metric name** `my distribution`. **Type** `distribution summary` and **base unit** `bytes`")
                 .contains("baaaar")
@@ -66,6 +65,7 @@ class DocsFromSourcesTests {
                 .contains("===== Events Having Observation - foo stop")
                 .contains("> Stop event.")
                 .contains("**Metric name** `foo.stop`. **Type** `counter`.")
+                .doesNotContain(".High cardinality Keys")
                 .doesNotContain("docs.metrics.usecases"); //smoke test that usecases have been excluded
         // @formatter:on
     }
