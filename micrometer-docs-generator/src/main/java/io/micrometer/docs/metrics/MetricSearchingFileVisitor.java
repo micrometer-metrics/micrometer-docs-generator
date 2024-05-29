@@ -89,9 +89,7 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
             String enumName = metricEntry.getEnumName();
             String enclosingClassName = metricEntry.getEnclosingClass();
 
-            List<KeyNameEntry> allTags = new ArrayList<>();
-            allTags.addAll(metricEntry.getLowCardinalityKeyNames());
-            allTags.addAll(metricEntry.getHighCardinalityKeyNames());
+            List<KeyNameEntry> allTags = new ArrayList<>(metricEntry.getLowCardinalityKeyNames());
 
             messages.addAll(validatePrefixOnTags(prefix, allTags, enumName, enclosingClassName));
         }
@@ -113,7 +111,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         String baseUnit = "";
         Meter.Type type = Meter.Type.TIMER;
         List<KeyNameEntry> lowCardinalityTags = new ArrayList<>();
-        List<KeyNameEntry> highCardinalityTags = new ArrayList<>();
         EnumConstantSource overridesDefaultMetricFrom = null;
         List<EventEntry> events = new ArrayList<>();
 
@@ -133,12 +130,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         methodSource = enumConstantBody.getMethod("getLowCardinalityKeyNames");
         if (methodSource != null) {
             lowCardinalityTags.addAll(retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
-        }
-
-        // ObservationDocumentation
-        methodSource = enumConstantBody.getMethod("getHighCardinalityKeyNames");
-        if (methodSource != null) {
-            highCardinalityTags.addAll(retrieveEnumValues(myEnum, methodSource, KeyNameEnumConstantReader.INSTANCE));
         }
 
         // MeterDocumentation, ObservationDocumentation
@@ -198,7 +189,6 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         }
 
         Collections.sort(lowCardinalityTags);
-        Collections.sort(highCardinalityTags);
         Collections.sort(events);
 
         List<MetricInfo> metricInfos = new ArrayList<>();
@@ -212,7 +202,7 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
         }
 
         return new MetricEntry(myEnum.getCanonicalName(), enumConstant.getName(), description, prefix,
-                lowCardinalityTags, highCardinalityTags, events, metricInfos);
+                lowCardinalityTags, events, metricInfos);
     }
 
     private NameInfo resolveName(boolean isObservationDoc, EnumConstantSource enumConstant,
