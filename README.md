@@ -32,9 +32,7 @@ dependencies {
 
 ## Milestone releases
 
-Milestone releases are published to https://repo.spring.io/milestone. Include that as a maven repository in your build
-configuration to use milestone releases. Note that milestone releases are for testing purposes and are not intended for
-production use.
+Starting with the 1.1.0-M1 release, milestone releases and release candidates will be published to Maven Central. Note that milestone releases are for testing purposes and are not intended for production use. Earlier milestone releases were published to https://repo.spring.io/milestone.
 
 ## Documentation
 
@@ -44,8 +42,7 @@ Example for a Gradle setup that scans your sources from the root project and cre
 
 repositories {
 	maven { url 'https://repo.spring.io/snapshot' } // for snapshots
-	maven { url 'https://repo.spring.io/milestone' } // for milestones
-	mavenCentral() // for GA
+	mavenCentral() // for GA and milestones
 }
 
 ext {
@@ -123,14 +120,6 @@ Example for a Maven setup that scans your sources from the root project and crea
         <releases>
             <enabled>false</enabled>
         </releases>
-    </repository>
-    <repository>
-        <id>spring-milestones</id>
-        <name>Spring Milestones</name>
-        <url>https://repo.spring.io/milestone</url>  <!-- For Milestones -->
-        <snapshots>
-            <enabled>false</enabled>
-        </snapshots>
     </repository>
 </repositories>
 ```
