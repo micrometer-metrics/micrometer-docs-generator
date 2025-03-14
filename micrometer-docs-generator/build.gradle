@@ -12,7 +12,8 @@ dependencies {
 	api libs.picocli
 	api libs.handlebars
 
-	testImplementation 'org.junit.jupiter:junit-jupiter'
+	testImplementation libs.junitJupiter
+	testRuntimeOnly libs.junitPlatformLauncher
 	testImplementation libs.assertj
 	testImplementation libs.mockitoCore
 }
