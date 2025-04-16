@@ -19,6 +19,8 @@ package io.micrometer.docs.commons;
 import java.util.Set;
 
 import io.micrometer.common.docs.KeyName;
+import io.micrometer.core.instrument.Meter;
+import io.micrometer.core.instrument.docs.MeterDocumentation;
 import io.micrometer.docs.RoasterTestUtils;
 import org.jboss.forge.roaster.model.source.JavaClassSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -49,6 +51,14 @@ class ParsingUtilsReadEnumClassNamesTests {
         assertThat(result).containsExactlyInAnyOrder("FooKeyName", "BarKeyName", "BazKeyName");
     }
 
+    @Test
+    void readNestedEnumClassName() {
+        JavaClassSource javaSource = RoasterTestUtils.readJavaClass(ParsingUtilsReadEnumClassNamesTests.class);
+        MethodSource<?> methodSource = ((JavaClassSource) javaSource.getNestedType("MyClass")).getMethod("mergeNested");
+        Set<String> result = ParsingUtils.readEnumClassNames(methodSource);
+        assertThat(result).containsExactlyInAnyOrder("NestedFooKeyName", "NestedBarKeyName");
+    }
+
     static class MyClass {
 
         Enum<?>[] simple() {
@@ -57,6 +67,11 @@ class ParsingUtilsReadEnumClassNamesTests {
 
         KeyName[] merge() {
             return KeyName.merge(FooKeyName.values(), BarKeyName.values(), BazKeyName.values());
+        }
+
+        KeyName[] mergeNested() {
+            return KeyName.merge(FooMeterDocumentation.NestedFooKeyName.values(),
+                    FooMeterDocumentation.NestedBarKeyName.values());
         }
 
     }
@@ -90,6 +105,44 @@ class ParsingUtilsReadEnumClassNamesTests {
             public String asString() {
                 return "baz";
             }
+        }
+
+    }
+
+    enum FooMeterDocumentation implements MeterDocumentation {
+
+        FOO {
+            @Override
+            public String getName() {
+                return "foo";
+            }
+
+            @Override
+            public Meter.Type getType() {
+                return Meter.Type.COUNTER;
+            }
+        };
+
+        enum NestedFooKeyName implements KeyName {
+
+            NESTED_FOO {
+                @Override
+                public String asString() {
+                    return "nested.foo";
+                }
+            }
+
+        }
+
+        enum NestedBarKeyName implements KeyName {
+
+            NESTED_BAR {
+                @Override
+                public String asString() {
+                    return "nested.bar";
+                }
+            }
+
         }
 
     }
