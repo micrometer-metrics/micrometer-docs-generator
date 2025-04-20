@@ -1,7 +1,9 @@
 ---
-name: Bug report about: Report a bug in Micrometer Docs Generator title: ''
-labels: bug assignees: ''
-
+name: Bug report
+about: Report a bug in Micrometer Docs Generator
+title: ''
+labels: bug
+assignees: ''
 ---
 
 **Describe the bug**
