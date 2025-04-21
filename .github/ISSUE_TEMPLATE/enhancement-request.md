@@ -1,7 +1,9 @@
 ---
-name: Enhancement request about: Request an enhancement for Micrometer title: ''
-labels: enhancement assignees: ''
-
+name: Enhancement request
+about: Request an enhancement for Micrometer
+title: ''
+labels: enhancement
+assignees: ''
 ---
 
 **Please describe the feature request.**
