@@ -10,7 +10,7 @@ slf4j = "1.7.36"
 assertj = "3.27.3"
 mockito = "5.5.0"
 asmForPlugins = "7.3.1"
-javaFormatForPlugins = "0.0.45"
+javaFormatForPlugins = "0.0.46"
 jsr305 = "3.0.2"
 
 [libraries]
