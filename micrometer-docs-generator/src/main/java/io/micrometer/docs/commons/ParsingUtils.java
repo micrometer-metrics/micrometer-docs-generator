@@ -20,8 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
@@ -41,6 +39,9 @@ import org.jboss.forge.roaster.model.source.JavaEnumSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
 public class ParsingUtils {
+
+    private ParsingUtils() {
+    }
 
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
@@ -102,14 +103,30 @@ public class ParsingUtils {
         MethodInvocation methodInvocation = (MethodInvocation) expression;
 
         if ("merge".equals(methodInvocation.getName().getIdentifier())) {
-            // TODO: There must be a better way to do this...
             // KeyName.merge(TestSpanTags.values(),AsyncSpanTags.values())
-            String invocationString = methodInvocation.toString();
-            Matcher matcher = Pattern.compile("([a-zA-Z]+.values)").matcher(invocationString);
             Set<String> classNames = new TreeSet<>();
-            while (matcher.find()) {
-                String className = matcher.group(1).split("\\.")[0];
-                classNames.add(className);
+
+            // Traverse arguments of the "merge" method
+            for (Object argument : methodInvocation.arguments()) {
+                if (argument instanceof MethodInvocation) {
+                    MethodInvocation argInvocation = (MethodInvocation) argument;
+
+                    // Ensure the method is ".values()" and extract its scope
+                    if ("values".equals(argInvocation.getName().getIdentifier())
+                            && argInvocation.getExpression() != null) {
+                        Expression scope = argInvocation.getExpression();
+
+                        // If KeyName is nested, extract only the corresponding class name
+                        if (scope instanceof QualifiedName) {
+                            String qualifiedName = scope.toString();
+                            String className = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
+                            classNames.add(className);
+                        }
+                        else {
+                            classNames.add(scope.toString());
+                        }
+                    }
+                }
             }
             return classNames;
         }
