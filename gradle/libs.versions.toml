@@ -1,7 +1,7 @@
 [versions]
 micrometer = "1.15.4"
 micrometerTracing = "1.5.4"
-junit = "5.13.4"
+junit = "5.14.0"
 roaster = "2.22.3.Final" # last using jdk8
 handlebars = "4.3.1"
 picocli = "4.7.7"
