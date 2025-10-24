@@ -108,20 +108,11 @@ public class ParsingUtils {
                 if (argument instanceof MethodInvocation) {
                     MethodInvocation argInvocation = (MethodInvocation) argument;
 
-                    // Ensure the method is ".values()" and extract its scope
+                    // Ensure the method is ".values()" and extract its class name
                     if ("values".equals(argInvocation.getName().getIdentifier())
                             && argInvocation.getExpression() != null) {
-                        Expression scope = argInvocation.getExpression();
-
-                        // If KeyName is nested, extract only the corresponding class name
-                        if (scope instanceof QualifiedName) {
-                            String qualifiedName = scope.toString();
-                            String className = qualifiedName.substring(qualifiedName.lastIndexOf('.') + 1);
-                            classNames.add(className);
-                        }
-                        else {
-                            classNames.add(scope.toString());
-                        }
+                        Expression className = argInvocation.getExpression();
+                        classNames.add(className.toString());
                     }
                 }
             }

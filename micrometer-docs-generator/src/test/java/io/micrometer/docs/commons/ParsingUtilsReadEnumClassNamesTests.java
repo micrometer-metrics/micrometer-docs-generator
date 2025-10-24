@@ -56,7 +56,8 @@ class ParsingUtilsReadEnumClassNamesTests {
         JavaClassSource javaSource = RoasterTestUtils.readJavaClass(ParsingUtilsReadEnumClassNamesTests.class);
         MethodSource<?> methodSource = ((JavaClassSource) javaSource.getNestedType("MyClass")).getMethod("mergeNested");
         Set<String> result = ParsingUtils.readEnumClassNames(methodSource);
-        assertThat(result).containsExactlyInAnyOrder("NestedFooKeyName", "NestedBarKeyName");
+        assertThat(result).containsExactlyInAnyOrder("FooMeterDocumentation.NestedFooKeyName",
+                "FooMeterDocumentation.NestedBarKeyName");
     }
 
     static class MyClass {
