@@ -40,9 +40,6 @@ import org.jboss.forge.roaster.model.source.MethodSource;
 
 public class ParsingUtils {
 
-    private ParsingUtils() {
-    }
-
     private static final InternalLogger logger = InternalLoggerFactory.getInstance(ParsingUtils.class);
 
     @SuppressWarnings("unchecked")
