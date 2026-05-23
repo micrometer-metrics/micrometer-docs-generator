@@ -25,5 +25,5 @@ node {
 }
 
 wrapper {
-	gradleVersion = '8.6'
+	gradleVersion = '9.5.1'
 }
