@@ -20,8 +20,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import io.micrometer.common.docs.KeyName;
 import io.micrometer.common.lang.Nullable;
@@ -102,14 +100,21 @@ public class ParsingUtils {
         MethodInvocation methodInvocation = (MethodInvocation) expression;
 
         if ("merge".equals(methodInvocation.getName().getIdentifier())) {
-            // TODO: There must be a better way to do this...
             // KeyName.merge(TestSpanTags.values(),AsyncSpanTags.values())
-            String invocationString = methodInvocation.toString();
-            Matcher matcher = Pattern.compile("([a-zA-Z]+.values)").matcher(invocationString);
             Set<String> classNames = new TreeSet<>();
-            while (matcher.find()) {
-                String className = matcher.group(1).split("\\.")[0];
-                classNames.add(className);
+
+            // Traverse arguments of the "merge" method
+            for (Object argument : methodInvocation.arguments()) {
+                if (argument instanceof MethodInvocation) {
+                    MethodInvocation argInvocation = (MethodInvocation) argument;
+
+                    // Ensure the method is ".values()" and extract its class name
+                    if ("values".equals(argInvocation.getName().getIdentifier())
+                            && argInvocation.getExpression() != null) {
+                        Expression className = argInvocation.getExpression();
+                        classNames.add(className.toString());
+                    }
+                }
             }
             return classNames;
         }
