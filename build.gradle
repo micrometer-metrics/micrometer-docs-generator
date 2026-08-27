@@ -286,6 +286,22 @@ subprojects {
 				github 'marcingrzejszczak'
 			}
 		}
+
+		infoBroker.excludedManifestProperties.addAll('Module-Origin', 'Module-Source')
+
+		// modify publications if necessary after Nebula plugins applied
+		plugins.withId('maven-publish') {
+			publishing {
+				publications {
+					nebula(MavenPublication) {
+						if (pom.url.get().startsWith('https://github.com/micrometer-metrics/')) {
+							pom.url = 'https://github.com/micrometer-metrics/micrometer-docs-generator'
+							pom.scm.url = 'git@github.com:micrometer-metrics/micrometer-docs-generator.git'
+						}
+					}
+				}
+			}
+		}
 	}
 
 	description = 'Documentation generator for Micrometer'
