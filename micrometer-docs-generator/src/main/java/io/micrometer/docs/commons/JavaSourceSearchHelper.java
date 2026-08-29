@@ -47,6 +47,7 @@ import org.jboss.forge.roaster.model.InterfaceCapable;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.Import;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
+import org.jboss.forge.roaster.model.source.JavaInterfaceSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodHolderSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
@@ -149,6 +150,20 @@ public class JavaSourceSearchHelper {
             return null;
         }
         return info.getJavaSource();
+    }
+
+    /**
+     * Search a {@link JavaInterfaceSource} by qualified class name.
+     * @param qualifiedName a qualified class name
+     * @return matched {@link JavaInterfaceSource} or {@code null} if not found.
+     */
+    @Nullable
+    public JavaInterfaceSource searchInterface(String qualifiedName) {
+        JavaSource<?> javaSource = search(qualifiedName);
+        if (javaSource == null || !javaSource.isInterface()) {
+            return null;
+        }
+        return (JavaInterfaceSource) javaSource;
     }
 
     /**
@@ -447,6 +462,61 @@ public class JavaSourceSearchHelper {
                 return javaSource;
             }
         }
+        return null;
+    }
+
+    /**
+     * Search for interfaces that extend the documentation interfaces.
+     * @param interfaceName
+     * @param abstractSearchingFileVisitor
+     * @return the {@link JavaInterfaceSource} that extends the documentation interface or
+     * {@code null} if no matching interface is found
+     */
+    @Nullable
+    public JavaInterfaceSource searchExtendingDocumentationInterfaceName(String interfaceName,
+            AbstractSearchingFileVisitor abstractSearchingFileVisitor) {
+        // delegate to recursive search
+        return searchExtendingDocumentationInterfaceName(interfaceName, new HashSet<>(), abstractSearchingFileVisitor);
+    }
+
+    @Nullable
+    private JavaInterfaceSource searchExtendingDocumentationInterfaceName(String interfaceName, Set<String> visited,
+            AbstractSearchingFileVisitor visitor) {
+        // Search for the interface
+        JavaInterfaceSource interfaceSource = searchInterface(interfaceName);
+        if (interfaceSource == null) {
+            return null;
+        }
+
+        String qualifiedName = interfaceSource.getQualifiedName();
+        logger.trace("Searching ExtendingDocumentationInterface on {} - start", qualifiedName);
+
+        // Cycle detection
+        if (visited.contains(qualifiedName)) {
+            return null;
+        }
+        visited.add(qualifiedName);
+
+        // Check if this interface is supported
+        if (visitor.supportedInterfaces().stream().anyMatch(name -> name.getName().equals(qualifiedName))) {
+            return interfaceSource;
+        }
+
+        // Check all extended interfaces
+        for (String childInterface : interfaceSource.getInterfaces()) {
+            // Check if child is directly supported
+            if (visitor.supportedInterfaces().stream().anyMatch(i -> i.getName().equals(childInterface))) {
+                return interfaceSource;
+            }
+
+            // Recursive search through child
+            JavaInterfaceSource result = searchExtendingDocumentationInterfaceName(childInterface, visited, visitor);
+            if (result != null) {
+                return result;
+            }
+        }
+
+        // No matching interface found
         return null;
     }
 

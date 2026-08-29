@@ -34,6 +34,7 @@ import io.micrometer.docs.commons.utils.StringUtils;
 import org.jboss.forge.roaster.Roaster;
 import org.jboss.forge.roaster.model.source.EnumConstantSource;
 import org.jboss.forge.roaster.model.source.JavaEnumSource;
+import org.jboss.forge.roaster.model.source.JavaInterfaceSource;
 import org.jboss.forge.roaster.model.source.JavaSource;
 import org.jboss.forge.roaster.model.source.MethodSource;
 
@@ -70,6 +71,20 @@ public abstract class AbstractSearchingFileVisitor extends SimpleFileVisitor<Pat
             return FileVisitResult.CONTINUE;
         }
         JavaEnumSource enumSource = (JavaEnumSource) javaSource;
+
+        enumSource.getInterfaces().forEach(interfaceName -> {
+            // Find any interfaces that match our supported interfaces
+            JavaInterfaceSource foundInterface = searchHelper.searchExtendingDocumentationInterfaceName(interfaceName,
+                    this);
+            if (foundInterface != null) {
+                try {
+                    supportedInterfaces().add(Class.forName(interfaceName));
+                }
+                catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
 
         if (supportedInterfaces().stream().noneMatch(enumSource::hasInterface)) {
             return FileVisitResult.CONTINUE;
