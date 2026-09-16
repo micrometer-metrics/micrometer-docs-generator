@@ -258,8 +258,18 @@ subprojects {
 		apply plugin: 'com.netflix.nebula.project'
 
 		if (project.name != 'micrometer-docs-generator-bom') {
+			tasks.withType(AbstractArchiveTask).configureEach {
+				preserveFileTimestamps = false
+				reproducibleFileOrder = true
+			}
+
 			jar {
-				manifest.attributes.put('Automatic-Module-Name', project.name.replace('-', '.'))
+				manifest {
+					attributes(
+						'Automatic-Module-Name': project.name.replace('-', '.'),
+						'Build-Jdk-Spec': System.getProperty('java.specification.version')
+					)
+				}
 				metaInf {
 					from "$rootDir/LICENSE"
 					from "$rootDir/NOTICE"
@@ -282,7 +292,24 @@ subprojects {
 			}
 		}
 
-		infoBroker.excludedManifestProperties.addAll('Module-Origin', 'Module-Source')
+		infoBroker.excludedManifestProperties.addAll(
+			'Branch',
+			'Build-Date-UTC',
+			'Build-Date',
+			'Build-Host',
+			'Build-Id',
+			'Build-Java-Version',
+			'Build-Job',
+			'Build-Number',
+			'Build-Timezone',
+			'Build-Url',
+			'Built-By',
+			'Built-OS',
+			'Built-Status',
+			'Created-By',
+			'Module-Origin',
+			'Module-Source'
+		)
 
 		// modify publications if necessary after Nebula plugins applied
 		plugins.withId('maven-publish') {
