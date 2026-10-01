@@ -6,7 +6,6 @@ buildscript {
 	}
 
 	dependencies {
-		classpath libs.plugin.license
 		classpath libs.plugin.nebulaRelease
 		classpath libs.plugin.nebulaPublishing
 		classpath libs.plugin.nebulaProject
@@ -14,6 +13,7 @@ buildscript {
 		classpath libs.plugin.noHttp
 		classpath libs.plugin.nexusPublish
 		classpath libs.plugin.javaformat
+		classpath libs.plugin.spotless
 
 		constraints {
 			classpath(libs.asmForPlugins) {
@@ -60,9 +60,9 @@ subprojects {
 
 	if (project.name != 'micrometer-docs-generator-bom') {
 		apply plugin: 'java-library'
-		apply plugin: 'com.github.hierynomus.license'
 		apply plugin: 'checkstyle'
 		apply plugin: 'io.spring.nohttp'
+		apply plugin: 'com.diffplug.spotless'
 
 		java {
 			// It is more idiomatic to define different features for different sets of optional
@@ -82,6 +82,18 @@ subprojects {
 			// JSR-305 only used for non-required meta-annotations
 			optionalApi libs.jsr305
 			checkstyle libs.javaFormatForPlugins
+		}
+
+		spotless {
+			java {
+				toggleOffOn()
+			}
+			format 'javaLicenseHeader', {
+				target 'src/**/*.java'
+				targetExclude fileTree(projectDir) { include 'src/**/*.java' }.filter { it.text.startsWith('// spotless-license-check:ignore') }
+				licenseHeaderFile(rootProject.file('gradle/licenseHeader.txt'),
+					'(package|import|public|class|module) |@|\\n/\\*\\*|// spotless-license-check:off')
+			}
 		}
 
 		tasks {
@@ -168,19 +180,6 @@ subprojects {
 
 		project.tasks.withType(Test) { Test testTask ->
 			testTask.testLogging.exceptionFormat = 'full'
-		}
-
-		license {
-			header rootProject.file('gradle/licenseHeader.txt')
-			strictCheck true
-			mapping {
-				kt = 'SLASHSTAR_STYLE'
-			}
-			sourceSets = project.sourceSets
-
-			ext.year = Calendar.getInstance().get(Calendar.YEAR)
-			skipExistingHeaders = true
-			exclude '**/*.json' // comments not supported
 		}
 
 		// Publish resolved versions.

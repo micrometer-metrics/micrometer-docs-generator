@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.micrometer.docs.commons.search.test4;
 
 import io.micrometer.docs.commons.search.test4.sub.DifferentPackageEnum;
