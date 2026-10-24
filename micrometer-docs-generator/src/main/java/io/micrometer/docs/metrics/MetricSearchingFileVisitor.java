@@ -56,6 +56,9 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     private final Collection<MetricEntry> entries;
 
+    private final Collection<Class<?>> supportedInterfaces = new ArrayList<>(
+            Arrays.asList(MeterDocumentation.class, ObservationDocumentation.class));
+
     MetricSearchingFileVisitor(Pattern pattern, Collection<MetricEntry> entries, JavaSourceSearchHelper searchHelper) {
         super(pattern, searchHelper);
         this.entries = entries;
@@ -63,7 +66,7 @@ class MetricSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     @Override
     public Collection<Class<?>> supportedInterfaces() {
-        return Arrays.asList(MeterDocumentation.class, ObservationDocumentation.class);
+        return supportedInterfaces;
     }
 
     @Override
