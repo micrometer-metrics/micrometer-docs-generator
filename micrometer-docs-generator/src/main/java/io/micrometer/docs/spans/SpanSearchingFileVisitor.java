@@ -56,6 +56,9 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     private final Collection<SpanEntry> spanEntries;
 
+    private final Collection<Class<?>> supportedInterfaces = new ArrayList<>(
+            Arrays.asList(SpanDocumentation.class, ObservationDocumentation.class));
+
     /**
      * The enclosing enum classes for overriding will be excluded from documentation
      */
@@ -68,7 +71,7 @@ class SpanSearchingFileVisitor extends AbstractSearchingFileVisitor {
 
     @Override
     public Collection<Class<?>> supportedInterfaces() {
-        return Arrays.asList(SpanDocumentation.class, ObservationDocumentation.class);
+        return supportedInterfaces;
     }
 
     @Override
